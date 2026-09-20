@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "radio-loadout"
+version = "0.1.0"
+description = "Universal radio channel planning and configuration exporter for CHIRP, DMR codeplugs, and manufacturer programming software."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Timothy Thurston" }
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
