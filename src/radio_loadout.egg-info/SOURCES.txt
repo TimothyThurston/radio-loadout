@@ -1,8 +1,0 @@
-README.md
-pyproject.toml
-src/radio_loadout/__init__.py
-src/radio_loadout.egg-info/PKG-INFO
-src/radio_loadout.egg-info/SOURCES.txt
-src/radio_loadout.egg-info/dependency_links.txt
-src/radio_loadout.egg-info/requires.txt
-src/radio_loadout.egg-info/top_level.txt
