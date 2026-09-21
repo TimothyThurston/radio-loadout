@@ -1,11 +1,25 @@
 """Radio Loadout web application."""
 
-from fastapi import FastAPI, Response
+from pathlib import Path
+
+from fastapi import FastAPI, Request, Response
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from radio_loadout.exporters.chirp_csv import export_chirp_csv
 from radio_loadout.models import AnalogSettings, Channel, ChannelMode
 
+WEB_DIRECTORY = Path(__file__).resolve().parent
+
 app = FastAPI(title="Radio Loadout")
+
+app.mount(
+    "/static",
+    StaticFiles(directory=WEB_DIRECTORY / "static"),
+    name="static",
+)
+
+templates = Jinja2Templates(directory=WEB_DIRECTORY / "templates")
 
 
 def _sample_channels() -> list[Channel]:
@@ -47,11 +61,11 @@ def _sample_channels() -> list[Channel]:
 
 
 @app.get("/")
-def home() -> dict[str, str]:
-    return {
-        "name": "Radio Loadout",
-        "status": "online",
-    }
+def home(request: Request) -> Response:
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+    )
 
 
 @app.get("/downloads/chirp-sample.csv")

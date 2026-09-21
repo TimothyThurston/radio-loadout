@@ -9,10 +9,9 @@ def test_home() -> None:
     response = client.get("/")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "name": "Radio Loadout",
-        "status": "online",
-    }
+    assert response.headers["content-type"].startswith("text/html")
+    assert "Radio Loadout" in response.text
+    assert "Download CHIRP sample" in response.text
 
 
 def test_chirp_sample_download() -> None:

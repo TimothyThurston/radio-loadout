@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="description"
+        content="Plan radio channels and export programming files for CHIRP and other radio software."
+    >
+    <title>Radio Loadout</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="/">
+            <span class="brand-mark">RL</span>
+            <span>Radio Loadout</span>
+        </a>
+
+        <span class="version">Early Development</span>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <p class="eyebrow">Universal radio channel planning</p>
+
+                <h1>Build one channel plan.<br>Export it anywhere.</h1>
+
+                <p class="hero-description">
+                    Create organized radio channel configurations for amateur
+                    radio, GMRS, public-safety monitoring, satellites, weather,
+                    and emergency communications.
+                </p>
+
+                <div class="hero-actions">
+                    <a
+                        class="button button-primary"
+                        href="/downloads/chirp-sample.csv"
+                    >
+                        Download CHIRP sample
+                    </a>
+
+                    <a class="button button-secondary" href="/docs">
+                        View API
+                    </a>
+                </div>
+            </div>
+
+            <div class="radio-panel" aria-label="Sample channel plan">
+                <div class="panel-header">
+                    <span>Sample loadout</span>
+                    <span class="status">
+                        <span class="status-light"></span>
+                        Ready
+                    </span>
+                </div>
+
+                <div class="channel-list">
+                    <div class="channel">
+                        <span class="channel-number">01</span>
+                        <div>
+                            <strong>2M CALL</strong>
+                            <span>146.520 MHz · FM</span>
+                        </div>
+                    </div>
+
+                    <div class="channel">
+                        <span class="channel-number">02</span>
+                        <div>
+                            <strong>1.25 CALL</strong>
+                            <span>223.500 MHz · FM</span>
+                        </div>
+                    </div>
+
+                    <div class="channel">
+                        <span class="channel-number">03</span>
+                        <div>
+                            <strong>70CM CALL</strong>
+                            <span>446.000 MHz · FM</span>
+                        </div>
+                    </div>
+
+                    <div class="channel">
+                        <span class="channel-number">04</span>
+                        <div>
+                            <strong>NOAA 7</strong>
+                            <span>162.550 MHz · NFM · RX only</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="formats">
+            <div class="section-heading">
+                <p class="eyebrow">Export targets</p>
+                <h2>One planner for the radio ecosystem</h2>
+            </div>
+
+            <div class="format-grid">
+                <article class="format-card available">
+                    <span class="card-status">Working now</span>
+                    <h3>CHIRP</h3>
+                    <p>
+                        Generate generic CSV files tested with the real CHIRP
+                        programming application.
+                    </p>
+                </article>
+
+                <article class="format-card">
+                    <span class="card-status">Planned</span>
+                    <h3>DMR Codeplugs</h3>
+                    <p>
+                        Organize digital channels, talkgroups, contacts, zones,
+                        color codes, and timeslots.
+                    </p>
+                </article>
+
+                <article class="format-card">
+                    <span class="card-status">Planned</span>
+                    <h3>Manufacturer CPS</h3>
+                    <p>
+                        Produce compatible files for manufacturer-specific
+                        radio programming software.
+                    </p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <span>Radio Loadout</span>
+        <span>Built for flexible radio programming.</span>
+    </footer>
+</body>
+</html>
