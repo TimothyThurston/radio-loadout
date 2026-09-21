@@ -11,7 +11,9 @@ requires-python = ">=3.11"
 authors = [
     { name = "Timothy Thurston" }
 ]
-dependencies = []
+dependencies = [
+    "fastapi[standard]",
+]
 
 [project.optional-dependencies]
 dev = [
