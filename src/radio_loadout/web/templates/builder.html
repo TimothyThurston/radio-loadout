@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="description"
+        content="Create a custom radio channel and export it as a CHIRP CSV file."
+    >
+    <title>Channel Builder · Radio Loadout</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="builder-page">
+    <header class="site-header">
+        <a class="brand" href="/">
+            <span class="brand-mark">RL</span>
+            <span>Radio Loadout</span>
+        </a>
+
+        <a class="nav-link" href="/">Back to home</a>
+    </header>
+
+    <main class="builder-main">
+        <section class="builder-introduction">
+            <p class="eyebrow">CHIRP channel builder</p>
+            <h1>Create your first custom channel.</h1>
+
+            <p>
+                Enter the channel details below and Radio Loadout will generate
+                a CHIRP-compatible CSV file for you.
+            </p>
+        </section>
+
+        <form
+            class="builder-form"
+            action="/downloads/chirp.csv"
+            method="post"
+        >
+            <div class="form-heading">
+                <div>
+                    <span class="form-step">Channel 01</span>
+                    <h2>Channel details</h2>
+                </div>
+
+                <span class="required-note">Required fields marked *</span>
+            </div>
+
+            <div class="form-grid">
+                <label class="field field-wide">
+                    <span>Channel name *</span>
+                    <input
+                        type="text"
+                        name="name"
+                        placeholder="Example: LOCAL RPT"
+                        maxlength="32"
+                        required
+                    >
+                </label>
+
+                <label class="field">
+                    <span>Receive frequency *</span>
+                    <div class="input-unit">
+                        <input
+                            type="number"
+                            name="receive_frequency_mhz"
+                            placeholder="146.520000"
+                            min="0.000001"
+                            step="0.000001"
+                            required
+                        >
+                        <span>MHz</span>
+                    </div>
+                </label>
+
+                <label class="field">
+                    <span>Transmit frequency</span>
+                    <div class="input-unit">
+                        <input
+                            type="number"
+                            name="transmit_frequency_mhz"
+                            placeholder="Leave blank for simplex"
+                            min="0.000001"
+                            step="0.000001"
+                        >
+                        <span>MHz</span>
+                    </div>
+                </label>
+
+                <label class="field">
+                    <span>Mode *</span>
+                    <select name="mode" required>
+                        <option value="FM" selected>FM</option>
+                        <option value="NFM">NFM</option>
+                        <option value="AM">AM</option>
+                    </select>
+                </label>
+
+                <label class="field">
+                    <span>Power</span>
+                    <div class="input-unit">
+                        <input
+                            type="number"
+                            name="power_watts"
+                            value="5.0"
+                            min="0.1"
+                            step="0.1"
+                        >
+                        <span>W</span>
+                    </div>
+                </label>
+
+                <label class="checkbox-field field-wide">
+                    <input
+                        type="checkbox"
+                        name="receive_only"
+                        value="true"
+                    >
+                    <span>
+                        <strong>Receive-only channel</strong>
+                        <small>
+                            Prevents transmission and ignores the transmit
+                            frequency.
+                        </small>
+                    </span>
+                </label>
+
+                <label class="field field-wide">
+                    <span>Comment</span>
+                    <textarea
+                        name="comment"
+                        rows="3"
+                        placeholder="Optional notes about this channel"
+                    ></textarea>
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <p>
+                    This first version generates one channel. Multi-channel
+                    loadouts are coming next.
+                </p>
+
+                <button class="button button-primary" type="submit">
+                    Generate CHIRP CSV
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <footer>
+        <span>Radio Loadout</span>
+        <span>Build once. Program anywhere.</span>
+    </footer>
+</body>
+</html>
