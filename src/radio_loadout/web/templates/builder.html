@@ -2,154 +2,167 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
     <meta
         name="description"
-        content="Create a custom radio channel and export it as a CHIRP CSV file."
+        content="Build a custom multi-channel radio loadout and export it for CHIRP."
     >
-    <title>Channel Builder · Radio Loadout</title>
+
+    <title>Channel Builder | Radio Loadout</title>
+
     <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/builder.js" defer></script>
 </head>
-<body class="builder-page">
+
+<body>
     <header class="site-header">
         <a class="brand" href="/">
             <span class="brand-mark">RL</span>
             <span>Radio Loadout</span>
         </a>
 
-        <a class="nav-link" href="/">Back to home</a>
+        <span class="version">Early Development</span>
     </header>
 
-    <main class="builder-main">
-        <section class="builder-introduction">
-            <p class="eyebrow">CHIRP channel builder</p>
-            <h1>Create your first custom channel.</h1>
+    <main>
+        <section class="builder-heading">
+            <p class="eyebrow">Multi-channel builder</p>
+            <h1>Build your radio loadout.</h1>
 
-            <p>
-                Enter the channel details below and Radio Loadout will generate
-                a CHIRP-compatible CSV file for you.
+            <p class="hero-description">
+                Add as many channels as you need, arrange their radio
+                settings, and export the complete loadout as one
+                CHIRP-compatible CSV file.
             </p>
         </section>
 
         <form
+            id="channel-form"
             class="builder-form"
             action="/downloads/chirp.csv"
             method="post"
         >
-            <div class="form-heading">
-                <div>
-                    <span class="form-step">Channel 01</span>
-                    <h2>Channel details</h2>
-                </div>
+            <input
+                id="channels-json"
+                name="channels_json"
+                type="hidden"
+            >
 
-                <span class="required-note">Required fields marked *</span>
-            </div>
+            <div id="channel-list" class="channel-list"></div>
 
-            <div class="form-grid">
-                <label class="field field-wide">
-                    <span>Channel name *</span>
-                    <input
-                        type="text"
-                        name="name"
-                        placeholder="Example: LOCAL RPT"
-                        maxlength="32"
-                        required
-                    >
-                </label>
+            <div class="builder-actions">
+                <button
+                    id="add-channel"
+                    class="button button-secondary"
+                    type="button"
+                >
+                    + Add another channel
+                </button>
 
-                <label class="field">
-                    <span>Receive frequency *</span>
-                    <div class="input-unit">
-                        <input
-                            type="number"
-                            name="receive_frequency_mhz"
-                            placeholder="146.520000"
-                            min="0.000001"
-                            step="0.000001"
-                            required
-                        >
-                        <span>MHz</span>
-                    </div>
-                </label>
-
-                <label class="field">
-                    <span>Transmit frequency</span>
-                    <div class="input-unit">
-                        <input
-                            type="number"
-                            name="transmit_frequency_mhz"
-                            placeholder="Leave blank for simplex"
-                            min="0.000001"
-                            step="0.000001"
-                        >
-                        <span>MHz</span>
-                    </div>
-                </label>
-
-                <label class="field">
-                    <span>Mode *</span>
-                    <select name="mode" required>
-                        <option value="FM" selected>FM</option>
-                        <option value="NFM">NFM</option>
-                        <option value="AM">AM</option>
-                    </select>
-                </label>
-
-                <label class="field">
-                    <span>Power</span>
-                    <div class="input-unit">
-                        <input
-                            type="number"
-                            name="power_watts"
-                            value="5.0"
-                            min="0.1"
-                            step="0.1"
-                        >
-                        <span>W</span>
-                    </div>
-                </label>
-
-                <label class="checkbox-field field-wide">
-                    <input
-                        type="checkbox"
-                        name="receive_only"
-                        value="true"
-                    >
-                    <span>
-                        <strong>Receive-only channel</strong>
-                        <small>
-                            Prevents transmission and ignores the transmit
-                            frequency.
-                        </small>
-                    </span>
-                </label>
-
-                <label class="field field-wide">
-                    <span>Comment</span>
-                    <textarea
-                        name="comment"
-                        rows="3"
-                        placeholder="Optional notes about this channel"
-                    ></textarea>
-                </label>
-            </div>
-
-            <div class="form-actions">
-                <p>
-                    This first version generates one channel. Multi-channel
-                    loadouts are coming next.
-                </p>
-
-                <button class="button button-primary" type="submit">
+                <button
+                    class="button button-primary"
+                    type="submit"
+                >
                     Generate CHIRP CSV
                 </button>
             </div>
         </form>
-    </main>
 
-    <footer>
-        <span>Radio Loadout</span>
-        <span>Build once. Program anywhere.</span>
-    </footer>
+        <template id="channel-template">
+            <article class="channel-card" data-channel-card>
+                <div class="channel-card-header">
+                    <h2 data-channel-number>Channel</h2>
+
+                    <button
+                        class="remove-channel"
+                        type="button"
+                        data-remove-channel
+                    >
+                        Remove
+                    </button>
+                </div>
+
+                <div class="form-grid">
+                    <label class="form-field">
+                        <span>Channel name</span>
+                        <input
+                            data-field="name"
+                            type="text"
+                            maxlength="32"
+                            placeholder="Example: TEST RPT"
+                            required
+                        >
+                    </label>
+
+                    <label class="form-field">
+                        <span>Mode</span>
+                        <select data-field="mode">
+                            <option value="FM">FM</option>
+                            <option value="NFM">NFM</option>
+                            <option value="AM">AM</option>
+                        </select>
+                    </label>
+
+                    <label class="form-field">
+                        <span>Receive frequency (MHz)</span>
+                        <input
+                            data-field="receive_frequency_mhz"
+                            type="number"
+                            min="0.000001"
+                            step="0.000001"
+                            placeholder="146.940000"
+                            required
+                        >
+                    </label>
+
+                    <label class="form-field">
+                        <span>Transmit frequency (MHz)</span>
+                        <input
+                            data-field="transmit_frequency_mhz"
+                            type="number"
+                            min="0.000001"
+                            step="0.000001"
+                            placeholder="146.340000"
+                        >
+                    </label>
+
+                    <label class="form-field">
+                        <span>Power (watts)</span>
+                        <input
+                            data-field="power_watts"
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            value="5.0"
+                            required
+                        >
+                    </label>
+
+                    <label class="form-field form-field-wide">
+                        <span>Comment</span>
+                        <input
+                            data-field="comment"
+                            type="text"
+                            maxlength="120"
+                            placeholder="Optional description"
+                        >
+                    </label>
+
+                    <label class="checkbox-field form-field-wide">
+                        <input
+                            data-field="receive_only"
+                            type="checkbox"
+                        >
+                        <span>
+                            Receive only — disable transmitting on this channel
+                        </span>
+                    </label>
+                </div>
+            </article>
+        </template>
+    </main>
 </body>
 </html>

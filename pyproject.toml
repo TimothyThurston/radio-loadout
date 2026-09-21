@@ -27,6 +27,7 @@ where = ["src"]
 [tool.setuptools.package-data]
 radio_loadout = [
     "web/static/*.css",
+    "web/static/*.js",
     "web/templates/*.html",
 ]
 

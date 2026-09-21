@@ -1,0 +1,95 @@
+const form = document.querySelector("#channel-form");
+const channelList = document.querySelector("#channel-list");
+const channelTemplate = document.querySelector("#channel-template");
+const addChannelButton = document.querySelector("#add-channel");
+const channelsJsonInput = document.querySelector("#channels-json");
+
+function getChannelCards() {
+    return [...channelList.querySelectorAll("[data-channel-card]")];
+}
+
+function updateChannelNumbers() {
+    const cards = getChannelCards();
+
+    cards.forEach((card, index) => {
+        card.querySelector("[data-channel-number]").textContent =
+            `Channel ${index + 1}`;
+
+        const removeButton = card.querySelector("[data-remove-channel]");
+        removeButton.disabled = cards.length === 1;
+    });
+}
+
+function updateTransmitField(card) {
+    const receiveOnlyInput = card.querySelector(
+        '[data-field="receive_only"]'
+    );
+    const transmitInput = card.querySelector(
+        '[data-field="transmit_frequency_mhz"]'
+    );
+
+    transmitInput.disabled = receiveOnlyInput.checked;
+
+    if (receiveOnlyInput.checked) {
+        transmitInput.value = "";
+    }
+}
+
+function addChannel() {
+    const newChannel = channelTemplate.content.cloneNode(true);
+    channelList.appendChild(newChannel);
+
+    const newCard = getChannelCards().at(-1);
+    updateTransmitField(newCard);
+    updateChannelNumbers();
+}
+
+addChannelButton.addEventListener("click", addChannel);
+
+channelList.addEventListener("click", (event) => {
+    const removeButton = event.target.closest("[data-remove-channel]");
+
+    if (!removeButton || getChannelCards().length === 1) {
+        return;
+    }
+
+    removeButton.closest("[data-channel-card]").remove();
+    updateChannelNumbers();
+});
+
+channelList.addEventListener("change", (event) => {
+    if (event.target.matches('[data-field="receive_only"]')) {
+        updateTransmitField(event.target.closest("[data-channel-card]"));
+    }
+});
+
+form.addEventListener("submit", () => {
+    const channels = getChannelCards().map((card) => {
+        const transmitValue = card.querySelector(
+            '[data-field="transmit_frequency_mhz"]'
+        ).value;
+
+        return {
+            name: card.querySelector('[data-field="name"]').value,
+            receive_frequency_mhz: Number(
+                card.querySelector(
+                    '[data-field="receive_frequency_mhz"]'
+                ).value
+            ),
+            transmit_frequency_mhz:
+                transmitValue === "" ? null : Number(transmitValue),
+            mode: card.querySelector('[data-field="mode"]').value,
+            power_watts: Number(
+                card.querySelector('[data-field="power_watts"]').value
+            ),
+            receive_only: card.querySelector(
+                '[data-field="receive_only"]'
+            ).checked,
+            comment: card.querySelector('[data-field="comment"]').value,
+        };
+    });
+
+    channelsJsonInput.value = JSON.stringify(channels);
+});
+
+addChannel();
