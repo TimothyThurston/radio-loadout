@@ -1,8 +1,8 @@
-# Channel Loadout
+# Radio Loadout
 
 > Build your channels once. Load them anywhere.
 
-Channel Loadout is an open-source, browser-first radio channel planning and configuration export project. Its long-term goal is to let radio users build one clean, validated channel plan and convert it into files that can be imported into CHIRP, DMR codeplug tools, and manufacturer-specific programming software.
+Radio Loadout is an open-source, browser-first radio channel planning and configuration export project. Its long-term goal is to let radio users build one clean, validated channel plan and convert it into files that can be imported into CHIRP, DMR codeplug tools, and manufacturer-specific programming software.
 
 The project is currently in early development. The data model and first CHIRP exporter are being built before the full website interface.
 
@@ -10,7 +10,7 @@ The project is currently in early development. The data model and first CHIRP ex
 
 Radio programming is fragmented. Different radios and programming applications expect different fields, file formats, naming limits, tone settings, and channel structures. A channel list that works in one program often has to be rebuilt manually for another.
 
-Channel Loadout is intended to separate the **channel plan** from the **radio-specific export format**:
+Radio Loadout is intended to separate the **channel plan** from the **radio-specific export format**:
 
 1. Create or import a channel plan once.
 2. Validate frequencies, names, modes, tones, and transmit settings.
@@ -22,7 +22,7 @@ The website will generate files locally for the user to download. It is not inte
 
 ## Current status
 
-Channel Loadout is a work in progress and is not yet a finished end-user application.
+Radio Loadout is a work in progress and is not yet a finished end-user application.
 
 ### Implemented
 
@@ -102,7 +102,7 @@ Future data features may include:
 - Clear separation between verified source data and user-created channels
 - Local caching so a temporary source outage does not destroy an existing loadout
 
-Generated files should remain reviewable before import. Channel Loadout will not assume that every listed frequency is legal to transmit on with every radio, license, service, or location.
+Generated files should remain reviewable before import. Radio Loadout will not assume that every listed frequency is legal to transmit on with every radio, license, service, or location.
 
 ## Project structure
 
@@ -162,7 +162,7 @@ As the project grows, target-specific logic should remain isolated in exporters 
 
 ## Safety and legal notice
 
-Channel Loadout is a planning and file-generation tool. It does not grant authorization to transmit. Users are responsible for following applicable licensing rules, band plans, service restrictions, equipment-certification requirements, and local regulations.
+Radio Loadout is a planning and file-generation tool. It does not grant authorization to transmit. Users are responsible for following applicable licensing rules, band plans, service restrictions, equipment-certification requirements, and local regulations.
 
 Always review generated files before importing them into programming software or writing them to a radio. During early development, test with backups and known-good configurations.
 
@@ -180,4 +180,4 @@ Please avoid submitting undocumented proprietary formats or sensitive personal c
 
 ## Project name
 
-The product name is **Channel Loadout**. The repository may still appear as `radio-loadout` while the project is being renamed and reorganized.
+The product name is **Radio Loadout**, matching the `radio-loadout` repository name.
