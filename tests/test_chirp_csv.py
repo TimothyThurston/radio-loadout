@@ -74,6 +74,7 @@ def test_receive_only_channel_export() -> None:
     assert row["Duplex"] == "off"
     assert row["Offset"] == "0.000000"
     assert row["Mode"] == "NFM"
+    assert row["Power"] == "5.0W"
 
 
 def test_matching_ctcss_tones_use_tsql() -> None:

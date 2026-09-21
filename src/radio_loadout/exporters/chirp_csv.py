@@ -60,9 +60,11 @@ def _channel_to_row(location: int, channel: Channel) -> list[str]:
         _tone_fields(settings)
     )
 
-    power = ""
-    if settings.power_watts is not None:
-        power = _format_power(settings.power_watts)
+    power_watts = settings.power_watts
+    if power_watts is None:
+        power_watts = 5.0
+
+    power = _format_power(power_watts)
 
     return [
         str(location),
