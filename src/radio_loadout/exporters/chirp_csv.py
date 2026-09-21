@@ -12,7 +12,6 @@ from radio_loadout.models import (
     ToneMode,
 )
 
-
 CHIRP_HEADERS = [
     "Location",
     "Name",
