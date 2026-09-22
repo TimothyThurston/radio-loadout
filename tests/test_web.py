@@ -37,6 +37,8 @@ def test_custom_chirp_download() -> None:
             "mode": "FM",
             "power_watts": 5.0,
             "receive_only": False,
+            "tone_mode": "tone",
+            "tone_frequency_hz": 100.0,
             "comment": "Test repeater",
         },
         {
@@ -46,6 +48,8 @@ def test_custom_chirp_download() -> None:
             "mode": "NFM",
             "power_watts": 5.0,
             "receive_only": True,
+            "tone_mode": "none",
+            "tone_frequency_hz": None,
             "comment": "Receive-only weather radio",
         },
     ]
@@ -70,6 +74,8 @@ def test_custom_chirp_download() -> None:
     assert rows[0]["Duplex"] == "-"
     assert rows[0]["Offset"] == "0.600000"
     assert rows[0]["Mode"] == "FM"
+    assert rows[0]["Tone"] == "Tone"
+    assert rows[0]["rToneFreq"] == "100.0"
 
     assert rows[1]["Name"] == "NOAA 7"
     assert rows[1]["Frequency"] == "162.550000"

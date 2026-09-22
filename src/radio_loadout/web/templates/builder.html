@@ -141,6 +141,34 @@
                         >
                     </label>
 
+                    <label class="form-field">
+                        <span>Tone mode</span>
+                        <select data-field="tone_mode">
+                            <option value="none">
+                                No tone
+                            </option>
+                            <option value="tone">
+                                Transmit tone
+                            </option>
+                            <option value="tsql">
+                                Tone squelch
+                            </option>
+                        </select>
+                    </label>
+
+                    <label class="form-field">
+                        <span>CTCSS frequency (Hz)</span>
+                        <input
+                            data-field="tone_frequency_hz"
+                            type="number"
+                            min="50.0"
+                            max="300.0"
+                            step="0.1"
+                            placeholder="Example: 100.0"
+                            disabled
+                        >
+                    </label>
+
                     <label class="form-field form-field-wide">
                         <span>Comment</span>
                         <input
@@ -157,7 +185,8 @@
                             type="checkbox"
                         >
                         <span>
-                            Receive only — disable transmitting on this channel
+                            Receive only — disable transmitting on
+                            this channel
                         </span>
                     </label>
                 </div>

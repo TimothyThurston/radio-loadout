@@ -1,15 +1,27 @@
 """Radio Loadout web application."""
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import FastAPI, Form, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError
+from pydantic import (
+    BaseModel,
+    Field,
+    TypeAdapter,
+    ValidationError,
+    model_validator,
+)
 
 from radio_loadout.exporters.chirp_csv import export_chirp_csv
-from radio_loadout.models import AnalogSettings, Channel, ChannelMode
+from radio_loadout.models import (
+    AnalogSettings,
+    Channel,
+    ChannelMode,
+    Tone,
+    ToneMode,
+)
 
 WEB_DIRECTORY = Path(__file__).resolve().parent
 
@@ -33,7 +45,25 @@ class ChannelFormData(BaseModel):
     mode: ChannelMode = ChannelMode.FM
     power_watts: float = Field(default=5.0, gt=0)
     receive_only: bool = False
+    tone_mode: Literal["none", "tone", "tsql"] = "none"
+    tone_frequency_hz: float | None = Field(
+        default=None,
+        ge=50.0,
+        le=300.0,
+    )
     comment: str = Field(default="", max_length=120)
+
+    @model_validator(mode="after")
+    def validate_tone(self) -> "ChannelFormData":
+        if (
+            self.tone_mode != "none"
+            and self.tone_frequency_hz is None
+        ):
+            raise ValueError(
+                "A CTCSS frequency is required when tones are enabled."
+            )
+
+        return self
 
 
 CHANNEL_FORM_LIST = TypeAdapter(list[ChannelFormData])
@@ -57,13 +87,30 @@ def _build_channel(form_data: ChannelFormData) -> Channel:
             form_data.transmit_frequency_mhz
         )
 
+    transmit_tone = Tone()
+    receive_tone = Tone()
+
+    if form_data.tone_mode in {"tone", "tsql"}:
+        transmit_tone = Tone(
+            mode=ToneMode.CTCSS,
+            value=form_data.tone_frequency_hz,
+        )
+
+    if form_data.tone_mode == "tsql":
+        receive_tone = Tone(
+            mode=ToneMode.CTCSS,
+            value=form_data.tone_frequency_hz,
+        )
+
     return Channel(
         name=form_data.name.strip(),
         receive_frequency_hz=receive_frequency_hz,
         transmit_frequency_hz=transmit_frequency_hz,
         mode=form_data.mode,
         analog_settings=AnalogSettings(
-            power_watts=form_data.power_watts
+            transmit_tone=transmit_tone,
+            receive_tone=receive_tone,
+            power_watts=form_data.power_watts,
         ),
         comment=form_data.comment.strip(),
     )

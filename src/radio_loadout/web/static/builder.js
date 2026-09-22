@@ -15,7 +15,9 @@ function updateChannelNumbers() {
         card.querySelector("[data-channel-number]").textContent =
             `Channel ${index + 1}`;
 
-        const removeButton = card.querySelector("[data-remove-channel]");
+        const removeButton = card.querySelector(
+            "[data-remove-channel]"
+        );
         removeButton.disabled = cards.length === 1;
     });
 }
@@ -35,19 +37,41 @@ function updateTransmitField(card) {
     }
 }
 
+function updateToneField(card) {
+    const toneModeInput = card.querySelector(
+        '[data-field="tone_mode"]'
+    );
+    const toneFrequencyInput = card.querySelector(
+        '[data-field="tone_frequency_hz"]'
+    );
+
+    const toneEnabled = toneModeInput.value !== "none";
+
+    toneFrequencyInput.disabled = !toneEnabled;
+    toneFrequencyInput.required = toneEnabled;
+
+    if (!toneEnabled) {
+        toneFrequencyInput.value = "";
+    }
+}
+
 function addChannel() {
     const newChannel = channelTemplate.content.cloneNode(true);
     channelList.appendChild(newChannel);
 
     const newCard = getChannelCards().at(-1);
+
     updateTransmitField(newCard);
+    updateToneField(newCard);
     updateChannelNumbers();
 }
 
 addChannelButton.addEventListener("click", addChannel);
 
 channelList.addEventListener("click", (event) => {
-    const removeButton = event.target.closest("[data-remove-channel]");
+    const removeButton = event.target.closest(
+        "[data-remove-channel]"
+    );
 
     if (!removeButton || getChannelCards().length === 1) {
         return;
@@ -58,8 +82,14 @@ channelList.addEventListener("click", (event) => {
 });
 
 channelList.addEventListener("change", (event) => {
+    const card = event.target.closest("[data-channel-card]");
+
     if (event.target.matches('[data-field="receive_only"]')) {
-        updateTransmitField(event.target.closest("[data-channel-card]"));
+        updateTransmitField(card);
+    }
+
+    if (event.target.matches('[data-field="tone_mode"]')) {
+        updateToneField(card);
     }
 });
 
@@ -67,6 +97,10 @@ form.addEventListener("submit", () => {
     const channels = getChannelCards().map((card) => {
         const transmitValue = card.querySelector(
             '[data-field="transmit_frequency_mhz"]'
+        ).value;
+
+        const toneFrequencyValue = card.querySelector(
+            '[data-field="tone_frequency_hz"]'
         ).value;
 
         return {
@@ -77,7 +111,9 @@ form.addEventListener("submit", () => {
                 ).value
             ),
             transmit_frequency_mhz:
-                transmitValue === "" ? null : Number(transmitValue),
+                transmitValue === ""
+                    ? null
+                    : Number(transmitValue),
             mode: card.querySelector('[data-field="mode"]').value,
             power_watts: Number(
                 card.querySelector('[data-field="power_watts"]').value
@@ -85,7 +121,16 @@ form.addEventListener("submit", () => {
             receive_only: card.querySelector(
                 '[data-field="receive_only"]'
             ).checked,
-            comment: card.querySelector('[data-field="comment"]').value,
+            tone_mode: card.querySelector(
+                '[data-field="tone_mode"]'
+            ).value,
+            tone_frequency_hz:
+                toneFrequencyValue === ""
+                    ? null
+                    : Number(toneFrequencyValue),
+            comment: card.querySelector(
+                '[data-field="comment"]'
+            ).value,
         };
     });
 
