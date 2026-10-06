@@ -21,6 +21,7 @@ from radio_loadout.models import (
     ChannelMode,
     Tone,
     ToneMode,
+    TonePolarity,
 )
 
 WEB_DIRECTORY = Path(__file__).resolve().parent
@@ -33,7 +34,9 @@ app.mount(
     name="static",
 )
 
-templates = Jinja2Templates(directory=WEB_DIRECTORY / "templates")
+templates = Jinja2Templates(
+    directory=WEB_DIRECTORY / "templates"
+)
 
 
 STANDARD_DCS_CODES = frozenset(
@@ -170,6 +173,12 @@ class ChannelFormData(BaseModel):
         le=300.0,
     )
     dcs_code: int | None = None
+    dcs_polarity: Literal[
+        "NN",
+        "NR",
+        "RN",
+        "RR",
+    ] = "NN"
     comment: str = Field(default="", max_length=120)
 
     @model_validator(mode="after")
@@ -179,29 +188,37 @@ class ChannelFormData(BaseModel):
             and self.tone_frequency_hz is None
         ):
             raise ValueError(
-                "A CTCSS frequency is required when CTCSS is enabled."
+                "A CTCSS frequency is required "
+                "when CTCSS is enabled."
             )
 
         if self.tone_mode == "dtcs":
             if self.dcs_code is None:
                 raise ValueError(
-                    "A DCS code is required when DCS is enabled."
+                    "A DCS code is required "
+                    "when DCS is enabled."
                 )
 
             if self.dcs_code not in STANDARD_DCS_CODES:
-                raise ValueError("The selected DCS code is invalid.")
+                raise ValueError(
+                    "The selected DCS code is invalid."
+                )
 
         return self
 
 
-CHANNEL_FORM_LIST = TypeAdapter(list[ChannelFormData])
+CHANNEL_FORM_LIST = TypeAdapter(
+    list[ChannelFormData]
+)
 
 
 def _mhz_to_hz(frequency_mhz: float) -> int:
     return round(frequency_mhz * 1_000_000)
 
 
-def _build_channel(form_data: ChannelFormData) -> Channel:
+def _build_channel(
+    form_data: ChannelFormData,
+) -> Channel:
     receive_frequency_hz = _mhz_to_hz(
         form_data.receive_frequency_mhz
     )
@@ -236,10 +253,16 @@ def _build_channel(form_data: ChannelFormData) -> Channel:
         transmit_tone = Tone(
             mode=ToneMode.DCS,
             value=form_data.dcs_code,
+            polarity=TonePolarity(
+                form_data.dcs_polarity[0]
+            ),
         )
         receive_tone = Tone(
             mode=ToneMode.DCS,
             value=form_data.dcs_code,
+            polarity=TonePolarity(
+                form_data.dcs_polarity[1]
+            ),
         )
 
     return Channel(
@@ -257,7 +280,9 @@ def _build_channel(form_data: ChannelFormData) -> Channel:
 
 
 def _sample_channels() -> list[Channel]:
-    handheld_power = AnalogSettings(power_watts=5.0)
+    handheld_power = AnalogSettings(
+        power_watts=5.0
+    )
 
     return [
         Channel(
@@ -266,7 +291,9 @@ def _sample_channels() -> list[Channel]:
             transmit_frequency_hz=146_520_000,
             mode=ChannelMode.FM,
             analog_settings=handheld_power,
-            comment="Two-meter national calling frequency",
+            comment=(
+                "Two-meter national calling frequency"
+            ),
         ),
         Channel(
             name="1.25 CALL",
@@ -274,7 +301,9 @@ def _sample_channels() -> list[Channel]:
             transmit_frequency_hz=223_500_000,
             mode=ChannelMode.FM,
             analog_settings=handheld_power,
-            comment="1.25-meter national calling frequency",
+            comment=(
+                "1.25-meter national calling frequency"
+            ),
         ),
         Channel(
             name="70CM CALL",
@@ -282,7 +311,9 @@ def _sample_channels() -> list[Channel]:
             transmit_frequency_hz=446_000_000,
             mode=ChannelMode.FM,
             analog_settings=handheld_power,
-            comment="70-centimeter national calling frequency",
+            comment=(
+                "70-centimeter national calling frequency"
+            ),
         ),
         Channel(
             name="NOAA 7",
@@ -315,13 +346,17 @@ def download_custom_chirp(
     channels_json: Annotated[str, Form()],
 ) -> Response:
     try:
-        form_channels = CHANNEL_FORM_LIST.validate_json(
-            channels_json
+        form_channels = (
+            CHANNEL_FORM_LIST.validate_json(
+                channels_json
+            )
         )
     except ValidationError as error:
         raise HTTPException(
             status_code=422,
-            detail="The submitted channel data is invalid.",
+            detail=(
+                "The submitted channel data is invalid."
+            ),
         ) from error
 
     if not form_channels:
@@ -342,7 +377,8 @@ def download_custom_chirp(
         media_type="text/csv",
         headers={
             "Content-Disposition": (
-                'attachment; filename="radio_loadout_custom.csv"'
+                "attachment; "
+                'filename="radio_loadout_custom.csv"'
             )
         },
     )
@@ -350,14 +386,17 @@ def download_custom_chirp(
 
 @app.get("/downloads/chirp-sample.csv")
 def download_chirp_sample() -> Response:
-    csv_text = export_chirp_csv(_sample_channels())
+    csv_text = export_chirp_csv(
+        _sample_channels()
+    )
 
     return Response(
         content=csv_text,
         media_type="text/csv",
         headers={
             "Content-Disposition": (
-                'attachment; filename="radio_loadout_sample.csv"'
+                "attachment; "
+                'filename="radio_loadout_sample.csv"'
             )
         },
     )

@@ -13,7 +13,9 @@ def test_home() -> None:
     response = client.get("/")
 
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/html")
+    assert response.headers["content-type"].startswith(
+        "text/html"
+    )
     assert "Radio Loadout" in response.text
 
 
@@ -21,17 +23,24 @@ def test_builder_page() -> None:
     response = client.get("/builder")
 
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/html")
+    assert response.headers["content-type"].startswith(
+        "text/html"
+    )
     assert "Build your radio loadout" in response.text
     assert 'id="channel-form"' in response.text
     assert "DCS / DTCS" in response.text
+    assert "DCS polarity" in response.text
 
 
 def test_chirp_sample_download() -> None:
-    response = client.get("/downloads/chirp-sample.csv")
+    response = client.get(
+        "/downloads/chirp-sample.csv"
+    )
 
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/csv")
+    assert response.headers["content-type"].startswith(
+        "text/csv"
+    )
     assert response.headers["content-disposition"] == (
         'attachment; filename="radio_loadout_sample.csv"'
     )
@@ -51,6 +60,7 @@ def test_custom_chirp_download() -> None:
             "tone_mode": "tone",
             "tone_frequency_hz": 100.0,
             "dcs_code": None,
+            "dcs_polarity": "NN",
             "comment": "Test repeater",
         },
         {
@@ -63,17 +73,22 @@ def test_custom_chirp_download() -> None:
             "tone_mode": "none",
             "tone_frequency_hz": None,
             "dcs_code": None,
+            "dcs_polarity": "NN",
             "comment": "Weather radio",
         },
     ]
 
     response = client.post(
         "/downloads/chirp.csv",
-        data={"channels_json": json.dumps(channels)},
+        data={
+            "channels_json": json.dumps(channels)
+        },
     )
 
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/csv")
+    assert response.headers["content-type"].startswith(
+        "text/csv"
+    )
     assert response.headers["content-disposition"] == (
         'attachment; filename="radio_loadout_custom.csv"'
     )
@@ -103,7 +118,7 @@ def test_custom_chirp_download() -> None:
 def test_custom_dcs_chirp_download() -> None:
     channels = [
         {
-            "name": "DCS TEST",
+            "name": "DCS POL TEST",
             "receive_frequency_mhz": 146.94,
             "transmit_frequency_mhz": 146.94,
             "mode": "FM",
@@ -112,13 +127,16 @@ def test_custom_dcs_chirp_download() -> None:
             "tone_mode": "dtcs",
             "tone_frequency_hz": None,
             "dcs_code": 23,
-            "comment": "Radio Loadout DCS test",
+            "dcs_polarity": "NR",
+            "comment": "DCS polarity test",
         }
     ]
 
     response = client.post(
         "/downloads/chirp.csv",
-        data={"channels_json": json.dumps(channels)},
+        data={
+            "channels_json": json.dumps(channels)
+        },
     )
 
     assert response.status_code == 200
@@ -130,9 +148,9 @@ def test_custom_dcs_chirp_download() -> None:
     )
 
     assert len(rows) == 1
-    assert rows[0]["Name"] == "DCS TEST"
+    assert rows[0]["Name"] == "DCS POL TEST"
     assert rows[0]["Frequency"] == "146.940000"
     assert rows[0]["Tone"] == "DTCS"
     assert int(rows[0]["DtcsCode"]) == 23
     assert int(rows[0]["RxDtcsCode"]) == 23
-    assert rows[0]["DtcsPolarity"] == "NN"
+    assert rows[0]["DtcsPolarity"] == "NR"

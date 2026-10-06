@@ -30,6 +30,7 @@
     <main>
         <section class="builder-heading">
             <p class="eyebrow">Multi-channel builder</p>
+
             <h1>Build your radio loadout.</h1>
 
             <p class="hero-description">
@@ -51,7 +52,10 @@
                 type="hidden"
             >
 
-            <div id="channel-list" class="channel-list"></div>
+            <div
+                id="channel-list"
+                class="channel-list"
+            ></div>
 
             <div class="builder-actions">
                 <button
@@ -77,7 +81,9 @@
                 data-channel-card
             >
                 <div class="channel-card-header">
-                    <h2 data-channel-number>Channel</h2>
+                    <h2 data-channel-number>
+                        Channel
+                    </h2>
 
                     <button
                         class="remove-channel"
@@ -91,6 +97,7 @@
                 <div class="form-grid">
                     <label class="form-field">
                         <span>Channel name</span>
+
                         <input
                             data-field="name"
                             type="text"
@@ -102,6 +109,7 @@
 
                     <label class="form-field">
                         <span>Mode</span>
+
                         <select data-field="mode">
                             <option value="FM">FM</option>
                             <option value="NFM">NFM</option>
@@ -111,6 +119,7 @@
 
                     <label class="form-field">
                         <span>Receive frequency (MHz)</span>
+
                         <input
                             data-field="receive_frequency_mhz"
                             type="number"
@@ -123,6 +132,7 @@
 
                     <label class="form-field">
                         <span>Transmit frequency (MHz)</span>
+
                         <input
                             data-field="transmit_frequency_mhz"
                             type="number"
@@ -134,6 +144,7 @@
 
                     <label class="form-field">
                         <span>Power (watts)</span>
+
                         <input
                             data-field="power_watts"
                             type="number"
@@ -146,16 +157,20 @@
 
                     <label class="form-field">
                         <span>Tone mode</span>
+
                         <select data-field="tone_mode">
                             <option value="none">
                                 No tone
                             </option>
+
                             <option value="tone">
                                 Transmit CTCSS tone
                             </option>
+
                             <option value="tsql">
                                 CTCSS tone squelch
                             </option>
+
                             <option value="dtcs">
                                 DCS / DTCS
                             </option>
@@ -167,6 +182,7 @@
                         data-ctcss-field
                     >
                         <span>CTCSS frequency (Hz)</span>
+
                         <select
                             data-field="tone_frequency_hz"
                             disabled
@@ -233,6 +249,7 @@
                         hidden
                     >
                         <span>DCS code</span>
+
                         <select
                             data-field="dcs_code"
                             disabled
@@ -347,8 +364,40 @@
                         </select>
                     </label>
 
-                    <label class="form-field form-field-wide">
+                    <label
+                        class="form-field"
+                        data-dcs-field
+                        hidden
+                    >
+                        <span>DCS polarity</span>
+
+                        <select
+                            data-field="dcs_polarity"
+                            disabled
+                        >
+                            <option value="NN">
+                                Normal TX / Normal RX — NN
+                            </option>
+
+                            <option value="NR">
+                                Normal TX / Reverse RX — NR
+                            </option>
+
+                            <option value="RN">
+                                Reverse TX / Normal RX — RN
+                            </option>
+
+                            <option value="RR">
+                                Reverse TX / Reverse RX — RR
+                            </option>
+                        </select>
+                    </label>
+
+                    <label
+                        class="form-field form-field-wide"
+                    >
                         <span>Comment</span>
+
                         <input
                             data-field="comment"
                             type="text"
@@ -364,6 +413,7 @@
                             data-field="receive_only"
                             type="checkbox"
                         >
+
                         <span>
                             Receive only — disable transmitting
                             on this channel
