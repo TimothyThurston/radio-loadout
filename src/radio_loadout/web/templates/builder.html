@@ -8,7 +8,7 @@
     >
     <meta
         name="description"
-        content="Build a custom multi-channel radio loadout and export it for CHIRP."
+        content="Build a custom radio loadout and export it for CHIRP."
     >
 
     <title>Channel Builder | Radio Loadout</title>
@@ -30,11 +30,10 @@
     <main>
         <section class="builder-heading">
             <p class="eyebrow">Multi-channel builder</p>
-
             <h1>Build your radio loadout.</h1>
 
             <p class="hero-description">
-                Add as many channels as you need, arrange their radio
+                Add as many channels as you need, configure their radio
                 settings, and export the complete loadout as one
                 CHIRP-compatible CSV file.
             </p>
@@ -52,10 +51,7 @@
                 type="hidden"
             >
 
-            <div
-                id="channel-list"
-                class="channel-list"
-            ></div>
+            <div id="channel-list" class="channel-list"></div>
 
             <div class="builder-actions">
                 <button
@@ -76,14 +72,9 @@
         </form>
 
         <template id="channel-template">
-            <article
-                class="channel-card"
-                data-channel-card
-            >
+            <article class="channel-card" data-channel-card>
                 <div class="channel-card-header">
-                    <h2 data-channel-number>
-                        Channel
-                    </h2>
+                    <h2 data-channel-number>Channel</h2>
 
                     <button
                         class="remove-channel"
@@ -97,7 +88,6 @@
                 <div class="form-grid">
                     <label class="form-field">
                         <span>Channel name</span>
-
                         <input
                             data-field="name"
                             type="text"
@@ -109,7 +99,6 @@
 
                     <label class="form-field">
                         <span>Mode</span>
-
                         <select data-field="mode">
                             <option value="FM">FM</option>
                             <option value="NFM">NFM</option>
@@ -119,7 +108,6 @@
 
                     <label class="form-field">
                         <span>Receive frequency (MHz)</span>
-
                         <input
                             data-field="receive_frequency_mhz"
                             type="number"
@@ -132,7 +120,6 @@
 
                     <label class="form-field">
                         <span>Transmit frequency (MHz)</span>
-
                         <input
                             data-field="transmit_frequency_mhz"
                             type="number"
@@ -144,7 +131,6 @@
 
                     <label class="form-field">
                         <span>Power (watts)</span>
-
                         <input
                             data-field="power_watts"
                             type="number"
@@ -156,271 +142,260 @@
                     </label>
 
                     <label class="form-field">
-                        <span>Tone configuration</span>
+                        <span>Tuning step (kHz)</span>
+                        <select data-field="tuning_step_khz">
+                            <option value="1">1.00</option>
+                            <option value="2.5">2.50</option>
+                            <option value="5" selected>5.00</option>
+                            <option value="6.25">6.25</option>
+                            <option value="9">9.00</option>
+                            <option value="10">10.00</option>
+                            <option value="12.5">12.50</option>
+                            <option value="15">15.00</option>
+                            <option value="20">20.00</option>
+                            <option value="25">25.00</option>
+                            <option value="30">30.00</option>
+                            <option value="50">50.00</option>
+                            <option value="100">100.00</option>
+                            <option value="125">125.00</option>
+                            <option value="200">200.00</option>
+                        </select>
+                    </label>
 
+                    <label class="form-field">
+                        <span>Scan behavior</span>
+                        <select data-field="scan_behavior">
+                            <option value="">
+                                Normal scan
+                            </option>
+                            <option value="S">
+                                Skip during scan
+                            </option>
+                            <option value="P">
+                                Priority scan
+                            </option>
+                        </select>
+                    </label>
+
+                    <label class="form-field">
+                        <span>Tone configuration</span>
                         <select data-field="tone_mode">
                             <option value="none">
                                 No tone
                             </option>
-
                             <option value="tone">
                                 Transmit CTCSS tone
                             </option>
-
                             <option value="tsql">
                                 CTCSS tone squelch
                             </option>
-
                             <option value="dtcs">
                                 Matched DCS / DTCS
                             </option>
-
                             <option value="cross">
                                 Advanced / Cross tone
                             </option>
                         </select>
                     </label>
 
-                    <label
+                    <div
                         class="form-field"
-                        data-simple-ctcss-field
+                        data-quick-ctcss-settings
                         hidden
                     >
-                        <span>CTCSS frequency (Hz)</span>
+                        <label>
+                            <span>CTCSS frequency (Hz)</span>
+                            <select
+                                data-field="tone_frequency_hz"
+                                data-ctcss-select
+                            ></select>
+                        </label>
+                    </div>
 
-                        <select
-                            data-field="tone_frequency_hz"
-                            data-ctcss-select
-                            disabled
-                        >
-                            <option value="">
-                                Select a CTCSS tone
-                            </option>
-                        </select>
-                    </label>
-
-                    <label
+                    <div
                         class="form-field"
-                        data-simple-dcs-field
+                        data-quick-dcs-settings
                         hidden
                     >
-                        <span>DCS code</span>
+                        <label>
+                            <span>DCS code</span>
+                            <select
+                                data-field="dcs_code"
+                                data-dcs-select
+                            ></select>
+                        </label>
+                    </div>
 
-                        <select
-                            data-field="dcs_code"
-                            data-dcs-select
-                            disabled
-                        >
-                            <option value="">
-                                Select a DCS code
-                            </option>
-                        </select>
-                    </label>
-
-                    <label
+                    <div
                         class="form-field"
-                        data-simple-dcs-field
+                        data-quick-dcs-settings
                         hidden
                     >
-                        <span>DCS polarity</span>
+                        <label>
+                            <span>DCS polarity</span>
+                            <select data-field="dcs_polarity">
+                                <option value="NN">
+                                    Normal / Normal
+                                </option>
+                                <option value="NR">
+                                    Normal / Reverse
+                                </option>
+                                <option value="RN">
+                                    Reverse / Normal
+                                </option>
+                                <option value="RR">
+                                    Reverse / Reverse
+                                </option>
+                            </select>
+                        </label>
+                    </div>
 
-                        <select
-                            data-field="dcs_polarity"
-                            disabled
-                        >
-                            <option value="NN">
-                                Normal TX / Normal RX — NN
-                            </option>
-
-                            <option value="NR">
-                                Normal TX / Reverse RX — NR
-                            </option>
-
-                            <option value="RN">
-                                Reverse TX / Normal RX — RN
-                            </option>
-
-                            <option value="RR">
-                                Reverse TX / Reverse RX — RR
-                            </option>
-                        </select>
-                    </label>
-
-                    <label
-                        class="form-field"
-                        data-advanced-tone-field
+                    <fieldset
+                        class="advanced-tone-settings form-field-wide"
+                        data-cross-tone-settings
                         hidden
                     >
-                        <span>Transmit tone type</span>
+                        <legend>Advanced tone controls</legend>
 
-                        <select
-                            data-field="transmit_tone_mode"
-                            disabled
-                        >
-                            <option value="none">
-                                No transmit tone
-                            </option>
+                        <div class="form-grid">
+                            <label class="form-field">
+                                <span>Transmit tone type</span>
+                                <select
+                                    data-field="transmit_tone_mode"
+                                >
+                                    <option value="none">
+                                        No transmit tone
+                                    </option>
+                                    <option value="ctcss">
+                                        CTCSS
+                                    </option>
+                                    <option value="dcs">
+                                        DCS / DTCS
+                                    </option>
+                                </select>
+                            </label>
 
-                            <option value="ctcss">
-                                CTCSS
-                            </option>
+                            <label class="form-field">
+                                <span>Receive tone type</span>
+                                <select
+                                    data-field="receive_tone_mode"
+                                >
+                                    <option value="none">
+                                        No receive tone
+                                    </option>
+                                    <option value="ctcss">
+                                        CTCSS
+                                    </option>
+                                    <option value="dcs">
+                                        DCS / DTCS
+                                    </option>
+                                </select>
+                            </label>
 
-                            <option value="dcs">
-                                DCS / DTCS
-                            </option>
-                        </select>
-                    </label>
+                            <div
+                                class="form-field"
+                                data-transmit-ctcss-settings
+                                hidden
+                            >
+                                <label>
+                                    <span>
+                                        Transmit CTCSS frequency
+                                    </span>
+                                    <select
+                                        data-field="transmit_ctcss_frequency_hz"
+                                        data-ctcss-select
+                                    ></select>
+                                </label>
+                            </div>
 
-                    <label
-                        class="form-field"
-                        data-advanced-tone-field
-                        hidden
-                    >
-                        <span>Receive tone type</span>
+                            <div
+                                class="form-field"
+                                data-receive-ctcss-settings
+                                hidden
+                            >
+                                <label>
+                                    <span>
+                                        Receive CTCSS frequency
+                                    </span>
+                                    <select
+                                        data-field="receive_ctcss_frequency_hz"
+                                        data-ctcss-select
+                                    ></select>
+                                </label>
+                            </div>
 
-                        <select
-                            data-field="receive_tone_mode"
-                            disabled
-                        >
-                            <option value="none">
-                                No receive tone
-                            </option>
+                            <div
+                                class="form-field"
+                                data-transmit-dcs-settings
+                                hidden
+                            >
+                                <label>
+                                    <span>Transmit DCS code</span>
+                                    <select
+                                        data-field="transmit_dcs_code"
+                                        data-dcs-select
+                                    ></select>
+                                </label>
+                            </div>
 
-                            <option value="ctcss">
-                                CTCSS
-                            </option>
+                            <div
+                                class="form-field"
+                                data-transmit-dcs-settings
+                                hidden
+                            >
+                                <label>
+                                    <span>Transmit DCS polarity</span>
+                                    <select
+                                        data-field="transmit_dcs_polarity"
+                                    >
+                                        <option value="N">
+                                            Normal
+                                        </option>
+                                        <option value="R">
+                                            Reverse
+                                        </option>
+                                    </select>
+                                </label>
+                            </div>
 
-                            <option value="dcs">
-                                DCS / DTCS
-                            </option>
-                        </select>
-                    </label>
+                            <div
+                                class="form-field"
+                                data-receive-dcs-settings
+                                hidden
+                            >
+                                <label>
+                                    <span>Receive DCS code</span>
+                                    <select
+                                        data-field="receive_dcs_code"
+                                        data-dcs-select
+                                    ></select>
+                                </label>
+                            </div>
 
-                    <label
-                        class="form-field"
-                        data-advanced-tone-field
-                        data-transmit-ctcss-field
-                        hidden
-                    >
-                        <span>Transmit CTCSS frequency (Hz)</span>
+                            <div
+                                class="form-field"
+                                data-receive-dcs-settings
+                                hidden
+                            >
+                                <label>
+                                    <span>Receive DCS polarity</span>
+                                    <select
+                                        data-field="receive_dcs_polarity"
+                                    >
+                                        <option value="N">
+                                            Normal
+                                        </option>
+                                        <option value="R">
+                                            Reverse
+                                        </option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
 
-                        <select
-                            data-field="transmit_ctcss_frequency_hz"
-                            data-ctcss-select
-                            disabled
-                        >
-                            <option value="">
-                                Select a transmit CTCSS tone
-                            </option>
-                        </select>
-                    </label>
-
-                    <label
-                        class="form-field"
-                        data-advanced-tone-field
-                        data-receive-ctcss-field
-                        hidden
-                    >
-                        <span>Receive CTCSS frequency (Hz)</span>
-
-                        <select
-                            data-field="receive_ctcss_frequency_hz"
-                            data-ctcss-select
-                            disabled
-                        >
-                            <option value="">
-                                Select a receive CTCSS tone
-                            </option>
-                        </select>
-                    </label>
-
-                    <label
-                        class="form-field"
-                        data-advanced-tone-field
-                        data-transmit-dcs-field
-                        hidden
-                    >
-                        <span>Transmit DCS code</span>
-
-                        <select
-                            data-field="transmit_dcs_code"
-                            data-dcs-select
-                            disabled
-                        >
-                            <option value="">
-                                Select a transmit DCS code
-                            </option>
-                        </select>
-                    </label>
-
-                    <label
-                        class="form-field"
-                        data-advanced-tone-field
-                        data-transmit-dcs-field
-                        hidden
-                    >
-                        <span>Transmit DCS polarity</span>
-
-                        <select
-                            data-field="transmit_dcs_polarity"
-                            disabled
-                        >
-                            <option value="N">
-                                Normal
-                            </option>
-
-                            <option value="R">
-                                Reverse
-                            </option>
-                        </select>
-                    </label>
-
-                    <label
-                        class="form-field"
-                        data-advanced-tone-field
-                        data-receive-dcs-field
-                        hidden
-                    >
-                        <span>Receive DCS code</span>
-
-                        <select
-                            data-field="receive_dcs_code"
-                            data-dcs-select
-                            disabled
-                        >
-                            <option value="">
-                                Select a receive DCS code
-                            </option>
-                        </select>
-                    </label>
-
-                    <label
-                        class="form-field"
-                        data-advanced-tone-field
-                        data-receive-dcs-field
-                        hidden
-                    >
-                        <span>Receive DCS polarity</span>
-
-                        <select
-                            data-field="receive_dcs_polarity"
-                            disabled
-                        >
-                            <option value="N">
-                                Normal
-                            </option>
-
-                            <option value="R">
-                                Reverse
-                            </option>
-                        </select>
-                    </label>
-
-                    <label
-                        class="form-field form-field-wide"
-                    >
+                    <label class="form-field form-field-wide">
                         <span>Comment</span>
-
                         <input
                             data-field="comment"
                             type="text"
@@ -429,17 +404,14 @@
                         >
                     </label>
 
-                    <label
-                        class="checkbox-field form-field-wide"
-                    >
+                    <label class="checkbox-field form-field-wide">
                         <input
                             data-field="receive_only"
                             type="checkbox"
                         >
-
                         <span>
-                            Receive only — disable transmitting
-                            on this channel
+                            Receive only — disable transmitting on this
+                            channel
                         </span>
                     </label>
                 </div>

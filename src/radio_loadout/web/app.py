@@ -16,15 +16,127 @@ from pydantic import (
 
 from radio_loadout.exporters.chirp_csv import export_chirp_csv
 from radio_loadout.models import (
+    TUNING_STEPS_KHZ,
     AnalogSettings,
     Channel,
     ChannelMode,
+    ScanBehavior,
     Tone,
     ToneMode,
     TonePolarity,
 )
 
 WEB_DIRECTORY = Path(__file__).resolve().parent
+
+STANDARD_DCS_CODES = (
+    23,
+    25,
+    26,
+    31,
+    32,
+    36,
+    43,
+    47,
+    51,
+    53,
+    54,
+    65,
+    71,
+    72,
+    73,
+    74,
+    114,
+    115,
+    116,
+    122,
+    125,
+    131,
+    132,
+    134,
+    143,
+    145,
+    152,
+    155,
+    156,
+    162,
+    165,
+    172,
+    174,
+    205,
+    212,
+    223,
+    225,
+    226,
+    243,
+    244,
+    245,
+    246,
+    251,
+    252,
+    255,
+    261,
+    263,
+    265,
+    266,
+    271,
+    274,
+    306,
+    311,
+    315,
+    325,
+    331,
+    332,
+    343,
+    346,
+    351,
+    356,
+    364,
+    365,
+    371,
+    411,
+    412,
+    413,
+    423,
+    431,
+    432,
+    445,
+    446,
+    452,
+    454,
+    455,
+    462,
+    464,
+    465,
+    466,
+    503,
+    506,
+    516,
+    523,
+    526,
+    532,
+    546,
+    565,
+    606,
+    612,
+    624,
+    627,
+    631,
+    632,
+    654,
+    662,
+    664,
+    703,
+    712,
+    723,
+    731,
+    732,
+    734,
+    743,
+    754,
+)
+
+IndependentToneMode = Literal["none", "ctcss", "dcs"]
+DcsPolarity = Literal["N", "R"]
 
 app = FastAPI(title="Radio Loadout")
 
@@ -34,53 +146,24 @@ app.mount(
     name="static",
 )
 
-templates = Jinja2Templates(
-    directory=WEB_DIRECTORY / "templates"
-)
-
-
-STANDARD_DCS_CODES = frozenset(
-    {
-        23, 25, 26, 31, 32, 36, 43, 47, 51, 53, 54,
-        65, 71, 72, 73, 74, 114, 115, 116, 122, 125,
-        131, 132, 134, 143, 145, 152, 155, 156, 162,
-        165, 172, 174, 205, 212, 223, 225, 226, 243,
-        244, 245, 246, 251, 252, 255, 261, 263, 265,
-        266, 271, 274, 306, 311, 315, 325, 331, 332,
-        343, 346, 351, 356, 364, 365, 371, 411, 412,
-        413, 423, 431, 432, 445, 446, 452, 454, 455,
-        462, 464, 465, 466, 503, 506, 516, 523, 526,
-        532, 546, 565, 606, 612, 624, 627, 631, 632,
-        654, 662, 664, 703, 712, 723, 731, 732, 734,
-        743, 754,
-    }
-)
-
-IndependentToneMode = Literal["none", "ctcss", "dcs"]
-DcsPolarity = Literal["N", "R"]
+templates = Jinja2Templates(directory=WEB_DIRECTORY / "templates")
 
 
 def _validate_independent_tone(
-    direction: str,
+    label: str,
     mode: IndependentToneMode,
     ctcss_frequency_hz: float | None,
     dcs_code: int | None,
 ) -> None:
     if mode == "ctcss" and ctcss_frequency_hz is None:
         raise ValueError(
-            f"A {direction} CTCSS frequency is required."
+            f"{label} CTCSS frequency is required."
         )
 
-    if mode == "dcs":
-        if dcs_code is None:
-            raise ValueError(
-                f"A {direction} DCS code is required."
-            )
-
-        if dcs_code not in STANDARD_DCS_CODES:
-            raise ValueError(
-                f"The selected {direction} DCS code is invalid."
-            )
+    if mode == "dcs" and dcs_code not in STANDARD_DCS_CODES:
+        raise ValueError(
+            f"{label} DCS code must be a standard DCS code."
+        )
 
 
 class ChannelFormData(BaseModel):
@@ -88,10 +171,7 @@ class ChannelFormData(BaseModel):
 
     name: str = Field(min_length=1, max_length=32)
     receive_frequency_mhz: float = Field(gt=0)
-    transmit_frequency_mhz: float | None = Field(
-        default=None,
-        gt=0,
-    )
+    transmit_frequency_mhz: float | None = Field(default=None, gt=0)
     mode: ChannelMode = ChannelMode.FM
     power_watts: float = Field(default=5.0, gt=0)
     receive_only: bool = False
@@ -109,81 +189,86 @@ class ChannelFormData(BaseModel):
         ge=50.0,
         le=300.0,
     )
+
     dcs_code: int | None = None
-    dcs_polarity: Literal[
-        "NN",
-        "NR",
-        "RN",
-        "RR",
-    ] = "NN"
+    dcs_polarity: Literal["NN", "NR", "RN", "RR"] = "NN"
 
     transmit_tone_mode: IndependentToneMode = "none"
+
     transmit_ctcss_frequency_hz: float | None = Field(
         default=None,
         ge=50.0,
         le=300.0,
     )
+
     transmit_dcs_code: int | None = None
     transmit_dcs_polarity: DcsPolarity = "N"
 
     receive_tone_mode: IndependentToneMode = "none"
+
     receive_ctcss_frequency_hz: float | None = Field(
         default=None,
         ge=50.0,
         le=300.0,
     )
+
     receive_dcs_code: int | None = None
     receive_dcs_polarity: DcsPolarity = "N"
 
+    tuning_step_khz: float = 5.0
+    scan_behavior: ScanBehavior = ScanBehavior.NORMAL
     comment: str = Field(default="", max_length=120)
 
     @model_validator(mode="after")
-    def validate_tones(self) -> "ChannelFormData":
+    def validate_channel_settings(self) -> "ChannelFormData":
         if (
             self.tone_mode in {"tone", "tsql"}
             and self.tone_frequency_hz is None
         ):
             raise ValueError(
-                "A CTCSS frequency is required "
-                "when CTCSS is enabled."
+                "A CTCSS frequency is required when CTCSS is enabled."
             )
 
-        if self.tone_mode == "dtcs":
-            if self.dcs_code is None:
-                raise ValueError(
-                    "A DCS code is required "
-                    "when DCS is enabled."
-                )
-
-            if self.dcs_code not in STANDARD_DCS_CODES:
-                raise ValueError(
-                    "The selected DCS code is invalid."
-                )
+        if (
+            self.tone_mode == "dtcs"
+            and self.dcs_code not in STANDARD_DCS_CODES
+        ):
+            raise ValueError(
+                "A standard DCS code is required when DCS is enabled."
+            )
 
         if self.tone_mode == "cross":
             _validate_independent_tone(
-                direction="transmit",
-                mode=self.transmit_tone_mode,
-                ctcss_frequency_hz=(
-                    self.transmit_ctcss_frequency_hz
-                ),
-                dcs_code=self.transmit_dcs_code,
+                "Transmit",
+                self.transmit_tone_mode,
+                self.transmit_ctcss_frequency_hz,
+                self.transmit_dcs_code,
             )
+
             _validate_independent_tone(
-                direction="receive",
-                mode=self.receive_tone_mode,
-                ctcss_frequency_hz=(
-                    self.receive_ctcss_frequency_hz
-                ),
-                dcs_code=self.receive_dcs_code,
+                "Receive",
+                self.receive_tone_mode,
+                self.receive_ctcss_frequency_hz,
+                self.receive_dcs_code,
+            )
+
+            if (
+                self.transmit_tone_mode == "none"
+                and self.receive_tone_mode == "none"
+            ):
+                raise ValueError(
+                    "Advanced tone mode requires at least one tone."
+                )
+
+        if self.tuning_step_khz not in TUNING_STEPS_KHZ:
+            raise ValueError(
+                "Tuning step must be a supported CHIRP value."
             )
 
         return self
 
 
-CHANNEL_FORM_LIST = TypeAdapter(
-    list[ChannelFormData]
-)
+CHANNEL_FORM_LIST = TypeAdapter(list[ChannelFormData])
 
 
 def _mhz_to_hz(frequency_mhz: float) -> int:
@@ -212,9 +297,7 @@ def _build_independent_tone(
     )
 
 
-def _build_channel(
-    form_data: ChannelFormData,
-) -> Channel:
+def _build_channel(form_data: ChannelFormData) -> Channel:
     receive_frequency_hz = _mhz_to_hz(
         form_data.receive_frequency_mhz
     )
@@ -231,23 +314,19 @@ def _build_channel(
     transmit_tone = Tone()
     receive_tone = Tone()
 
-    if form_data.tone_mode == "tone":
+    if form_data.tone_mode in {"tone", "tsql"}:
         transmit_tone = Tone(
             mode=ToneMode.CTCSS,
             value=form_data.tone_frequency_hz,
         )
 
-    elif form_data.tone_mode == "tsql":
-        transmit_tone = Tone(
-            mode=ToneMode.CTCSS,
-            value=form_data.tone_frequency_hz,
-        )
+    if form_data.tone_mode == "tsql":
         receive_tone = Tone(
             mode=ToneMode.CTCSS,
             value=form_data.tone_frequency_hz,
         )
 
-    elif form_data.tone_mode == "dtcs":
+    if form_data.tone_mode == "dtcs":
         transmit_tone = Tone(
             mode=ToneMode.DCS,
             value=form_data.dcs_code,
@@ -255,6 +334,7 @@ def _build_channel(
                 form_data.dcs_polarity[0]
             ),
         )
+
         receive_tone = Tone(
             mode=ToneMode.DCS,
             value=form_data.dcs_code,
@@ -263,26 +343,19 @@ def _build_channel(
             ),
         )
 
-    elif form_data.tone_mode == "cross":
+    if form_data.tone_mode == "cross":
         transmit_tone = _build_independent_tone(
-            mode=form_data.transmit_tone_mode,
-            ctcss_frequency_hz=(
-                form_data.transmit_ctcss_frequency_hz
-            ),
-            dcs_code=form_data.transmit_dcs_code,
-            dcs_polarity=(
-                form_data.transmit_dcs_polarity
-            ),
+            form_data.transmit_tone_mode,
+            form_data.transmit_ctcss_frequency_hz,
+            form_data.transmit_dcs_code,
+            form_data.transmit_dcs_polarity,
         )
+
         receive_tone = _build_independent_tone(
-            mode=form_data.receive_tone_mode,
-            ctcss_frequency_hz=(
-                form_data.receive_ctcss_frequency_hz
-            ),
-            dcs_code=form_data.receive_dcs_code,
-            dcs_polarity=(
-                form_data.receive_dcs_polarity
-            ),
+            form_data.receive_tone_mode,
+            form_data.receive_ctcss_frequency_hz,
+            form_data.receive_dcs_code,
+            form_data.receive_dcs_polarity,
         )
 
     return Channel(
@@ -295,14 +368,14 @@ def _build_channel(
             receive_tone=receive_tone,
             power_watts=form_data.power_watts,
         ),
+        tuning_step_khz=form_data.tuning_step_khz,
+        scan_behavior=form_data.scan_behavior,
         comment=form_data.comment.strip(),
     )
 
 
 def _sample_channels() -> list[Channel]:
-    handheld_power = AnalogSettings(
-        power_watts=5.0
-    )
+    handheld_power = AnalogSettings(power_watts=5.0)
 
     return [
         Channel(
@@ -311,9 +384,7 @@ def _sample_channels() -> list[Channel]:
             transmit_frequency_hz=146_520_000,
             mode=ChannelMode.FM,
             analog_settings=handheld_power,
-            comment=(
-                "Two-meter national calling frequency"
-            ),
+            comment="Two-meter national calling frequency",
         ),
         Channel(
             name="1.25 CALL",
@@ -321,9 +392,7 @@ def _sample_channels() -> list[Channel]:
             transmit_frequency_hz=223_500_000,
             mode=ChannelMode.FM,
             analog_settings=handheld_power,
-            comment=(
-                "1.25-meter national calling frequency"
-            ),
+            comment="1.25-meter national calling frequency",
         ),
         Channel(
             name="70CM CALL",
@@ -331,15 +400,14 @@ def _sample_channels() -> list[Channel]:
             transmit_frequency_hz=446_000_000,
             mode=ChannelMode.FM,
             analog_settings=handheld_power,
-            comment=(
-                "70-centimeter national calling frequency"
-            ),
+            comment="70-centimeter national calling frequency",
         ),
         Channel(
             name="NOAA 7",
             receive_frequency_hz=162_550_000,
             transmit_frequency_hz=None,
             mode=ChannelMode.NFM,
+            scan_behavior=ScanBehavior.PRIORITY,
             comment="Receive-only weather radio",
         ),
     ]
@@ -366,17 +434,13 @@ def download_custom_chirp(
     channels_json: Annotated[str, Form()],
 ) -> Response:
     try:
-        form_channels = (
-            CHANNEL_FORM_LIST.validate_json(
-                channels_json
-            )
+        form_channels = CHANNEL_FORM_LIST.validate_json(
+            channels_json
         )
     except ValidationError as error:
         raise HTTPException(
             status_code=422,
-            detail=(
-                "The submitted channel data is invalid."
-            ),
+            detail="The submitted channel data is invalid.",
         ) from error
 
     if not form_channels:
@@ -397,8 +461,7 @@ def download_custom_chirp(
         media_type="text/csv",
         headers={
             "Content-Disposition": (
-                "attachment; "
-                'filename="radio_loadout_custom.csv"'
+                'attachment; filename="radio_loadout_custom.csv"'
             )
         },
     )
@@ -406,17 +469,14 @@ def download_custom_chirp(
 
 @app.get("/downloads/chirp-sample.csv")
 def download_chirp_sample() -> Response:
-    csv_text = export_chirp_csv(
-        _sample_channels()
-    )
+    csv_text = export_chirp_csv(_sample_channels())
 
     return Response(
         content=csv_text,
         media_type="text/csv",
         headers={
             "Content-Disposition": (
-                "attachment; "
-                'filename="radio_loadout_sample.csv"'
+                'attachment; filename="radio_loadout_sample.csv"'
             )
         },
     )

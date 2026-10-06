@@ -4,6 +4,25 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 
+TUNING_STEPS_KHZ = (
+    1.0,
+    2.5,
+    5.0,
+    6.25,
+    9.0,
+    10.0,
+    12.5,
+    15.0,
+    20.0,
+    25.0,
+    30.0,
+    50.0,
+    100.0,
+    125.0,
+    200.0,
+)
+
+
 class ChannelMode(StrEnum):
     """Supported radio channel modes."""
 
@@ -22,10 +41,18 @@ class ToneMode(StrEnum):
 
 
 class TonePolarity(StrEnum):
-    """Supported DCS signal polarities."""
+    """Supported DCS tone polarities."""
 
     NORMAL = "N"
     REVERSE = "R"
+
+
+class ScanBehavior(StrEnum):
+    """Control how a channel participates in scanning."""
+
+    NORMAL = ""
+    SKIP = "S"
+    PRIORITY = "P"
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,9 +66,7 @@ class Tone:
     def __post_init__(self) -> None:
         if self.mode is ToneMode.NONE:
             if self.value is not None:
-                raise ValueError(
-                    "A disabled tone cannot have a value."
-                )
+                raise ValueError("A disabled tone cannot have a value.")
 
             if self.polarity is not TonePolarity.NORMAL:
                 raise ValueError(
@@ -51,23 +76,19 @@ class Tone:
             return
 
         if self.value is None:
-            raise ValueError(
-                "An enabled tone must have a value."
-            )
+            raise ValueError("An enabled tone must have a value.")
 
         if self.mode is ToneMode.CTCSS:
             if self.polarity is not TonePolarity.NORMAL:
                 raise ValueError(
-                    "CTCSS tones cannot use DCS polarity."
+                    "A CTCSS tone cannot use reverse polarity."
                 )
 
-            if (
-                isinstance(self.value, bool)
-                or not isinstance(self.value, (int, float))
+            if isinstance(self.value, bool) or not isinstance(
+                self.value,
+                (int, float),
             ):
-                raise ValueError(
-                    "A CTCSS tone must be numeric."
-                )
+                raise ValueError("A CTCSS tone must be numeric.")
 
             if not 50.0 <= float(self.value) <= 300.0:
                 raise ValueError(
@@ -79,18 +100,12 @@ class Tone:
                 self.value,
                 int,
             ):
-                raise ValueError(
-                    "A DCS code must be an integer."
-                )
+                raise ValueError("A DCS code must be an integer.")
 
             digits = f"{self.value:03d}"
 
-            if (
-                len(digits) != 3
-                or any(
-                    digit not in "01234567"
-                    for digit in digits
-                )
+            if len(digits) != 3 or any(
+                digit not in "01234567" for digit in digits
             ):
                 raise ValueError(
                     "A DCS code must contain three octal digits."
@@ -107,16 +122,11 @@ class AnalogSettings:
 
     def __post_init__(self) -> None:
         if self.power_watts is not None:
-            if (
-                isinstance(self.power_watts, bool)
-                or not isinstance(
-                    self.power_watts,
-                    (int, float),
-                )
+            if isinstance(self.power_watts, bool) or not isinstance(
+                self.power_watts,
+                (int, float),
             ):
-                raise ValueError(
-                    "Transmit power must be numeric."
-                )
+                raise ValueError("Transmit power must be numeric.")
 
             if self.power_watts <= 0:
                 raise ValueError(
@@ -126,20 +136,20 @@ class AnalogSettings:
 
 @dataclass(frozen=True, slots=True)
 class Channel:
-    """A radio channel independent of any programming software."""
+    """A radio channel independent of programming software."""
 
     name: str
     receive_frequency_hz: int
     transmit_frequency_hz: int | None
     mode: ChannelMode = ChannelMode.FM
     analog_settings: AnalogSettings | None = None
+    tuning_step_khz: float = 5.0
+    scan_behavior: ScanBehavior = ScanBehavior.NORMAL
     comment: str = ""
 
     def __post_init__(self) -> None:
         if not self.name.strip():
-            raise ValueError(
-                "Channel name cannot be empty."
-            )
+            raise ValueError("Channel name cannot be empty.")
 
         if self.receive_frequency_hz <= 0:
             raise ValueError(
@@ -154,12 +164,20 @@ class Channel:
                 "Transmit frequency must be greater than zero."
             )
 
-        if (
-            self.mode is ChannelMode.DMR
-            and self.analog_settings is not None
-        ):
+        if self.mode is ChannelMode.DMR and self.analog_settings is not None:
             raise ValueError(
                 "A DMR channel cannot have analog settings."
+            )
+
+        if isinstance(self.tuning_step_khz, bool) or not isinstance(
+            self.tuning_step_khz,
+            (int, float),
+        ):
+            raise ValueError("Tuning step must be numeric.")
+
+        if float(self.tuning_step_khz) not in TUNING_STEPS_KHZ:
+            raise ValueError(
+                "Tuning step must be a supported CHIRP value."
             )
 
     @property
