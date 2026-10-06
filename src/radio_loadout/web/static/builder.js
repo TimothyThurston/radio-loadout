@@ -158,11 +158,18 @@ const DCS_CODES = [
     754,
 ];
 
+const DRAFT_STORAGE_KEY = "radio-loadout-builder-draft-v1";
+
 const form = document.querySelector("#channel-form");
 const channelList = document.querySelector("#channel-list");
 const channelTemplate = document.querySelector("#channel-template");
 const addChannelButton = document.querySelector("#add-channel");
+const clearDraftButton = document.querySelector("#clear-draft");
 const channelsJsonInput = document.querySelector("#channels-json");
+const draftStatus = document.querySelector("#draft-status");
+
+let pendingSaveTimer = null;
+let statusClearTimer = null;
 
 function getChannelCards() {
     return [...channelList.querySelectorAll("[data-channel-card]")];
@@ -180,6 +187,15 @@ function optionalNumber(card, fieldName) {
     }
 
     return Number(input.value);
+}
+
+function showDraftStatus(message) {
+    window.clearTimeout(statusClearTimer);
+    draftStatus.textContent = message;
+
+    statusClearTimer = window.setTimeout(() => {
+        draftStatus.textContent = "";
+    }, 2500);
 }
 
 function populateToneOptions(card) {
@@ -331,12 +347,132 @@ function createChannelCard() {
     return newCard;
 }
 
-function addChannel() {
+function initializeChannelCard(card) {
+    updateTransmitField(card);
+    updateToneFields(card);
+}
+
+function getCardDraft(card) {
+    const cardDraft = {};
+
+    card.querySelectorAll("[data-field]").forEach((field) => {
+        if (field.type === "checkbox") {
+            cardDraft[field.dataset.field] = field.checked;
+        } else {
+            cardDraft[field.dataset.field] = field.value;
+        }
+    });
+
+    return cardDraft;
+}
+
+function saveDraft() {
+    window.clearTimeout(pendingSaveTimer);
+    pendingSaveTimer = null;
+
+    const draft = getChannelCards().map(getCardDraft);
+
+    try {
+        window.localStorage.setItem(
+            DRAFT_STORAGE_KEY,
+            JSON.stringify(draft)
+        );
+        showDraftStatus("Draft saved locally.");
+    } catch {
+        showDraftStatus("Draft could not be saved.");
+    }
+}
+
+function scheduleDraftSave() {
+    window.clearTimeout(pendingSaveTimer);
+
+    pendingSaveTimer = window.setTimeout(() => {
+        saveDraft();
+    }, 250);
+}
+
+function loadDraft() {
+    try {
+        const savedDraft = window.localStorage.getItem(
+            DRAFT_STORAGE_KEY
+        );
+
+        if (savedDraft === null) {
+            return null;
+        }
+
+        const parsedDraft = JSON.parse(savedDraft);
+
+        if (
+            !Array.isArray(parsedDraft)
+            || parsedDraft.length === 0
+        ) {
+            return null;
+        }
+
+        return parsedDraft;
+    } catch {
+        return null;
+    }
+}
+
+function applyDraftToCard(card, cardDraft) {
+    if (
+        cardDraft === null
+        || typeof cardDraft !== "object"
+        || Array.isArray(cardDraft)
+    ) {
+        return;
+    }
+
+    Object.entries(cardDraft).forEach(([fieldName, value]) => {
+        const field = getField(card, fieldName);
+
+        if (!field) {
+            return;
+        }
+
+        if (field.type === "checkbox") {
+            field.checked = Boolean(value);
+        } else if (value === null || value === undefined) {
+            field.value = "";
+        } else {
+            field.value = String(value);
+        }
+    });
+}
+
+function restoreDraft() {
+    const savedDraft = loadDraft();
+
+    if (savedDraft === null) {
+        return false;
+    }
+
+    channelList.replaceChildren();
+
+    savedDraft.forEach((cardDraft) => {
+        const card = createChannelCard();
+
+        applyDraftToCard(card, cardDraft);
+        initializeChannelCard(card);
+    });
+
+    updateChannelNumbers();
+    showDraftStatus("Saved draft restored.");
+
+    return true;
+}
+
+function addChannel(shouldSave = true) {
     const newCard = createChannelCard();
 
-    updateTransmitField(newCard);
-    updateToneFields(newCard);
+    initializeChannelCard(newCard);
     updateChannelNumbers();
+
+    if (shouldSave) {
+        saveDraft();
+    }
 }
 
 function copyChannelValues(sourceCard, targetCard) {
@@ -375,9 +511,9 @@ function duplicateChannel(card) {
             `${originalName} COPY`.slice(0, 32);
     }
 
-    updateTransmitField(duplicatedCard);
-    updateToneFields(duplicatedCard);
+    initializeChannelCard(duplicatedCard);
     updateChannelNumbers();
+    saveDraft();
 
     const nameField = getField(duplicatedCard, "name");
 
@@ -394,6 +530,7 @@ function moveChannelUp(card) {
     ) {
         channelList.insertBefore(card, previousCard);
         updateChannelNumbers();
+        saveDraft();
     }
 }
 
@@ -406,10 +543,107 @@ function moveChannelDown(card) {
     ) {
         channelList.insertBefore(nextCard, card);
         updateChannelNumbers();
+        saveDraft();
     }
 }
 
-addChannelButton.addEventListener("click", addChannel);
+function clearDraft() {
+    const shouldClear = window.confirm(
+        "Clear every channel in the current draft?"
+    );
+
+    if (!shouldClear) {
+        return;
+    }
+
+    try {
+        window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {
+        showDraftStatus("Saved draft could not be cleared.");
+        return;
+    }
+
+    channelList.replaceChildren();
+    addChannel(false);
+    showDraftStatus("Draft cleared.");
+}
+
+function channelDataFromCard(card) {
+    return {
+        name: getField(card, "name").value,
+        receive_frequency_mhz: Number(
+            getField(card, "receive_frequency_mhz").value
+        ),
+        transmit_frequency_mhz: optionalNumber(
+            card,
+            "transmit_frequency_mhz"
+        ),
+        mode: getField(card, "mode").value,
+        power_watts: Number(
+            getField(card, "power_watts").value
+        ),
+        receive_only: getField(
+            card,
+            "receive_only"
+        ).checked,
+        tone_mode: getField(card, "tone_mode").value,
+        tone_frequency_hz: optionalNumber(
+            card,
+            "tone_frequency_hz"
+        ),
+        dcs_code: optionalNumber(card, "dcs_code"),
+        dcs_polarity: getField(
+            card,
+            "dcs_polarity"
+        ).value,
+        transmit_tone_mode: getField(
+            card,
+            "transmit_tone_mode"
+        ).value,
+        transmit_ctcss_frequency_hz: optionalNumber(
+            card,
+            "transmit_ctcss_frequency_hz"
+        ),
+        transmit_dcs_code: optionalNumber(
+            card,
+            "transmit_dcs_code"
+        ),
+        transmit_dcs_polarity: getField(
+            card,
+            "transmit_dcs_polarity"
+        ).value,
+        receive_tone_mode: getField(
+            card,
+            "receive_tone_mode"
+        ).value,
+        receive_ctcss_frequency_hz: optionalNumber(
+            card,
+            "receive_ctcss_frequency_hz"
+        ),
+        receive_dcs_code: optionalNumber(
+            card,
+            "receive_dcs_code"
+        ),
+        receive_dcs_polarity: getField(
+            card,
+            "receive_dcs_polarity"
+        ).value,
+        tuning_step_khz: Number(
+            getField(card, "tuning_step_khz").value
+        ),
+        scan_behavior: getField(
+            card,
+            "scan_behavior"
+        ).value,
+        comment: getField(card, "comment").value,
+    };
+}
+
+addChannelButton.addEventListener("click", () => {
+    addChannel();
+});
+
+clearDraftButton.addEventListener("click", clearDraft);
 
 channelList.addEventListener("click", (event) => {
     const card = event.target.closest("[data-channel-card]");
@@ -443,6 +677,13 @@ channelList.addEventListener("click", (event) => {
 
     card.remove();
     updateChannelNumbers();
+    saveDraft();
+});
+
+channelList.addEventListener("input", (event) => {
+    if (event.target.closest("[data-channel-card]")) {
+        scheduleDraftSave();
+    }
 });
 
 channelList.addEventListener("change", (event) => {
@@ -475,81 +716,20 @@ channelList.addEventListener("change", (event) => {
     ) {
         updateIndependentToneFields(card, "receive");
     }
+
+    saveDraft();
 });
 
 form.addEventListener("submit", () => {
-    const channels = getChannelCards().map((card) => {
-        return {
-            name: getField(card, "name").value,
-            receive_frequency_mhz: Number(
-                getField(card, "receive_frequency_mhz").value
-            ),
-            transmit_frequency_mhz: optionalNumber(
-                card,
-                "transmit_frequency_mhz"
-            ),
-            mode: getField(card, "mode").value,
-            power_watts: Number(
-                getField(card, "power_watts").value
-            ),
-            receive_only: getField(
-                card,
-                "receive_only"
-            ).checked,
-            tone_mode: getField(card, "tone_mode").value,
-            tone_frequency_hz: optionalNumber(
-                card,
-                "tone_frequency_hz"
-            ),
-            dcs_code: optionalNumber(card, "dcs_code"),
-            dcs_polarity: getField(
-                card,
-                "dcs_polarity"
-            ).value,
-            transmit_tone_mode: getField(
-                card,
-                "transmit_tone_mode"
-            ).value,
-            transmit_ctcss_frequency_hz: optionalNumber(
-                card,
-                "transmit_ctcss_frequency_hz"
-            ),
-            transmit_dcs_code: optionalNumber(
-                card,
-                "transmit_dcs_code"
-            ),
-            transmit_dcs_polarity: getField(
-                card,
-                "transmit_dcs_polarity"
-            ).value,
-            receive_tone_mode: getField(
-                card,
-                "receive_tone_mode"
-            ).value,
-            receive_ctcss_frequency_hz: optionalNumber(
-                card,
-                "receive_ctcss_frequency_hz"
-            ),
-            receive_dcs_code: optionalNumber(
-                card,
-                "receive_dcs_code"
-            ),
-            receive_dcs_polarity: getField(
-                card,
-                "receive_dcs_polarity"
-            ).value,
-            tuning_step_khz: Number(
-                getField(card, "tuning_step_khz").value
-            ),
-            scan_behavior: getField(
-                card,
-                "scan_behavior"
-            ).value,
-            comment: getField(card, "comment").value,
-        };
-    });
+    saveDraft();
+
+    const channels = getChannelCards().map(
+        channelDataFromCard
+    );
 
     channelsJsonInput.value = JSON.stringify(channels);
 });
 
-addChannel();
+if (!restoreDraft()) {
+    addChannel(false);
+}

@@ -63,12 +63,26 @@
                 </button>
 
                 <button
+                    id="clear-draft"
+                    class="button button-secondary"
+                    type="button"
+                >
+                    Clear draft
+                </button>
+
+                <button
                     class="button button-primary"
                     type="submit"
                 >
                     Generate CHIRP CSV
                 </button>
             </div>
+
+            <p
+                id="draft-status"
+                class="draft-status"
+                aria-live="polite"
+            ></p>
         </form>
 
         <template id="channel-template">

@@ -218,3 +218,18 @@ def test_custom_tuning_step_and_scan_behavior() -> None:
     assert rows[0]["Name"] == "SCAN TEST"
     assert rows[0]["TStep"] == "12.50"
     assert rows[0]["Skip"] == "S"
+
+
+def test_builder_autosave_assets() -> None:
+    page_response = client.get("/builder")
+    script_response = client.get("/static/builder.js")
+
+    assert page_response.status_code == 200
+    assert 'id="clear-draft"' in page_response.text
+    assert 'id="draft-status"' in page_response.text
+
+    assert script_response.status_code == 200
+    assert "radio-loadout-builder-draft-v1" in script_response.text
+    assert "window.localStorage" in script_response.text
+    assert "restoreDraft" in script_response.text
+    assert "clearDraft" in script_response.text
