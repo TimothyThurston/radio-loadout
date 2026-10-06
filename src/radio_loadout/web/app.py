@@ -36,32 +36,160 @@ app.mount(
 templates = Jinja2Templates(directory=WEB_DIRECTORY / "templates")
 
 
+STANDARD_DCS_CODES = frozenset(
+    {
+        23,
+        25,
+        26,
+        31,
+        32,
+        36,
+        43,
+        47,
+        51,
+        53,
+        54,
+        65,
+        71,
+        72,
+        73,
+        74,
+        114,
+        115,
+        116,
+        122,
+        125,
+        131,
+        132,
+        134,
+        143,
+        145,
+        152,
+        155,
+        156,
+        162,
+        165,
+        172,
+        174,
+        205,
+        212,
+        223,
+        225,
+        226,
+        243,
+        244,
+        245,
+        246,
+        251,
+        252,
+        255,
+        261,
+        263,
+        265,
+        266,
+        271,
+        274,
+        306,
+        311,
+        315,
+        325,
+        331,
+        332,
+        343,
+        346,
+        351,
+        356,
+        364,
+        365,
+        371,
+        411,
+        412,
+        413,
+        423,
+        431,
+        432,
+        445,
+        446,
+        452,
+        454,
+        455,
+        462,
+        464,
+        465,
+        466,
+        503,
+        506,
+        516,
+        523,
+        526,
+        532,
+        546,
+        565,
+        606,
+        612,
+        624,
+        627,
+        631,
+        632,
+        654,
+        662,
+        664,
+        703,
+        712,
+        723,
+        731,
+        732,
+        734,
+        743,
+        754,
+    }
+)
+
+
 class ChannelFormData(BaseModel):
     """One channel submitted by the browser-based builder."""
 
     name: str = Field(min_length=1, max_length=32)
     receive_frequency_mhz: float = Field(gt=0)
-    transmit_frequency_mhz: float | None = Field(default=None, gt=0)
+    transmit_frequency_mhz: float | None = Field(
+        default=None,
+        gt=0,
+    )
     mode: ChannelMode = ChannelMode.FM
     power_watts: float = Field(default=5.0, gt=0)
     receive_only: bool = False
-    tone_mode: Literal["none", "tone", "tsql"] = "none"
+    tone_mode: Literal[
+        "none",
+        "tone",
+        "tsql",
+        "dtcs",
+    ] = "none"
     tone_frequency_hz: float | None = Field(
         default=None,
         ge=50.0,
         le=300.0,
     )
+    dcs_code: int | None = None
     comment: str = Field(default="", max_length=120)
 
     @model_validator(mode="after")
     def validate_tone(self) -> "ChannelFormData":
         if (
-            self.tone_mode != "none"
+            self.tone_mode in {"tone", "tsql"}
             and self.tone_frequency_hz is None
         ):
             raise ValueError(
-                "A CTCSS frequency is required when tones are enabled."
+                "A CTCSS frequency is required when CTCSS is enabled."
             )
+
+        if self.tone_mode == "dtcs":
+            if self.dcs_code is None:
+                raise ValueError(
+                    "A DCS code is required when DCS is enabled."
+                )
+
+            if self.dcs_code not in STANDARD_DCS_CODES:
+                raise ValueError("The selected DCS code is invalid.")
 
         return self
 
@@ -90,16 +218,28 @@ def _build_channel(form_data: ChannelFormData) -> Channel:
     transmit_tone = Tone()
     receive_tone = Tone()
 
-    if form_data.tone_mode in {"tone", "tsql"}:
+    if form_data.tone_mode == "tone":
         transmit_tone = Tone(
             mode=ToneMode.CTCSS,
             value=form_data.tone_frequency_hz,
         )
-
-    if form_data.tone_mode == "tsql":
+    elif form_data.tone_mode == "tsql":
+        transmit_tone = Tone(
+            mode=ToneMode.CTCSS,
+            value=form_data.tone_frequency_hz,
+        )
         receive_tone = Tone(
             mode=ToneMode.CTCSS,
             value=form_data.tone_frequency_hz,
+        )
+    elif form_data.tone_mode == "dtcs":
+        transmit_tone = Tone(
+            mode=ToneMode.DCS,
+            value=form_data.dcs_code,
+        )
+        receive_tone = Tone(
+            mode=ToneMode.DCS,
+            value=form_data.dcs_code,
         )
 
     return Channel(

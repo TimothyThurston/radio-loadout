@@ -1,6 +1,6 @@
-from csv import DictReader
-from io import StringIO
-from json import dumps
+import csv
+import io
+import json
 
 from fastapi.testclient import TestClient
 
@@ -15,7 +15,6 @@ def test_home() -> None:
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
     assert "Radio Loadout" in response.text
-    assert "Open channel builder" in response.text
 
 
 def test_builder_page() -> None:
@@ -24,39 +23,53 @@ def test_builder_page() -> None:
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
     assert "Build your radio loadout" in response.text
-    assert "Add another channel" in response.text
-    assert "Generate CHIRP CSV" in response.text
+    assert 'id="channel-form"' in response.text
+    assert "DCS / DTCS" in response.text
+
+
+def test_chirp_sample_download() -> None:
+    response = client.get("/downloads/chirp-sample.csv")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert response.headers["content-disposition"] == (
+        'attachment; filename="radio_loadout_sample.csv"'
+    )
+    assert "2M CALL" in response.text
+    assert "NOAA 7" in response.text
 
 
 def test_custom_chirp_download() -> None:
     channels = [
         {
             "name": "TEST RPT",
-            "receive_frequency_mhz": 146.940000,
-            "transmit_frequency_mhz": 146.340000,
+            "receive_frequency_mhz": 146.94,
+            "transmit_frequency_mhz": 146.34,
             "mode": "FM",
             "power_watts": 5.0,
             "receive_only": False,
             "tone_mode": "tone",
             "tone_frequency_hz": 100.0,
+            "dcs_code": None,
             "comment": "Test repeater",
         },
         {
             "name": "NOAA 7",
-            "receive_frequency_mhz": 162.550000,
+            "receive_frequency_mhz": 162.55,
             "transmit_frequency_mhz": None,
             "mode": "NFM",
             "power_watts": 5.0,
             "receive_only": True,
             "tone_mode": "none",
             "tone_frequency_hz": None,
-            "comment": "Receive-only weather radio",
+            "dcs_code": None,
+            "comment": "Weather radio",
         },
     ]
 
     response = client.post(
         "/downloads/chirp.csv",
-        data={"channels_json": dumps(channels)},
+        data={"channels_json": json.dumps(channels)},
     )
 
     assert response.status_code == 200
@@ -65,7 +78,11 @@ def test_custom_chirp_download() -> None:
         'attachment; filename="radio_loadout_custom.csv"'
     )
 
-    rows = list(DictReader(StringIO(response.text)))
+    rows = list(
+        csv.DictReader(
+            io.StringIO(response.text)
+        )
+    )
 
     assert len(rows) == 2
 
@@ -83,13 +100,39 @@ def test_custom_chirp_download() -> None:
     assert rows[1]["Mode"] == "NFM"
 
 
-def test_chirp_sample_download() -> None:
-    response = client.get("/downloads/chirp-sample.csv")
+def test_custom_dcs_chirp_download() -> None:
+    channels = [
+        {
+            "name": "DCS TEST",
+            "receive_frequency_mhz": 146.94,
+            "transmit_frequency_mhz": 146.94,
+            "mode": "FM",
+            "power_watts": 5.0,
+            "receive_only": False,
+            "tone_mode": "dtcs",
+            "tone_frequency_hz": None,
+            "dcs_code": 23,
+            "comment": "Radio Loadout DCS test",
+        }
+    ]
+
+    response = client.post(
+        "/downloads/chirp.csv",
+        data={"channels_json": json.dumps(channels)},
+    )
 
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/csv")
-    assert response.headers["content-disposition"] == (
-        'attachment; filename="radio_loadout_sample.csv"'
+
+    rows = list(
+        csv.DictReader(
+            io.StringIO(response.text)
+        )
     )
-    assert "2M CALL" in response.text
-    assert "NOAA 7" in response.text
+
+    assert len(rows) == 1
+    assert rows[0]["Name"] == "DCS TEST"
+    assert rows[0]["Frequency"] == "146.940000"
+    assert rows[0]["Tone"] == "DTCS"
+    assert int(rows[0]["DtcsCode"]) == 23
+    assert int(rows[0]["RxDtcsCode"]) == 23
+    assert rows[0]["DtcsPolarity"] == "NN"

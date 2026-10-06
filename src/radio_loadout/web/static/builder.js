@@ -18,6 +18,7 @@ function updateChannelNumbers() {
         const removeButton = card.querySelector(
             "[data-remove-channel]"
         );
+
         removeButton.disabled = cards.length === 1;
     });
 }
@@ -37,21 +38,43 @@ function updateTransmitField(card) {
     }
 }
 
-function updateToneField(card) {
+function updateToneFields(card) {
     const toneModeInput = card.querySelector(
         '[data-field="tone_mode"]'
     );
-    const toneFrequencyInput = card.querySelector(
+    const ctcssField = card.querySelector(
+        "[data-ctcss-field]"
+    );
+    const ctcssInput = card.querySelector(
         '[data-field="tone_frequency_hz"]'
     );
+    const dcsField = card.querySelector(
+        "[data-dcs-field]"
+    );
+    const dcsInput = card.querySelector(
+        '[data-field="dcs_code"]'
+    );
 
-    const toneEnabled = toneModeInput.value !== "none";
+    const ctcssEnabled = (
+        toneModeInput.value === "tone"
+        || toneModeInput.value === "tsql"
+    );
+    const dcsEnabled = toneModeInput.value === "dtcs";
 
-    toneFrequencyInput.disabled = !toneEnabled;
-    toneFrequencyInput.required = toneEnabled;
+    ctcssField.hidden = !ctcssEnabled;
+    ctcssInput.disabled = !ctcssEnabled;
+    ctcssInput.required = ctcssEnabled;
 
-    if (!toneEnabled) {
-        toneFrequencyInput.value = "";
+    dcsField.hidden = !dcsEnabled;
+    dcsInput.disabled = !dcsEnabled;
+    dcsInput.required = dcsEnabled;
+
+    if (!ctcssEnabled) {
+        ctcssInput.value = "";
+    }
+
+    if (!dcsEnabled) {
+        dcsInput.value = "";
     }
 }
 
@@ -62,7 +85,7 @@ function addChannel() {
     const newCard = getChannelCards().at(-1);
 
     updateTransmitField(newCard);
-    updateToneField(newCard);
+    updateToneFields(newCard);
     updateChannelNumbers();
 }
 
@@ -84,12 +107,16 @@ channelList.addEventListener("click", (event) => {
 channelList.addEventListener("change", (event) => {
     const card = event.target.closest("[data-channel-card]");
 
+    if (!card) {
+        return;
+    }
+
     if (event.target.matches('[data-field="receive_only"]')) {
         updateTransmitField(card);
     }
 
     if (event.target.matches('[data-field="tone_mode"]')) {
-        updateToneField(card);
+        updateToneFields(card);
     }
 });
 
@@ -103,8 +130,14 @@ form.addEventListener("submit", () => {
             '[data-field="tone_frequency_hz"]'
         ).value;
 
+        const dcsCodeValue = card.querySelector(
+            '[data-field="dcs_code"]'
+        ).value;
+
         return {
-            name: card.querySelector('[data-field="name"]').value,
+            name: card.querySelector(
+                '[data-field="name"]'
+            ).value,
             receive_frequency_mhz: Number(
                 card.querySelector(
                     '[data-field="receive_frequency_mhz"]'
@@ -114,9 +147,13 @@ form.addEventListener("submit", () => {
                 transmitValue === ""
                     ? null
                     : Number(transmitValue),
-            mode: card.querySelector('[data-field="mode"]').value,
+            mode: card.querySelector(
+                '[data-field="mode"]'
+            ).value,
             power_watts: Number(
-                card.querySelector('[data-field="power_watts"]').value
+                card.querySelector(
+                    '[data-field="power_watts"]'
+                ).value
             ),
             receive_only: card.querySelector(
                 '[data-field="receive_only"]'
@@ -128,6 +165,10 @@ form.addEventListener("submit", () => {
                 toneFrequencyValue === ""
                     ? null
                     : Number(toneFrequencyValue),
+            dcs_code:
+                dcsCodeValue === ""
+                    ? null
+                    : Number(dcsCodeValue),
             comment: card.querySelector(
                 '[data-field="comment"]'
             ).value,
