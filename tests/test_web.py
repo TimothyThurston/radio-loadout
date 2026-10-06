@@ -21,7 +21,6 @@ def test_home() -> None:
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
     assert "Radio Loadout" in response.text
-    
 
 
 def test_builder_page() -> None:
@@ -33,6 +32,8 @@ def test_builder_page() -> None:
     assert "Generate CHIRP CSV" in response.text
     assert "Tuning step (kHz)" in response.text
     assert "Scan behavior" in response.text
+    assert "data-move-channel-up" in response.text
+    assert "data-move-channel-down" in response.text
 
 
 def test_chirp_sample_download() -> None:

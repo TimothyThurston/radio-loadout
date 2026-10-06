@@ -809,3 +809,56 @@ textarea:focus {
         text-align: center;
     }
 }
+.channel-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.channel-order-button {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 0.65rem;
+    background: rgba(15, 23, 42, 0.7);
+    color: #dbeafe;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        border-color 150ms ease,
+        background-color 150ms ease,
+        color 150ms ease,
+        transform 150ms ease;
+}
+
+.channel-order-button:hover:not(:disabled) {
+    border-color: rgba(56, 189, 248, 0.8);
+    background: rgba(14, 116, 144, 0.35);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.channel-order-button:focus-visible {
+    outline: 3px solid rgba(56, 189, 248, 0.45);
+    outline-offset: 2px;
+}
+
+.channel-order-button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@media (max-width: 640px) {
+    .channel-card-header {
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .channel-card-actions {
+        justify-content: flex-start;
+    }
+}

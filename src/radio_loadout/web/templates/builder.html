@@ -76,13 +76,33 @@
                 <div class="channel-card-header">
                     <h2 data-channel-number>Channel</h2>
 
-                    <button
-                        class="remove-channel"
-                        type="button"
-                        data-remove-channel
-                    >
-                        Remove
-                    </button>
+                    <div class="channel-card-actions">
+                        <button
+                            class="channel-order-button"
+                            type="button"
+                            data-move-channel-up
+                            aria-label="Move channel up"
+                        >
+                            ↑ Up
+                        </button>
+
+                        <button
+                            class="channel-order-button"
+                            type="button"
+                            data-move-channel-down
+                            aria-label="Move channel down"
+                        >
+                            ↓ Down
+                        </button>
+
+                        <button
+                            class="remove-channel"
+                            type="button"
+                            data-remove-channel
+                        >
+                            Remove
+                        </button>
+                    </div>
                 </div>
 
                 <div class="form-grid">

@@ -221,10 +221,18 @@ function updateChannelNumbers() {
         card.querySelector("[data-channel-number]").textContent =
             `Channel ${index + 1}`;
 
+        const moveUpButton = card.querySelector(
+            "[data-move-channel-up]"
+        );
+        const moveDownButton = card.querySelector(
+            "[data-move-channel-down]"
+        );
         const removeButton = card.querySelector(
             "[data-remove-channel]"
         );
 
+        moveUpButton.disabled = index === 0;
+        moveDownButton.disabled = index === cards.length - 1;
         removeButton.disabled = cards.length === 1;
     });
 }
@@ -324,9 +332,49 @@ function addChannel() {
     updateChannelNumbers();
 }
 
+function moveChannelUp(card) {
+    const previousCard = card.previousElementSibling;
+
+    if (
+        previousCard
+        && previousCard.matches("[data-channel-card]")
+    ) {
+        channelList.insertBefore(card, previousCard);
+        updateChannelNumbers();
+    }
+}
+
+function moveChannelDown(card) {
+    const nextCard = card.nextElementSibling;
+
+    if (
+        nextCard
+        && nextCard.matches("[data-channel-card]")
+    ) {
+        channelList.insertBefore(nextCard, card);
+        updateChannelNumbers();
+    }
+}
+
 addChannelButton.addEventListener("click", addChannel);
 
 channelList.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-channel-card]");
+
+    if (!card) {
+        return;
+    }
+
+    if (event.target.closest("[data-move-channel-up]")) {
+        moveChannelUp(card);
+        return;
+    }
+
+    if (event.target.closest("[data-move-channel-down]")) {
+        moveChannelDown(card);
+        return;
+    }
+
     const removeButton = event.target.closest(
         "[data-remove-channel]"
     );
@@ -335,7 +383,7 @@ channelList.addEventListener("click", (event) => {
         return;
     }
 
-    removeButton.closest("[data-channel-card]").remove();
+    card.remove();
     updateChannelNumbers();
 });
 
