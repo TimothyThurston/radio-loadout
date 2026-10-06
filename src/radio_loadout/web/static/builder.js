@@ -319,7 +319,7 @@ function updateToneFields(card) {
     }
 }
 
-function addChannel() {
+function createChannelCard() {
     const newChannel = channelTemplate.content.cloneNode(true);
 
     channelList.appendChild(newChannel);
@@ -327,9 +327,62 @@ function addChannel() {
     const newCard = getChannelCards().at(-1);
 
     populateToneOptions(newCard);
+
+    return newCard;
+}
+
+function addChannel() {
+    const newCard = createChannelCard();
+
     updateTransmitField(newCard);
     updateToneFields(newCard);
     updateChannelNumbers();
+}
+
+function copyChannelValues(sourceCard, targetCard) {
+    sourceCard.querySelectorAll("[data-field]").forEach(
+        (sourceField) => {
+            const fieldName = sourceField.dataset.field;
+            const targetField = getField(targetCard, fieldName);
+
+            if (!targetField) {
+                return;
+            }
+
+            if (sourceField.type === "checkbox") {
+                targetField.checked = sourceField.checked;
+            } else {
+                targetField.value = sourceField.value;
+            }
+        }
+    );
+}
+
+function duplicateChannel(card) {
+    const newChannel = channelTemplate.content.cloneNode(true);
+
+    card.after(newChannel);
+
+    const duplicatedCard = card.nextElementSibling;
+
+    populateToneOptions(duplicatedCard);
+    copyChannelValues(card, duplicatedCard);
+
+    const originalName = getField(card, "name").value.trim();
+
+    if (originalName !== "") {
+        getField(duplicatedCard, "name").value =
+            `${originalName} COPY`.slice(0, 32);
+    }
+
+    updateTransmitField(duplicatedCard);
+    updateToneFields(duplicatedCard);
+    updateChannelNumbers();
+
+    const nameField = getField(duplicatedCard, "name");
+
+    nameField.focus();
+    nameField.select();
 }
 
 function moveChannelUp(card) {
@@ -372,6 +425,11 @@ channelList.addEventListener("click", (event) => {
 
     if (event.target.closest("[data-move-channel-down]")) {
         moveChannelDown(card);
+        return;
+    }
+
+    if (event.target.closest("[data-duplicate-channel]")) {
+        duplicateChannel(card);
         return;
     }
 

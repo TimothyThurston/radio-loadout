@@ -34,6 +34,7 @@ def test_builder_page() -> None:
     assert "Scan behavior" in response.text
     assert "data-move-channel-up" in response.text
     assert "data-move-channel-down" in response.text
+    assert "data-duplicate-channel" in response.text
 
 
 def test_chirp_sample_download() -> None:
