@@ -41,112 +41,46 @@ templates = Jinja2Templates(
 
 STANDARD_DCS_CODES = frozenset(
     {
-        23,
-        25,
-        26,
-        31,
-        32,
-        36,
-        43,
-        47,
-        51,
-        53,
-        54,
-        65,
-        71,
-        72,
-        73,
-        74,
-        114,
-        115,
-        116,
-        122,
-        125,
-        131,
-        132,
-        134,
-        143,
-        145,
-        152,
-        155,
-        156,
-        162,
-        165,
-        172,
-        174,
-        205,
-        212,
-        223,
-        225,
-        226,
-        243,
-        244,
-        245,
-        246,
-        251,
-        252,
-        255,
-        261,
-        263,
-        265,
-        266,
-        271,
-        274,
-        306,
-        311,
-        315,
-        325,
-        331,
-        332,
-        343,
-        346,
-        351,
-        356,
-        364,
-        365,
-        371,
-        411,
-        412,
-        413,
-        423,
-        431,
-        432,
-        445,
-        446,
-        452,
-        454,
-        455,
-        462,
-        464,
-        465,
-        466,
-        503,
-        506,
-        516,
-        523,
-        526,
-        532,
-        546,
-        565,
-        606,
-        612,
-        624,
-        627,
-        631,
-        632,
-        654,
-        662,
-        664,
-        703,
-        712,
-        723,
-        731,
-        732,
-        734,
-        743,
-        754,
+        23, 25, 26, 31, 32, 36, 43, 47, 51, 53, 54,
+        65, 71, 72, 73, 74, 114, 115, 116, 122, 125,
+        131, 132, 134, 143, 145, 152, 155, 156, 162,
+        165, 172, 174, 205, 212, 223, 225, 226, 243,
+        244, 245, 246, 251, 252, 255, 261, 263, 265,
+        266, 271, 274, 306, 311, 315, 325, 331, 332,
+        343, 346, 351, 356, 364, 365, 371, 411, 412,
+        413, 423, 431, 432, 445, 446, 452, 454, 455,
+        462, 464, 465, 466, 503, 506, 516, 523, 526,
+        532, 546, 565, 606, 612, 624, 627, 631, 632,
+        654, 662, 664, 703, 712, 723, 731, 732, 734,
+        743, 754,
     }
 )
+
+IndependentToneMode = Literal["none", "ctcss", "dcs"]
+DcsPolarity = Literal["N", "R"]
+
+
+def _validate_independent_tone(
+    direction: str,
+    mode: IndependentToneMode,
+    ctcss_frequency_hz: float | None,
+    dcs_code: int | None,
+) -> None:
+    if mode == "ctcss" and ctcss_frequency_hz is None:
+        raise ValueError(
+            f"A {direction} CTCSS frequency is required."
+        )
+
+    if mode == "dcs":
+        if dcs_code is None:
+            raise ValueError(
+                f"A {direction} DCS code is required."
+            )
+
+        if dcs_code not in STANDARD_DCS_CODES:
+            raise ValueError(
+                f"The selected {direction} DCS code is invalid."
+            )
 
 
 class ChannelFormData(BaseModel):
@@ -161,12 +95,15 @@ class ChannelFormData(BaseModel):
     mode: ChannelMode = ChannelMode.FM
     power_watts: float = Field(default=5.0, gt=0)
     receive_only: bool = False
+
     tone_mode: Literal[
         "none",
         "tone",
         "tsql",
         "dtcs",
+        "cross",
     ] = "none"
+
     tone_frequency_hz: float | None = Field(
         default=None,
         ge=50.0,
@@ -179,10 +116,29 @@ class ChannelFormData(BaseModel):
         "RN",
         "RR",
     ] = "NN"
+
+    transmit_tone_mode: IndependentToneMode = "none"
+    transmit_ctcss_frequency_hz: float | None = Field(
+        default=None,
+        ge=50.0,
+        le=300.0,
+    )
+    transmit_dcs_code: int | None = None
+    transmit_dcs_polarity: DcsPolarity = "N"
+
+    receive_tone_mode: IndependentToneMode = "none"
+    receive_ctcss_frequency_hz: float | None = Field(
+        default=None,
+        ge=50.0,
+        le=300.0,
+    )
+    receive_dcs_code: int | None = None
+    receive_dcs_polarity: DcsPolarity = "N"
+
     comment: str = Field(default="", max_length=120)
 
     @model_validator(mode="after")
-    def validate_tone(self) -> "ChannelFormData":
+    def validate_tones(self) -> "ChannelFormData":
         if (
             self.tone_mode in {"tone", "tsql"}
             and self.tone_frequency_hz is None
@@ -204,6 +160,24 @@ class ChannelFormData(BaseModel):
                     "The selected DCS code is invalid."
                 )
 
+        if self.tone_mode == "cross":
+            _validate_independent_tone(
+                direction="transmit",
+                mode=self.transmit_tone_mode,
+                ctcss_frequency_hz=(
+                    self.transmit_ctcss_frequency_hz
+                ),
+                dcs_code=self.transmit_dcs_code,
+            )
+            _validate_independent_tone(
+                direction="receive",
+                mode=self.receive_tone_mode,
+                ctcss_frequency_hz=(
+                    self.receive_ctcss_frequency_hz
+                ),
+                dcs_code=self.receive_dcs_code,
+            )
+
         return self
 
 
@@ -214,6 +188,28 @@ CHANNEL_FORM_LIST = TypeAdapter(
 
 def _mhz_to_hz(frequency_mhz: float) -> int:
     return round(frequency_mhz * 1_000_000)
+
+
+def _build_independent_tone(
+    mode: IndependentToneMode,
+    ctcss_frequency_hz: float | None,
+    dcs_code: int | None,
+    dcs_polarity: DcsPolarity,
+) -> Tone:
+    if mode == "none":
+        return Tone()
+
+    if mode == "ctcss":
+        return Tone(
+            mode=ToneMode.CTCSS,
+            value=ctcss_frequency_hz,
+        )
+
+    return Tone(
+        mode=ToneMode.DCS,
+        value=dcs_code,
+        polarity=TonePolarity(dcs_polarity),
+    )
 
 
 def _build_channel(
@@ -240,6 +236,7 @@ def _build_channel(
             mode=ToneMode.CTCSS,
             value=form_data.tone_frequency_hz,
         )
+
     elif form_data.tone_mode == "tsql":
         transmit_tone = Tone(
             mode=ToneMode.CTCSS,
@@ -249,6 +246,7 @@ def _build_channel(
             mode=ToneMode.CTCSS,
             value=form_data.tone_frequency_hz,
         )
+
     elif form_data.tone_mode == "dtcs":
         transmit_tone = Tone(
             mode=ToneMode.DCS,
@@ -262,6 +260,28 @@ def _build_channel(
             value=form_data.dcs_code,
             polarity=TonePolarity(
                 form_data.dcs_polarity[1]
+            ),
+        )
+
+    elif form_data.tone_mode == "cross":
+        transmit_tone = _build_independent_tone(
+            mode=form_data.transmit_tone_mode,
+            ctcss_frequency_hz=(
+                form_data.transmit_ctcss_frequency_hz
+            ),
+            dcs_code=form_data.transmit_dcs_code,
+            dcs_polarity=(
+                form_data.transmit_dcs_polarity
+            ),
+        )
+        receive_tone = _build_independent_tone(
+            mode=form_data.receive_tone_mode,
+            ctcss_frequency_hz=(
+                form_data.receive_ctcss_frequency_hz
+            ),
+            dcs_code=form_data.receive_dcs_code,
+            dcs_polarity=(
+                form_data.receive_dcs_polarity
             ),
         )
 

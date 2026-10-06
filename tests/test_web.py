@@ -28,8 +28,11 @@ def test_builder_page() -> None:
     )
     assert "Build your radio loadout" in response.text
     assert 'id="channel-form"' in response.text
-    assert "DCS / DTCS" in response.text
+    assert "Matched DCS / DTCS" in response.text
     assert "DCS polarity" in response.text
+    assert "Advanced / Cross tone" in response.text
+    assert "Transmit tone type" in response.text
+    assert "Receive tone type" in response.text
 
 
 def test_chirp_sample_download() -> None:
@@ -152,5 +155,57 @@ def test_custom_dcs_chirp_download() -> None:
     assert rows[0]["Frequency"] == "146.940000"
     assert rows[0]["Tone"] == "DTCS"
     assert int(rows[0]["DtcsCode"]) == 23
+    assert int(rows[0]["RxDtcsCode"]) == 23
+    assert rows[0]["DtcsPolarity"] == "NR"
+
+
+def test_custom_cross_tone_download() -> None:
+    channels = [
+        {
+            "name": "CROSS TEST",
+            "receive_frequency_mhz": 146.94,
+            "transmit_frequency_mhz": 146.34,
+            "mode": "FM",
+            "power_watts": 5.0,
+            "receive_only": False,
+            "tone_mode": "cross",
+            "tone_frequency_hz": None,
+            "dcs_code": None,
+            "dcs_polarity": "NN",
+            "transmit_tone_mode": "ctcss",
+            "transmit_ctcss_frequency_hz": 100.0,
+            "transmit_dcs_code": None,
+            "transmit_dcs_polarity": "N",
+            "receive_tone_mode": "dcs",
+            "receive_ctcss_frequency_hz": None,
+            "receive_dcs_code": 23,
+            "receive_dcs_polarity": "R",
+            "comment": "Cross-tone test",
+        }
+    ]
+
+    response = client.post(
+        "/downloads/chirp.csv",
+        data={
+            "channels_json": json.dumps(channels)
+        },
+    )
+
+    assert response.status_code == 200
+
+    rows = list(
+        csv.DictReader(
+            io.StringIO(response.text)
+        )
+    )
+
+    assert len(rows) == 1
+    assert rows[0]["Name"] == "CROSS TEST"
+    assert rows[0]["Frequency"] == "146.940000"
+    assert rows[0]["Duplex"] == "-"
+    assert rows[0]["Offset"] == "0.600000"
+    assert rows[0]["Tone"] == "Cross"
+    assert rows[0]["CrossMode"] == "Tone->DTCS"
+    assert rows[0]["rToneFreq"] == "100.0"
     assert int(rows[0]["RxDtcsCode"]) == 23
     assert rows[0]["DtcsPolarity"] == "NR"
