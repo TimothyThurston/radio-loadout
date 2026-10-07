@@ -11,7 +11,9 @@ from radio_loadout.web.app import app
 client = TestClient(app)
 
 
-def _read_csv_response(response_text: str) -> list[dict[str, str]]:
+def _read_csv_response(
+    response_text: str,
+) -> list[dict[str, str]]:
     return list(csv.DictReader(StringIO(response_text)))
 
 
@@ -19,7 +21,9 @@ def test_home() -> None:
     response = client.get("/")
 
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/html")
+    assert response.headers["content-type"].startswith(
+        "text/html"
+    )
     assert "Radio Loadout" in response.text
 
 
@@ -27,7 +31,9 @@ def test_builder_page() -> None:
     response = client.get("/builder")
 
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/html")
+    assert response.headers["content-type"].startswith(
+        "text/html"
+    )
     assert "Build your radio loadout" in response.text
     assert "Generate CHIRP CSV" in response.text
     assert "Tuning step (kHz)" in response.text
@@ -41,7 +47,9 @@ def test_chirp_sample_download() -> None:
     response = client.get("/downloads/chirp-sample.csv")
 
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/csv")
+    assert response.headers["content-type"].startswith(
+        "text/csv"
+    )
     assert response.headers["content-disposition"] == (
         'attachment; filename="radio_loadout_sample.csv"'
     )
@@ -93,7 +101,9 @@ def test_custom_chirp_download() -> None:
     )
 
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/csv")
+    assert response.headers["content-type"].startswith(
+        "text/csv"
+    )
     assert response.headers["content-disposition"] == (
         'attachment; filename="radio_loadout_custom.csv"'
     )
@@ -229,7 +239,46 @@ def test_builder_autosave_assets() -> None:
     assert 'id="draft-status"' in page_response.text
 
     assert script_response.status_code == 200
-    assert "radio-loadout-builder-draft-v1" in script_response.text
+    assert (
+        "radio-loadout-builder-draft-v1"
+        in script_response.text
+    )
     assert "window.localStorage" in script_response.text
     assert "restoreDraft" in script_response.text
     assert "clearDraft" in script_response.text
+
+
+def test_builder_noaa_weather_preset_assets() -> None:
+    page_response = client.get("/builder")
+    script_response = client.get("/static/builder.js")
+
+    assert page_response.status_code == 200
+    assert 'id="add-noaa-weather"' in page_response.text
+    assert 'id="preset-status"' in page_response.text
+    assert "Add NOAA Weather" in page_response.text
+
+    assert script_response.status_code == 200
+    assert "NOAA_WEATHER_CHANNELS" in script_response.text
+    assert "addNoaaWeatherPreset" in script_response.text
+    assert "existingFrequencies" in script_response.text
+    assert "tuning_step_khz: 25" in script_response.text
+
+    for channel_number in range(1, 8):
+        assert (
+            f'name: "NOAA {channel_number}"'
+            in script_response.text
+        )
+
+    for frequency in (
+        "162.4",
+        "162.425",
+        "162.45",
+        "162.475",
+        "162.5",
+        "162.525",
+        "162.55",
+    ):
+        assert (
+            f"receive_frequency_mhz: {frequency}"
+            in script_response.text
+        )

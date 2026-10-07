@@ -39,6 +39,40 @@
             </p>
         </section>
 
+        <section
+            class="preset-panel"
+            aria-labelledby="preset-heading"
+        >
+            <div class="preset-panel-heading">
+                <p class="eyebrow">Channel presets</p>
+
+                <h2 id="preset-heading">
+                    Add a complete channel pack.
+                </h2>
+
+                <p>
+                    Add commonly used channels with one click. Every
+                    channel remains fully editable after it is added.
+                </p>
+            </div>
+
+            <div class="preset-actions">
+                <button
+                    id="add-noaa-weather"
+                    class="button button-secondary"
+                    type="button"
+                >
+                    Add NOAA Weather — 7 channels
+                </button>
+            </div>
+
+            <p
+                id="preset-status"
+                class="draft-status"
+                aria-live="polite"
+            ></p>
+        </section>
+
         <form
             id="channel-form"
             class="builder-form"
@@ -131,6 +165,7 @@
                 <div class="form-grid">
                     <label class="form-field">
                         <span>Channel name</span>
+
                         <input
                             data-field="name"
                             type="text"
@@ -142,6 +177,7 @@
 
                     <label class="form-field">
                         <span>Mode</span>
+
                         <select data-field="mode">
                             <option value="FM">FM</option>
                             <option value="NFM">NFM</option>
@@ -151,6 +187,7 @@
 
                     <label class="form-field">
                         <span>Receive frequency (MHz)</span>
+
                         <input
                             data-field="receive_frequency_mhz"
                             type="number"
@@ -163,6 +200,7 @@
 
                     <label class="form-field">
                         <span>Transmit frequency (MHz)</span>
+
                         <input
                             data-field="transmit_frequency_mhz"
                             type="number"
@@ -174,6 +212,7 @@
 
                     <label class="form-field">
                         <span>Power (watts)</span>
+
                         <input
                             data-field="power_watts"
                             type="number"
@@ -186,6 +225,7 @@
 
                     <label class="form-field">
                         <span>Tuning step (kHz)</span>
+
                         <select data-field="tuning_step_khz">
                             <option value="1">1.00</option>
                             <option value="2.5">2.50</option>
@@ -207,13 +247,16 @@
 
                     <label class="form-field">
                         <span>Scan behavior</span>
+
                         <select data-field="scan_behavior">
                             <option value="">
                                 Normal scan
                             </option>
+
                             <option value="S">
                                 Skip during scan
                             </option>
+
                             <option value="P">
                                 Priority scan
                             </option>
@@ -222,19 +265,24 @@
 
                     <label class="form-field">
                         <span>Tone configuration</span>
+
                         <select data-field="tone_mode">
                             <option value="none">
                                 No tone
                             </option>
+
                             <option value="tone">
                                 Transmit CTCSS tone
                             </option>
+
                             <option value="tsql">
                                 CTCSS tone squelch
                             </option>
+
                             <option value="dtcs">
                                 Matched DCS / DTCS
                             </option>
+
                             <option value="cross">
                                 Advanced / Cross tone
                             </option>
@@ -248,6 +296,7 @@
                     >
                         <label>
                             <span>CTCSS frequency (Hz)</span>
+
                             <select
                                 data-field="tone_frequency_hz"
                                 data-ctcss-select
@@ -262,6 +311,7 @@
                     >
                         <label>
                             <span>DCS code</span>
+
                             <select
                                 data-field="dcs_code"
                                 data-dcs-select
@@ -276,16 +326,20 @@
                     >
                         <label>
                             <span>DCS polarity</span>
+
                             <select data-field="dcs_polarity">
                                 <option value="NN">
                                     Normal / Normal
                                 </option>
+
                                 <option value="NR">
                                     Normal / Reverse
                                 </option>
+
                                 <option value="RN">
                                     Reverse / Normal
                                 </option>
+
                                 <option value="RR">
                                     Reverse / Reverse
                                 </option>
@@ -303,15 +357,18 @@
                         <div class="form-grid">
                             <label class="form-field">
                                 <span>Transmit tone type</span>
+
                                 <select
                                     data-field="transmit_tone_mode"
                                 >
                                     <option value="none">
                                         No transmit tone
                                     </option>
+
                                     <option value="ctcss">
                                         CTCSS
                                     </option>
+
                                     <option value="dcs">
                                         DCS / DTCS
                                     </option>
@@ -320,15 +377,18 @@
 
                             <label class="form-field">
                                 <span>Receive tone type</span>
+
                                 <select
                                     data-field="receive_tone_mode"
                                 >
                                     <option value="none">
                                         No receive tone
                                     </option>
+
                                     <option value="ctcss">
                                         CTCSS
                                     </option>
+
                                     <option value="dcs">
                                         DCS / DTCS
                                     </option>
@@ -344,6 +404,7 @@
                                     <span>
                                         Transmit CTCSS frequency
                                     </span>
+
                                     <select
                                         data-field="transmit_ctcss_frequency_hz"
                                         data-ctcss-select
@@ -360,6 +421,7 @@
                                     <span>
                                         Receive CTCSS frequency
                                     </span>
+
                                     <select
                                         data-field="receive_ctcss_frequency_hz"
                                         data-ctcss-select
@@ -374,6 +436,7 @@
                             >
                                 <label>
                                     <span>Transmit DCS code</span>
+
                                     <select
                                         data-field="transmit_dcs_code"
                                         data-dcs-select
@@ -388,12 +451,14 @@
                             >
                                 <label>
                                     <span>Transmit DCS polarity</span>
+
                                     <select
                                         data-field="transmit_dcs_polarity"
                                     >
                                         <option value="N">
                                             Normal
                                         </option>
+
                                         <option value="R">
                                             Reverse
                                         </option>
@@ -408,6 +473,7 @@
                             >
                                 <label>
                                     <span>Receive DCS code</span>
+
                                     <select
                                         data-field="receive_dcs_code"
                                         data-dcs-select
@@ -422,12 +488,14 @@
                             >
                                 <label>
                                     <span>Receive DCS polarity</span>
+
                                     <select
                                         data-field="receive_dcs_polarity"
                                     >
                                         <option value="N">
                                             Normal
                                         </option>
+
                                         <option value="R">
                                             Reverse
                                         </option>
@@ -439,6 +507,7 @@
 
                     <label class="form-field form-field-wide">
                         <span>Comment</span>
+
                         <input
                             data-field="comment"
                             type="text"
@@ -452,6 +521,7 @@
                             data-field="receive_only"
                             type="checkbox"
                         >
+
                         <span>
                             Receive only — disable transmitting on this
                             channel
