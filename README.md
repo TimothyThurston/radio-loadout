@@ -2,182 +2,450 @@
 
 > Build your channels once. Load them anywhere.
 
-Radio Loadout is an open-source, browser-first radio channel planning and configuration export project. Its long-term goal is to let radio users build one clean, validated channel plan and convert it into files that can be imported into CHIRP, DMR codeplug tools, and manufacturer-specific programming software.
+Radio Loadout is a browser-first radio channel planning and configuration export project. It lets users create organized channel loadouts through a guided web interface and download them as CHIRP-compatible CSV files.
 
-The project is currently in early development. The data model and first CHIRP exporter are being built before the full website interface.
+The long-term goal is to provide one radio-independent channel plan that can eventually be exported for CHIRP, DMR codeplug tools, and selected manufacturer programming applications.
 
-## The problem
+## Project status
 
-Radio programming is fragmented. Different radios and programming applications expect different fields, file formats, naming limits, tone settings, and channel structures. A channel list that works in one program often has to be rebuilt manually for another.
+Radio Loadout is currently in early development, but its analog channel builder is functional.
 
-Radio Loadout is intended to separate the **channel plan** from the **radio-specific export format**:
+The current version includes:
 
-1. Create or import a channel plan once.
-2. Validate frequencies, names, modes, tones, and transmit settings.
-3. Select a radio or programming-software target.
-4. Export a compatible file.
-5. Import that file into the radio's existing programming software.
+- A working browser-based channel builder
+- CHIRP Generic CSV downloads
+- Analog tone and repeater configuration
+- Browser draft saving
+- Verified channel presets
+- Automated model, exporter, and web tests
+- **23 passing automated tests**
 
-The website will generate files locally for the user to download. It is not intended to replace CHIRP, a DMR CPS, or a manufacturer's programming application, and direct USB radio programming is not required for the initial product.
+Radio Loadout is not yet considered a production-ready release. Generated files should be reviewed and tested with backups before programming a radio.
 
-## Current status
+## Current features
 
-Radio Loadout is a work in progress and is not yet a finished end-user application.
+### Browser channel builder
 
-### Implemented
+Users can:
 
-- A universal `Channel` model
-- FM, NFM, AM, and DMR mode representation
-- Channel-name and frequency validation
-- Receive-only channel support
-- Analog CTCSS, DCS, and cross-tone settings
-- Transmit-power settings
-- A CHIRP Generic CSV exporter using CHIRP's 21-column format
-- Automated tests for the current model and exporter behavior
-- Explicit rejection of unsupported DMR-to-CHIRP exports instead of silently producing an invalid file
+- Add multiple channels
+- Edit existing channels
+- Remove channels
+- Duplicate channels
+- Move channels up or down
+- Configure simplex channels
+- Configure repeater channels
+- Create receive-only channels
+- Add comments
+- Download the complete loadout as one CHIRP CSV file
 
-### Current limitations
+### Supported analog modes
 
-- The CHIRP exporter currently supports analog channels only.
-- DMR-specific codeplug data and DMR export are not implemented yet.
-- Manufacturer-specific CPS formats are not implemented yet.
-- The browser interface has not been completed.
-- Radio-specific field limits and compatibility rules still need to be added target by target.
+- FM
+- NFM
+- AM
 
-## Planned export targets
+The internal model also represents DMR channels, but DMR export is not implemented yet.
 
-| Target | Status | Purpose |
-| --- | --- | --- |
-| CHIRP Generic CSV | In development | Import analog channel plans into CHIRP-supported radios |
-| DMR codeplug formats | Planned | Export digital contacts, talkgroups, channels, zones, scan lists, and related settings |
-| Manufacturer CPS formats | Planned | Support vendor- and model-specific programming workflows |
-| CSV, TSV, JSON, TXT, and XML | Planned | Portable channel-plan exchange, backup, and debugging |
-| ZIP export bundles | Planned | Package multiple files or radio-specific outputs together |
-| Direct USB programming | Long-term research | May be possible for selected radios, but is outside the initial website scope |
+### Frequency and transmit settings
 
-Support will be added one verified format and radio family at a time. “Universal” describes the direction of the project, not a claim that every radio is already supported.
-
-## Channel model
-
-The internal model is designed to hold radio-independent channel information before an exporter converts it into a target format. Depending on the mode and radio, a channel may include:
+Each channel can include:
 
 - Channel name
 - Receive frequency
-- Transmit frequency or repeater offset
-- Operating mode and bandwidth
+- Transmit frequency
+- Repeater offset
 - Receive-only status
-- CTCSS transmit and receive tones
-- DCS transmit and receive codes
-- Cross-tone configuration
-- Transmit-power level
-- Scan and skip behavior
-- Comments or source metadata
-- Digital-mode fields as DMR support is developed
+- Transmit power
+- Tuning step
+- Scan behavior
+- Comment
 
-Keeping this information in a common model allows multiple exporters to use the same channel plan while applying their own field names, value mappings, restrictions, and file layouts.
+### Tone support
 
-## Planned website workflow
+The builder supports:
 
-The finished website is intended to provide a guided channel builder rather than requiring users to edit raw files.
+- No tone
+- Transmit CTCSS tone
+- CTCSS tone squelch
+- Matched DCS/DTCS
+- DCS polarity
+- Independent transmit and receive tones
+- Advanced cross-tone configurations
 
-1. Start a new loadout or import an existing supported file.
-2. Add channels manually or select them from supported data sources.
-3. Organize channels into a useful order, banks, or zones when the target supports them.
-4. Choose the destination radio, CPS, or export format.
-5. Review validation warnings and radio-specific compatibility issues.
-6. Download the generated file and import it into the appropriate programming application.
+The CHIRP exporter maps these settings into the appropriate generic CSV fields.
 
-An optional installable Progressive Web App may be explored later for offline use, but the primary product is intended to remain a website rather than a required desktop download.
+### Scan behavior
 
-## Data accuracy and updates
+Channels can be configured for:
 
-Repeater, satellite, and other frequency data changes over time. The long-term plan is to use maintainable data sources and update pipelines rather than permanently embedding an unchanging master list.
+- Normal scanning
+- Scan skip
+- Priority scan
 
-Future data features may include:
+### Automatic draft saving
 
-- Source and last-updated information
-- Scheduled data refreshes
-- Change detection for added, modified, or removed records
-- Review rules before replacing trusted data
-- Clear separation between verified source data and user-created channels
-- Local caching so a temporary source outage does not destroy an existing loadout
+The builder automatically saves the current channel loadout in the browser using local storage.
 
-Generated files should remain reviewable before import. Radio Loadout will not assume that every listed frequency is legal to transmit on with every radio, license, service, or location.
+Saved drafts are restored when the builder is reopened. Users can also clear the saved draft and start again.
+
+Draft saving is currently local to the browser and is not synchronized between devices.
+
+### Channel presets
+
+#### NOAA Weather
+
+The NOAA Weather preset adds all seven U.S. weather-radio channels:
+
+| Channel | Frequency |
+| --- | ---: |
+| NOAA 1 | 162.400 MHz |
+| NOAA 2 | 162.425 MHz |
+| NOAA 3 | 162.450 MHz |
+| NOAA 4 | 162.475 MHz |
+| NOAA 5 | 162.500 MHz |
+| NOAA 6 | 162.525 MHz |
+| NOAA 7 | 162.550 MHz |
+
+These channels are configured as receive-only NFM channels with a 25 kHz tuning step.
+
+#### Amateur Calling
+
+The Amateur Calling preset adds three national simplex calling frequencies:
+
+| Channel | Frequency |
+| --- | ---: |
+| 2M CALL | 146.520 MHz |
+| 1.25 CALL | 223.500 MHz |
+| 70CM CALL | 446.000 MHz |
+
+Preset loading avoids adding another copy of a frequency already present in the builder.
+
+## CHIRP export
+
+Radio Loadout currently exports analog channels using CHIRP’s generic 21-column CSV format.
+
+The exporter supports:
+
+- Channel locations
+- Names
+- Receive frequencies
+- Simplex and repeater operation
+- Positive and negative offsets
+- Receive-only channels
+- FM, NFM, and AM
+- CTCSS tones
+- DCS/DTCS tones
+- DCS polarity
+- Cross tones
+- Tuning steps
+- Scan behavior
+- Transmit power
+- Comments
+
+Unsupported DMR channels are explicitly rejected instead of producing a file that only appears valid.
+
+## How it works
+
+1. Open the Radio Loadout channel builder.
+2. Add channels manually or load a preset.
+3. Configure frequencies, modes, tones, power, and scan settings.
+4. Arrange the channels in the desired memory order.
+5. Select **Generate CHIRP CSV**.
+6. Download the generated file.
+7. Open the file in CHIRP and review it before programming a radio.
+
+Radio Loadout generates programming files. It does not directly communicate with or program a connected radio.
+
+## Technology stack
+
+Radio Loadout currently uses:
+
+- Python 3.11 or newer
+- FastAPI
+- Pydantic
+- Jinja2
+- HTML
+- CSS
+- JavaScript
+- Pytest
+- Ruff
+- GitHub Actions
+
+## Running Radio Loadout locally
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/TimothyThurston/radio-loadout.git
+cd radio-loadout
+```
+
+### 2. Create a virtual environment
+
+```bash
+python -m venv .venv
+```
+
+Activate it on Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Activate it on macOS or Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+### 3. Install the project
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+```
+
+### 4. Start the development server
+
+```bash
+uvicorn radio_loadout.web.app:app --reload
+```
+
+Open the following address in a browser:
+
+```text
+http://127.0.0.1:8000
+```
+
+The channel builder is available at:
+
+```text
+http://127.0.0.1:8000/builder
+```
+
+## Development checks
+
+Run the formatter and lint checks:
+
+```bash
+ruff check .
+```
+
+Run the automated test suite:
+
+```bash
+pytest
+```
+
+Both commands should complete successfully before committing changes.
+
+The test suite currently covers:
+
+- Channel model validation
+- Invalid frequencies
+- Receive-only channels
+- Analog settings
+- CTCSS tones
+- DCS/DTCS tones
+- DCS polarity
+- Cross-tone export
+- Repeater offsets
+- Tuning steps
+- Scan behavior
+- CHIRP CSV downloads
+- Builder page assets
+- Draft-saving assets
+- NOAA preset assets
+- Amateur Calling preset assets
 
 ## Project structure
 
-The current Python foundation is organized around two main responsibilities:
+```text
+radio-loadout/
+├── examples/
+│   └── generate_chirp_sample.py
+├── src/
+│   └── radio_loadout/
+│       ├── exporters/
+│       │   └── chirp_csv.py
+│       ├── web/
+│       │   ├── static/
+│       │   │   ├── builder.js
+│       │   │   └── styles.css
+│       │   ├── templates/
+│       │   │   ├── builder.html
+│       │   │   └── index.html
+│       │   └── app.py
+│       └── models.py
+├── tests/
+│   ├── test_chirp_csv.py
+│   ├── test_models.py
+│   └── test_web.py
+├── pyproject.toml
+└── README.md
+```
 
-- `src/radio_loadout/models.py` defines the shared channel data model and validation rules.
-- `src/radio_loadout/exporters/chirp_csv.py` converts supported analog channels into CHIRP Generic CSV rows.
-- The test suite verifies valid models, rejected inputs, receive-only behavior, tone handling, and exporter output.
+### Important modules
 
-As the project grows, target-specific logic should remain isolated in exporters so that adding one radio or file format does not require rewriting the universal channel model.
+- `models.py` contains the radio-independent channel and tone models.
+- `chirp_csv.py` converts supported analog channels into CHIRP Generic CSV rows.
+- `app.py` provides the FastAPI routes and validates builder submissions.
+- `builder.html` contains the channel-builder interface.
+- `builder.js` controls channel cards, presets, validation behavior, draft saving, and form submission.
+- `styles.css` contains the website styling.
+- `tests/` verifies model, exporter, and web behavior.
 
-## Design principles
+## Current limitations
 
-- **Browser first:** the main user experience should work from a website.
-- **One plan, multiple targets:** users should not rebuild the same channel list for every radio.
-- **Validate before export:** bad or unsupported values should produce clear errors.
-- **Never fake compatibility:** an exporter should reject unsupported settings rather than create a file that only appears valid.
-- **Modular exporters:** each format should be independently testable and maintainable.
-- **Traceable data:** imported frequency data should retain its source and update date when possible.
-- **User control:** generated files should be visible, editable, and reviewable before programming a radio.
+Radio Loadout does not currently provide:
+
+- CHIRP CSV import
+- Portable JSON loadout import and export
+- Server-side user accounts or cloud synchronization
+- A production database
+- Radio-specific compatibility profiles
+- ZIP-code repeater lookup
+- Satellite channel presets
+- DMR codeplug export
+- Manufacturer-specific CPS export
+- Direct USB radio programming
+- A production-hosted public release
+
+The current CHIRP exporter supports analog channels only.
 
 ## Roadmap
 
-### Phase 1 — Core foundation
+### Version 1 — Analog web application
 
-- Complete the universal analog channel model
-- Expand validation and edge-case coverage
-- Finish and verify CHIRP Generic CSV export
-- Add round-trip fixtures using known-good files
+The first public release will focus on creating a dependable analog channel-planning application.
 
-### Phase 2 — Website MVP
+Completed or substantially implemented:
 
-- Build the channel-plan editor
-- Add import, reorder, duplicate, edit, and delete controls
-- Add target selection and compatibility warnings
-- Generate downloadable CHIRP CSV files entirely through the website
-- Add loadout save and restore support
+- Universal analog channel model
+- CHIRP Generic CSV export
+- Browser-based multi-channel builder
+- Repeater and receive-only channels
+- CTCSS, DCS, and cross-tone controls
+- Power, tuning-step, and scan settings
+- Channel duplication and reordering
+- Automatic browser draft saving
+- NOAA Weather preset
+- Amateur Calling preset
+- Automated tests
 
-### Phase 3 — Radio profiles
+Remaining Version 1 work:
 
-- Add per-radio name lengths, frequency ranges, supported modes, power levels, and memory limits
-- Add bank and zone mapping rules
-- Create verified compatibility tests for each supported radio family
+- Improve user-facing validation and error messages
+- Add known-good CHIRP compatibility fixtures
+- Verify exported files through repeated CHIRP testing
+- Add CHIRP CSV import
+- Add portable JSON backup and restoration
+- Add initial radio compatibility profiles
+- Add broader browser and end-to-end testing
+- Update user documentation
+- Prepare and deploy the public website
 
-### Phase 4 — DMR and CPS support
+### Version 2 — Data sources and digital radio
 
-- Expand the model for contacts, talkgroups, color codes, time slots, zones, receive groups, and scan lists
-- Add DMR codeplug exporters one ecosystem at a time
-- Research documented manufacturer CPS formats and safe conversion methods
+Planned Version 2 features include:
 
-### Phase 5 — Maintained data sources
+- Repeater lookup by ZIP code or location
+- Satellite presets
+- Emergency and monitoring presets
+- Source attribution and last-updated information
+- Maintainable frequency-data update pipelines
+- Change detection for updated repeater and satellite records
+- Initial DMR channel, contact, talkgroup, and zone models
+- The first verified DMR codeplug workflow
 
-- Add repeater and satellite data integrations where licensing and access terms allow
-- Track source provenance and update timestamps
-- Detect additions, changes, and removals
-- Preserve user edits when upstream data changes
+### Version 3 — Broader radio compatibility
+
+Longer-term work may include:
+
+- Additional DMR ecosystems
+- Manufacturer-specific CPS exports
+- Radio-specific memory and field validation
+- Bank and zone mapping
+- Export bundles containing multiple formats
+- More extensive radio compatibility testing
+- Selected app-based radio workflows
+- Research into safe direct-radio programming
+
+Support will be added one verified format and radio family at a time.
+
+“Universal” describes the project’s direction. It is not a claim that every radio or programming format is already supported.
+
+## Design principles
+
+- **Browser first:** the main application should work through a website.
+- **One plan, multiple targets:** users should not rebuild the same channel list for every radio.
+- **Validate before export:** invalid or unsupported settings should produce clear errors.
+- **Never fake compatibility:** unsupported configurations should be rejected instead of silently producing unreliable files.
+- **Modular exporters:** each export format should remain independently testable.
+- **Traceable data:** imported frequencies should retain source and update information when possible.
+- **User control:** generated files should remain visible and reviewable before radio programming.
+- **Incremental verification:** new radios and formats should be added only after repeatable testing.
+
+## Data accuracy
+
+Repeater, satellite, aviation, emergency, and other frequency information can change.
+
+Future imported data should include:
+
+- Original source
+- Last-updated date
+- Geographic coverage
+- Licensing or usage restrictions
+- Review status
+- Change history where practical
+
+Radio Loadout should distinguish verified source data from user-created channels and preserve user edits when upstream information changes.
 
 ## Safety and legal notice
 
-Radio Loadout is a planning and file-generation tool. It does not grant authorization to transmit. Users are responsible for following applicable licensing rules, band plans, service restrictions, equipment-certification requirements, and local regulations.
+Radio Loadout is a planning and file-generation tool. It does not grant authorization to transmit.
 
-Always review generated files before importing them into programming software or writing them to a radio. During early development, test with backups and known-good configurations.
+Users are responsible for following:
+
+- Amateur-radio license privileges
+- Band plans
+- Service restrictions
+- Equipment-certification requirements
+- Local regulations
+- Applicable national regulations
+
+A listed frequency may be legal to monitor but illegal to transmit on without the correct authorization or equipment.
+
+Always review generated files before importing them into programming software or writing them to a radio. During early development, use backups and known-good configurations.
 
 ## Contributing
 
-The project is still establishing its core model and exporter architecture. Useful contributions will eventually include:
+Useful contributions may include:
 
-- Verified sample files from supported programming applications
-- Exporter and validation tests
+- Verified sample files
+- Exporter tests
+- Validation tests
 - Radio-specific field-limit research
 - Documentation corrections
-- Reproducible bug reports that include the target radio, programming software, expected result, and generated result
+- Reproducible bug reports
+- Authorized and appropriately licensed data-source integrations
 
-Please avoid submitting undocumented proprietary formats or sensitive personal channel data.
+Bug reports should include:
 
-## Project name
+- Target radio
+- Programming application and version
+- Expected result
+- Actual result
+- Generated file or a privacy-safe reproduction
+- Steps needed to reproduce the problem
 
-The product name is **Radio Loadout**, matching the `radio-loadout` repository name.
+Do not submit undocumented proprietary formats or sensitive personal channel data.
+
+## Author
+
+Radio Loadout is developed by Timothy Thurston.
+
+## License
+
+A project license has not yet been selected.
