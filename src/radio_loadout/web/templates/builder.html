@@ -1,15 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-    <meta
-        name="description"
-        content="Build a custom radio loadout and export it for CHIRP."
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Build a custom radio loadout and export it for CHIRP.">
 
     <title>Channel Builder | Radio Loadout</title>
 
@@ -39,10 +34,7 @@
             </p>
         </section>
 
-        <section
-            class="preset-panel"
-            aria-labelledby="preset-heading"
-        >
+        <section class="preset-panel" aria-labelledby="preset-heading">
             <div class="preset-panel-heading">
                 <p class="eyebrow">Channel presets</p>
 
@@ -57,66 +49,38 @@
             </div>
 
             <div class="preset-actions">
-                <button
-                    id="add-noaa-weather"
-                    class="button button-secondary"
-                    type="button"
-                >
+                <button id="add-noaa-weather" class="button button-secondary" type="button">
                     Add NOAA Weather — 7 channels
+                </button>
+
+                <button id="add-amateur-calling" class="button button-secondary" type="button">
+                    Add Amateur Calling — 3 channels
                 </button>
             </div>
 
-            <p
-                id="preset-status"
-                class="draft-status"
-                aria-live="polite"
-            ></p>
+            <p id="preset-status" class="draft-status" aria-live="polite"></p>
         </section>
 
-        <form
-            id="channel-form"
-            class="builder-form"
-            action="/downloads/chirp.csv"
-            method="post"
-        >
-            <input
-                id="channels-json"
-                name="channels_json"
-                type="hidden"
-            >
+        <form id="channel-form" class="builder-form" action="/downloads/chirp.csv" method="post">
+            <input id="channels-json" name="channels_json" type="hidden">
 
             <div id="channel-list" class="channel-list"></div>
 
             <div class="builder-actions">
-                <button
-                    id="add-channel"
-                    class="button button-secondary"
-                    type="button"
-                >
+                <button id="add-channel" class="button button-secondary" type="button">
                     + Add another channel
                 </button>
 
-                <button
-                    id="clear-draft"
-                    class="button button-secondary"
-                    type="button"
-                >
+                <button id="clear-draft" class="button button-secondary" type="button">
                     Clear draft
                 </button>
 
-                <button
-                    class="button button-primary"
-                    type="submit"
-                >
+                <button class="button button-primary" type="submit">
                     Generate CHIRP CSV
                 </button>
             </div>
 
-            <p
-                id="draft-status"
-                class="draft-status"
-                aria-live="polite"
-            ></p>
+            <p id="draft-status" class="draft-status" aria-live="polite"></p>
         </form>
 
         <template id="channel-template">
@@ -125,38 +89,22 @@
                     <h2 data-channel-number>Channel</h2>
 
                     <div class="channel-card-actions">
-                        <button
-                            class="channel-order-button"
-                            type="button"
-                            data-move-channel-up
-                            aria-label="Move channel up"
-                        >
+                        <button class="channel-order-button" type="button" data-move-channel-up
+                            aria-label="Move channel up">
                             ↑ Up
                         </button>
 
-                        <button
-                            class="channel-order-button"
-                            type="button"
-                            data-move-channel-down
-                            aria-label="Move channel down"
-                        >
+                        <button class="channel-order-button" type="button" data-move-channel-down
+                            aria-label="Move channel down">
                             ↓ Down
                         </button>
 
-                        <button
-                            class="channel-order-button"
-                            type="button"
-                            data-duplicate-channel
-                            aria-label="Duplicate channel"
-                        >
+                        <button class="channel-order-button" type="button" data-duplicate-channel
+                            aria-label="Duplicate channel">
                             Duplicate
                         </button>
 
-                        <button
-                            class="remove-channel"
-                            type="button"
-                            data-remove-channel
-                        >
+                        <button class="remove-channel" type="button" data-remove-channel>
                             Remove
                         </button>
                     </div>
@@ -166,13 +114,7 @@
                     <label class="form-field">
                         <span>Channel name</span>
 
-                        <input
-                            data-field="name"
-                            type="text"
-                            maxlength="32"
-                            placeholder="Example: TEST RPT"
-                            required
-                        >
+                        <input data-field="name" type="text" maxlength="32" placeholder="Example: TEST RPT" required>
                     </label>
 
                     <label class="form-field">
@@ -188,39 +130,21 @@
                     <label class="form-field">
                         <span>Receive frequency (MHz)</span>
 
-                        <input
-                            data-field="receive_frequency_mhz"
-                            type="number"
-                            min="0.000001"
-                            step="0.000001"
-                            placeholder="146.940000"
-                            required
-                        >
+                        <input data-field="receive_frequency_mhz" type="number" min="0.000001" step="0.000001"
+                            placeholder="146.940000" required>
                     </label>
 
                     <label class="form-field">
                         <span>Transmit frequency (MHz)</span>
 
-                        <input
-                            data-field="transmit_frequency_mhz"
-                            type="number"
-                            min="0.000001"
-                            step="0.000001"
-                            placeholder="146.340000"
-                        >
+                        <input data-field="transmit_frequency_mhz" type="number" min="0.000001" step="0.000001"
+                            placeholder="146.340000">
                     </label>
 
                     <label class="form-field">
                         <span>Power (watts)</span>
 
-                        <input
-                            data-field="power_watts"
-                            type="number"
-                            min="0.1"
-                            step="0.1"
-                            value="5.0"
-                            required
-                        >
+                        <input data-field="power_watts" type="number" min="0.1" step="0.1" value="5.0" required>
                     </label>
 
                     <label class="form-field">
@@ -289,41 +213,23 @@
                         </select>
                     </label>
 
-                    <div
-                        class="form-field"
-                        data-quick-ctcss-settings
-                        hidden
-                    >
+                    <div class="form-field" data-quick-ctcss-settings hidden>
                         <label>
                             <span>CTCSS frequency (Hz)</span>
 
-                            <select
-                                data-field="tone_frequency_hz"
-                                data-ctcss-select
-                            ></select>
+                            <select data-field="tone_frequency_hz" data-ctcss-select></select>
                         </label>
                     </div>
 
-                    <div
-                        class="form-field"
-                        data-quick-dcs-settings
-                        hidden
-                    >
+                    <div class="form-field" data-quick-dcs-settings hidden>
                         <label>
                             <span>DCS code</span>
 
-                            <select
-                                data-field="dcs_code"
-                                data-dcs-select
-                            ></select>
+                            <select data-field="dcs_code" data-dcs-select></select>
                         </label>
                     </div>
 
-                    <div
-                        class="form-field"
-                        data-quick-dcs-settings
-                        hidden
-                    >
+                    <div class="form-field" data-quick-dcs-settings hidden>
                         <label>
                             <span>DCS polarity</span>
 
@@ -347,20 +253,14 @@
                         </label>
                     </div>
 
-                    <fieldset
-                        class="advanced-tone-settings form-field-wide"
-                        data-cross-tone-settings
-                        hidden
-                    >
+                    <fieldset class="advanced-tone-settings form-field-wide" data-cross-tone-settings hidden>
                         <legend>Advanced tone controls</legend>
 
                         <div class="form-grid">
                             <label class="form-field">
                                 <span>Transmit tone type</span>
 
-                                <select
-                                    data-field="transmit_tone_mode"
-                                >
+                                <select data-field="transmit_tone_mode">
                                     <option value="none">
                                         No transmit tone
                                     </option>
@@ -378,9 +278,7 @@
                             <label class="form-field">
                                 <span>Receive tone type</span>
 
-                                <select
-                                    data-field="receive_tone_mode"
-                                >
+                                <select data-field="receive_tone_mode">
                                     <option value="none">
                                         No receive tone
                                     </option>
@@ -395,66 +293,39 @@
                                 </select>
                             </label>
 
-                            <div
-                                class="form-field"
-                                data-transmit-ctcss-settings
-                                hidden
-                            >
+                            <div class="form-field" data-transmit-ctcss-settings hidden>
                                 <label>
                                     <span>
                                         Transmit CTCSS frequency
                                     </span>
 
-                                    <select
-                                        data-field="transmit_ctcss_frequency_hz"
-                                        data-ctcss-select
-                                    ></select>
+                                    <select data-field="transmit_ctcss_frequency_hz" data-ctcss-select></select>
                                 </label>
                             </div>
 
-                            <div
-                                class="form-field"
-                                data-receive-ctcss-settings
-                                hidden
-                            >
+                            <div class="form-field" data-receive-ctcss-settings hidden>
                                 <label>
                                     <span>
                                         Receive CTCSS frequency
                                     </span>
 
-                                    <select
-                                        data-field="receive_ctcss_frequency_hz"
-                                        data-ctcss-select
-                                    ></select>
+                                    <select data-field="receive_ctcss_frequency_hz" data-ctcss-select></select>
                                 </label>
                             </div>
 
-                            <div
-                                class="form-field"
-                                data-transmit-dcs-settings
-                                hidden
-                            >
+                            <div class="form-field" data-transmit-dcs-settings hidden>
                                 <label>
                                     <span>Transmit DCS code</span>
 
-                                    <select
-                                        data-field="transmit_dcs_code"
-                                        data-dcs-select
-                                    ></select>
+                                    <select data-field="transmit_dcs_code" data-dcs-select></select>
                                 </label>
                             </div>
 
-                            <div
-                                class="form-field"
-                                data-transmit-dcs-settings
-                                hidden
-                            >
+                            <div class="form-field" data-transmit-dcs-settings hidden>
                                 <label>
                                     <span>Transmit DCS polarity</span>
 
-                                    <select
-                                        data-field="transmit_dcs_polarity"
-                                    >
+                                    <select data-field="transmit_dcs_polarity">
                                         <option value="N">
                                             Normal
                                         </option>
@@ -466,32 +337,19 @@
                                 </label>
                             </div>
 
-                            <div
-                                class="form-field"
-                                data-receive-dcs-settings
-                                hidden
-                            >
+                            <div class="form-field" data-receive-dcs-settings hidden>
                                 <label>
                                     <span>Receive DCS code</span>
 
-                                    <select
-                                        data-field="receive_dcs_code"
-                                        data-dcs-select
-                                    ></select>
+                                    <select data-field="receive_dcs_code" data-dcs-select></select>
                                 </label>
                             </div>
 
-                            <div
-                                class="form-field"
-                                data-receive-dcs-settings
-                                hidden
-                            >
+                            <div class="form-field" data-receive-dcs-settings hidden>
                                 <label>
                                     <span>Receive DCS polarity</span>
 
-                                    <select
-                                        data-field="receive_dcs_polarity"
-                                    >
+                                    <select data-field="receive_dcs_polarity">
                                         <option value="N">
                                             Normal
                                         </option>
@@ -508,19 +366,11 @@
                     <label class="form-field form-field-wide">
                         <span>Comment</span>
 
-                        <input
-                            data-field="comment"
-                            type="text"
-                            maxlength="120"
-                            placeholder="Optional description"
-                        >
+                        <input data-field="comment" type="text" maxlength="120" placeholder="Optional description">
                     </label>
 
                     <label class="checkbox-field form-field-wide">
-                        <input
-                            data-field="receive_only"
-                            type="checkbox"
-                        >
+                        <input data-field="receive_only" type="checkbox">
 
                         <span>
                             Receive only — disable transmitting on this
@@ -532,4 +382,5 @@
         </template>
     </main>
 </body>
+
 </html>

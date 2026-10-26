@@ -28,6 +28,24 @@ const NOAA_WEATHER_CHANNELS = [
     { name: "NOAA 7", receive_frequency_mhz: 162.55 },
 ];
 
+const AMATEUR_CALLING_CHANNELS = [
+    {
+        name: "2M CALL",
+        receive_frequency_mhz: 146.52,
+        comment: "Two-meter national simplex calling frequency",
+    },
+    {
+        name: "1.25 CALL",
+        receive_frequency_mhz: 223.5,
+        comment: "1.25-meter national simplex calling frequency",
+    },
+    {
+        name: "70CM CALL",
+        receive_frequency_mhz: 446.0,
+        comment: "70-centimeter national simplex calling frequency",
+    },
+];
+
 const DRAFT_STORAGE_KEY = "radio-loadout-builder-draft-v1";
 
 const form = document.querySelector("#channel-form");
@@ -36,6 +54,9 @@ const channelTemplate = document.querySelector("#channel-template");
 const addChannelButton = document.querySelector("#add-channel");
 const addNoaaWeatherButton = document.querySelector(
     "#add-noaa-weather"
+);
+const addAmateurCallingButton = document.querySelector(
+    "#add-amateur-calling"
 );
 const clearDraftButton = document.querySelector("#clear-draft");
 const channelsJsonInput = document.querySelector("#channels-json");
@@ -562,6 +583,92 @@ function addNoaaWeatherPreset() {
     }
 }
 
+function amateurCallingChannelDraft(channel) {
+    return {
+        name: channel.name,
+        receive_frequency_mhz:
+            channel.receive_frequency_mhz,
+        transmit_frequency_mhz:
+            channel.receive_frequency_mhz,
+        mode: "FM",
+        power_watts: 5.0,
+        receive_only: false,
+        tone_mode: "none",
+        tuning_step_khz: 5,
+        scan_behavior: "",
+        comment: channel.comment,
+    };
+}
+
+function addAmateurCallingPreset() {
+    const existingFrequencies = new Set();
+
+    getChannelCards().forEach((card) => {
+        const value = getField(
+            card,
+            "receive_frequency_mhz"
+        ).value;
+
+        if (value !== "") {
+            existingFrequencies.add(frequencyKey(value));
+        }
+    });
+
+    getChannelCards().forEach((card) => {
+        if (isBlankChannelCard(card)) {
+            card.remove();
+        }
+    });
+
+    let addedCount = 0;
+    let skippedCount = 0;
+
+    AMATEUR_CALLING_CHANNELS.forEach((channel) => {
+        const key = frequencyKey(
+            channel.receive_frequency_mhz
+        );
+
+        if (existingFrequencies.has(key)) {
+            skippedCount += 1;
+            return;
+        }
+
+        const card = createChannelCard();
+
+        applyDraftToCard(
+            card,
+            amateurCallingChannelDraft(channel)
+        );
+        initializeChannelCard(card);
+
+        existingFrequencies.add(key);
+        addedCount += 1;
+    });
+
+    if (getChannelCards().length === 0) {
+        addChannel(false);
+    }
+
+    updateChannelNumbers();
+    saveDraft();
+
+    if (addedCount === 0) {
+        showPresetStatus(
+            "All three Amateur Calling channels are already "
+            + "in this loadout."
+        );
+    } else if (skippedCount > 0) {
+        showPresetStatus(
+            `Added ${addedCount} Amateur Calling channels; `
+            + `skipped ${skippedCount} already present.`
+        );
+    } else {
+        showPresetStatus(
+            "Added all three Amateur Calling channels."
+        );
+    }
+}
+
 function clearDraft() {
     const shouldClear = window.confirm(
         "Clear every channel in the current draft?"
@@ -698,6 +805,11 @@ addChannelButton.addEventListener("click", () => {
 addNoaaWeatherButton.addEventListener(
     "click",
     addNoaaWeatherPreset
+);
+
+addAmateurCallingButton.addEventListener(
+    "click",
+    addAmateurCallingPreset
 );
 
 clearDraftButton.addEventListener(

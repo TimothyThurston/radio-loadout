@@ -282,3 +282,45 @@ def test_builder_noaa_weather_preset_assets() -> None:
             f"receive_frequency_mhz: {frequency}"
             in script_response.text
         )
+
+
+def test_builder_amateur_calling_preset_assets() -> None:
+    page_response = client.get("/builder")
+    script_response = client.get("/static/builder.js")
+
+    assert page_response.status_code == 200
+    assert (
+        'id="add-amateur-calling"'
+        in page_response.text
+    )
+    assert "Add Amateur Calling" in page_response.text
+
+    assert script_response.status_code == 200
+    assert (
+        "AMATEUR_CALLING_CHANNELS"
+        in script_response.text
+    )
+    assert (
+        "addAmateurCallingPreset"
+        in script_response.text
+    )
+
+    for channel_name in (
+        "2M CALL",
+        "1.25 CALL",
+        "70CM CALL",
+    ):
+        assert (
+            f'name: "{channel_name}"'
+            in script_response.text
+        )
+
+    for frequency in (
+        "146.52",
+        "223.5",
+        "446.0",
+    ):
+        assert (
+            f"receive_frequency_mhz: {frequency}"
+            in script_response.text
+        )
