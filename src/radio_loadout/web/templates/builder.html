@@ -64,6 +64,9 @@
         <form id="channel-form" class="builder-form" action="/downloads/chirp.csv" method="post">
             <input id="channels-json" name="channels_json" type="hidden">
 
+            <div id="form-message" class="form-message" role="alert" aria-live="assertive" aria-atomic="true" hidden>
+            </div>
+
             <div id="channel-list" class="channel-list"></div>
 
             <div class="builder-actions">
@@ -75,7 +78,7 @@
                     Clear draft
                 </button>
 
-                <button class="button button-primary" type="submit">
+                <button id="generate-csv" class="button button-primary" type="submit">
                     Generate CHIRP CSV
                 </button>
             </div>

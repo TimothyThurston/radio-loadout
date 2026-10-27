@@ -862,3 +862,35 @@ textarea:focus {
         justify-content: flex-start;
     }
 }
+
+.form-message {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid transparent;
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 650;
+    line-height: 1.5;
+}
+
+.form-message[hidden] {
+    display: none;
+}
+
+.form-message-error {
+    color: #fecaca;
+    background: rgba(127, 29, 29, 0.28);
+    border-color: rgba(248, 113, 113, 0.5);
+}
+
+.form-message-success {
+    color: #bbf7d0;
+    background: rgba(20, 83, 45, 0.3);
+    border-color: rgba(74, 222, 128, 0.45);
+}
+
+.button:disabled {
+    cursor: wait;
+    opacity: 0.6;
+    transform: none;
+}

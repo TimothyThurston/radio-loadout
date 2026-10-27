@@ -324,3 +324,18 @@ def test_builder_amateur_calling_preset_assets() -> None:
             f"receive_frequency_mhz: {frequency}"
             in script_response.text
         )
+
+
+def test_builder_validation_feedback_assets() -> None:
+    page_response = client.get("/builder")
+    script_response = client.get("/static/builder.js")
+
+    assert page_response.status_code == 200
+    assert 'id="form-message"' in page_response.text
+    assert 'id="generate-csv"' in page_response.text
+
+    assert script_response.status_code == 200
+    assert "submitChannelForm" in script_response.text
+    assert "window.fetch" in script_response.text
+    assert "getResponseErrorMessage" in script_response.text
+    assert "URL.createObjectURL" in script_response.text

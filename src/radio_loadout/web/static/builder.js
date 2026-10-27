@@ -62,6 +62,8 @@ const clearDraftButton = document.querySelector("#clear-draft");
 const channelsJsonInput = document.querySelector("#channels-json");
 const draftStatus = document.querySelector("#draft-status");
 const presetStatus = document.querySelector("#preset-status");
+const formMessage = document.querySelector("#form-message");
+const generateCsvButton = document.querySelector("#generate-csv");
 
 let pendingSaveTimer = null;
 let statusClearTimer = null;
@@ -103,6 +105,29 @@ function showPresetStatus(message) {
     presetStatusClearTimer = window.setTimeout(() => {
         presetStatus.textContent = "";
     }, 4000);
+}
+
+function clearFormMessage() {
+    formMessage.textContent = "";
+    formMessage.classList.remove(
+        "form-message-error",
+        "form-message-success"
+    );
+    formMessage.hidden = true;
+}
+
+function showFormMessage(message, type) {
+    formMessage.textContent = message;
+    formMessage.classList.remove(
+        "form-message-error",
+        "form-message-success"
+    );
+    formMessage.classList.add(`form-message-${type}`);
+    formMessage.hidden = false;
+    formMessage.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+    });
 }
 
 function populateToneOptions(card) {
@@ -798,6 +823,124 @@ function channelDataFromCard(card) {
     };
 }
 
+async function getResponseErrorMessage(response) {
+    const fallbackMessage =
+        "Radio Loadout could not generate the CSV. "
+        + "Please review the channel settings and try again.";
+
+    try {
+        const responseData = await response.json();
+
+        if (
+            typeof responseData.detail === "string"
+            && responseData.detail.trim() !== ""
+        ) {
+            return responseData.detail;
+        }
+
+        if (Array.isArray(responseData.detail)) {
+            const messages = responseData.detail
+                .map((error) => error.msg)
+                .filter(Boolean);
+
+            if (messages.length > 0) {
+                return messages.join(" ");
+            }
+        }
+    } catch {
+        return fallbackMessage;
+    }
+
+    return fallbackMessage;
+}
+
+function getResponseFilename(response) {
+    const disposition =
+        response.headers.get("content-disposition") || "";
+
+    const filenameMatch = disposition.match(
+        /filename="?([^";]+)"?/i
+    );
+
+    if (filenameMatch) {
+        return filenameMatch[1];
+    }
+
+    return "radio_loadout_custom.csv";
+}
+
+function downloadBlob(blob, filename) {
+    const downloadUrl = URL.createObjectURL(blob);
+    const downloadLink = document.createElement("a");
+
+    downloadLink.href = downloadUrl;
+    downloadLink.download = filename;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    downloadLink.remove();
+
+    window.setTimeout(() => {
+        URL.revokeObjectURL(downloadUrl);
+    }, 0);
+}
+
+async function submitChannelForm(event) {
+    event.preventDefault();
+    clearFormMessage();
+    saveDraft();
+
+    const channels = getChannelCards().map(
+        channelDataFromCard
+    );
+
+    channelsJsonInput.value = JSON.stringify(
+        channels
+    );
+
+    generateCsvButton.disabled = true;
+    generateCsvButton.textContent = "Generating...";
+
+    try {
+        const response = await window.fetch(
+            form.action,
+            {
+                method: "POST",
+                body: new FormData(form),
+            }
+        );
+
+        if (!response.ok) {
+            const errorMessage =
+                await getResponseErrorMessage(response);
+
+            throw new Error(errorMessage);
+        }
+
+        const csvBlob = await response.blob();
+
+        downloadBlob(
+            csvBlob,
+            getResponseFilename(response)
+        );
+
+        showFormMessage(
+            "Your CHIRP CSV was generated and downloaded.",
+            "success"
+        );
+    } catch (error) {
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : "Radio Loadout could not generate the CSV.";
+
+        showFormMessage(errorMessage, "error");
+    } finally {
+        generateCsvButton.disabled = false;
+        generateCsvButton.textContent =
+            "Generate CHIRP CSV";
+    }
+}
+
 addChannelButton.addEventListener("click", () => {
     addChannel();
 });
@@ -921,17 +1064,10 @@ channelList.addEventListener("change", (event) => {
     saveDraft();
 });
 
-form.addEventListener("submit", () => {
-    saveDraft();
-
-    const channels = getChannelCards().map(
-        channelDataFromCard
-    );
-
-    channelsJsonInput.value = JSON.stringify(
-        channels
-    );
-});
+form.addEventListener(
+    "submit",
+    submitChannelForm
+);
 
 if (!restoreDraft()) {
     addChannel(false);
