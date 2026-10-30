@@ -339,3 +339,28 @@ def test_builder_validation_feedback_assets() -> None:
     assert "window.fetch" in script_response.text
     assert "getResponseErrorMessage" in script_response.text
     assert "URL.createObjectURL" in script_response.text
+
+def test_invalid_channel_returns_specific_message() -> None:
+    channels = [
+        {
+            "name": "INVALID CROSS",
+            "receive_frequency_mhz": 146.94,
+            "transmit_frequency_mhz": 146.34,
+            "tone_mode": "cross",
+            "transmit_tone_mode": "none",
+            "receive_tone_mode": "none",
+        }
+    ]
+
+    response = client.post(
+        "/downloads/chirp.csv",
+        data={"channels_json": json.dumps(channels)},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": (
+            "Channel 1: Advanced tone mode requires "
+            "at least one tone."
+        )
+    }

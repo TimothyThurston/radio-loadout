@@ -171,7 +171,10 @@ class ChannelFormData(BaseModel):
 
     name: str = Field(min_length=1, max_length=32)
     receive_frequency_mhz: float = Field(gt=0)
-    transmit_frequency_mhz: float | None = Field(default=None, gt=0)
+    transmit_frequency_mhz: float | None = Field(
+        default=None,
+        gt=0,
+    )
     mode: ChannelMode = ChannelMode.FM
     power_watts: float = Field(default=5.0, gt=0)
     receive_only: bool = False
@@ -220,13 +223,16 @@ class ChannelFormData(BaseModel):
     comment: str = Field(default="", max_length=120)
 
     @model_validator(mode="after")
-    def validate_channel_settings(self) -> "ChannelFormData":
+    def validate_channel_settings(
+        self,
+    ) -> "ChannelFormData":
         if (
             self.tone_mode in {"tone", "tsql"}
             and self.tone_frequency_hz is None
         ):
             raise ValueError(
-                "A CTCSS frequency is required when CTCSS is enabled."
+                "A CTCSS frequency is required when "
+                "CTCSS is enabled."
             )
 
         if (
@@ -234,7 +240,8 @@ class ChannelFormData(BaseModel):
             and self.dcs_code not in STANDARD_DCS_CODES
         ):
             raise ValueError(
-                "A standard DCS code is required when DCS is enabled."
+                "A standard DCS code is required when "
+                "DCS is enabled."
             )
 
         if self.tone_mode == "cross":
@@ -257,7 +264,8 @@ class ChannelFormData(BaseModel):
                 and self.receive_tone_mode == "none"
             ):
                 raise ValueError(
-                    "Advanced tone mode requires at least one tone."
+                    "Advanced tone mode requires at least "
+                    "one tone."
                 )
 
         if self.tuning_step_khz not in TUNING_STEPS_KHZ:
@@ -269,6 +277,60 @@ class ChannelFormData(BaseModel):
 
 
 CHANNEL_FORM_LIST = TypeAdapter(list[ChannelFormData])
+
+VALIDATION_FIELD_LABELS = {
+    "name": "channel name",
+    "receive_frequency_mhz": "receive frequency",
+    "transmit_frequency_mhz": "transmit frequency",
+    "power_watts": "power",
+    "tone_frequency_hz": "CTCSS frequency",
+    "dcs_code": "DCS code",
+    "tuning_step_khz": "tuning step",
+    "scan_behavior": "scan behavior",
+    "comment": "comment",
+}
+
+
+def _format_validation_error(
+    error: ValidationError,
+) -> str:
+    messages = []
+
+    for issue in error.errors(include_url=False):
+        location = issue.get("loc", ())
+        message = str(
+            issue.get("msg", "Invalid value.")
+        ).removeprefix("Value error, ")
+
+        channel_number = None
+        field_name = None
+
+        if location and isinstance(location[0], int):
+            channel_number = location[0] + 1
+
+        if location and isinstance(location[-1], str):
+            field_name = location[-1]
+
+        if channel_number is None:
+            messages.append(message)
+        elif field_name is None:
+            messages.append(
+                f"Channel {channel_number}: {message}"
+            )
+        else:
+            field_label = VALIDATION_FIELD_LABELS.get(
+                field_name,
+                field_name.replace("_", " "),
+            )
+            messages.append(
+                f"Channel {channel_number}, "
+                f"{field_label}: {message}"
+            )
+
+    if not messages:
+        return "The submitted channel data is invalid."
+
+    return " ".join(messages)
 
 
 def _mhz_to_hz(frequency_mhz: float) -> int:
@@ -440,7 +502,7 @@ def download_custom_chirp(
     except ValidationError as error:
         raise HTTPException(
             status_code=422,
-            detail="The submitted channel data is invalid.",
+            detail=_format_validation_error(error),
         ) from error
 
     if not form_channels:
