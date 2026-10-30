@@ -3,7 +3,6 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-
 TUNING_STEPS_KHZ = (
     1.0,
     2.5,
@@ -173,7 +172,7 @@ class Channel:
             self.tuning_step_khz,
             (int, float),
         ):
-            raise ValueError("Tuning step must be numeric.")
+            raise TypeError("Tuning step must be numeric.")
 
         if float(self.tuning_step_khz) not in TUNING_STEPS_KHZ:
             raise ValueError(
