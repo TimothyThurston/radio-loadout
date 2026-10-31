@@ -1,0 +1,7 @@
+Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE
+12,2M CALL,146.520000,,0.000000,,88.5,88.5,023,NN,023,Tone->Tone,FM,5.00,,5.0W,Simplex calling channel,,,,
+4,PLUS RPT,444.500000,+,5.000000,,88.5,88.5,023,NN,023,Tone->Tone,FM,12.50,S,25W,Positive repeater offset,,,,
+90,MINUS RPT,146.940000,-,0.600000,,88.5,88.5,023,NN,023,Tone->Tone,FM,5.00,,10W,Negative repeater offset,,,,
+1,NOAA 7,162.550000,off,0.000000,,88.5,88.5,023,NN,023,Tone->Tone,NFM,25.00,P,0.5W,Receive-only weather,,,,
+8,AIR RX,121.500000,off,0.000000,,88.5,88.5,023,NN,023,Tone->Tone,AM,25.00,,5W,AM receive-only channel,,,,
+2,SPLIT,145.000000,split,435.000000,,88.5,88.5,023,NN,023,Tone->Tone,FM,10.00,,2.5W,Absolute transmit frequency,,,,

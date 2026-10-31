@@ -118,7 +118,7 @@ def _row_to_channel(
     )
 
     mode = _parse_channel_mode(
-        _row_value(row, "Mode", "FM")
+        _row_value(row, "Mode") or "FM"
     )
 
     transmit_tone, receive_tone = _parse_tones(row)
@@ -128,7 +128,7 @@ def _row_to_channel(
     )
 
     tuning_step_khz = _parse_tuning_step(
-        _row_value(row, "TStep", "5.0")
+        _row_value(row, "TStep") or "5.0"
     )
 
     scan_behavior = _parse_scan_behavior(
@@ -170,7 +170,11 @@ def _parse_frequency_mhz(
             f"{field_name} must be greater than zero."
         )
 
-    return round(frequency_mhz * 1_000_000)
+    frequency_hz = frequency_mhz * 1_000_000
+    if not math.isfinite(frequency_hz):
+        raise ValueError(f"{field_name} is too large.")
+
+    return round(frequency_hz)
 
 
 def _parse_transmit_frequency(
@@ -233,7 +237,7 @@ def _parse_tones(
     tone_mode = _row_value(row, "Tone").casefold()
     transmit_polarity, receive_polarity = (
         _parse_dcs_polarities(
-            _row_value(row, "DtcsPolarity", "NN")
+            _row_value(row, "DtcsPolarity") or "NN"
         )
     )
 
@@ -249,18 +253,18 @@ def _parse_tones(
         )
 
     if tone_mode == "tsql":
-        transmit_frequency = _required_row_value(
-            row,
-            "rToneFreq",
-        )
-        receive_frequency = (
+        # CHIRP TSQL uses ctone in both directions; rtone is inactive.
+        # Keep validating populated inactive fields instead of accepting bad CSV.
+        if _row_value(row, "rToneFreq"):
+            _parse_ctcss_tone(_row_value(row, "rToneFreq"))
+        frequency = (
             _row_value(row, "cToneFreq")
-            or transmit_frequency
+            or _required_row_value(row, "rToneFreq")
         )
 
         return (
-            _parse_ctcss_tone(transmit_frequency),
-            _parse_ctcss_tone(receive_frequency),
+            _parse_ctcss_tone(frequency),
+            _parse_ctcss_tone(frequency),
         )
 
     if tone_mode == "dtcs":
@@ -268,10 +272,8 @@ def _parse_tones(
             row,
             "DtcsCode",
         )
-        receive_code = (
-            _row_value(row, "RxDtcsCode")
-            or transmit_code
-        )
+        if _row_value(row, "RxDtcsCode"):
+            _parse_dcs_tone(_row_value(row, "RxDtcsCode"), receive_polarity)
 
         return (
             _parse_dcs_tone(
@@ -279,7 +281,7 @@ def _parse_tones(
                 transmit_polarity,
             ),
             _parse_dcs_tone(
-                receive_code,
+                transmit_code,
                 receive_polarity,
             ),
         )

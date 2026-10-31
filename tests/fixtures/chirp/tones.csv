@@ -1,0 +1,15 @@
+Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment
+50,TX CTCSS,146.520000,,0,Tone,100.0,88.5,023,NN,025,Tone->Tone,FM,5,,5W,Transmit tone only
+2,TSQL,146.530000,,0,TSQL,88.5,110.9,023,NN,025,Tone->Tone,FM,5,,5W,Inactive rToneFreq differs
+88,DCS NN,146.540000,,0,DTCS,88.5,88.5,023,NN,025,Tone->Tone,FM,5,,5W,Inactive RxDtcsCode differs
+3,DCS NR,146.550000,,0,DTCS,88.5,88.5,025,NR,026,Tone->Tone,FM,5,S,2.5W,Normal TX reverse RX
+7,DCS RN,146.560000,,0,DTCS,88.5,88.5,026,RN,031,Tone->Tone,FM,5,P,1W,Reverse TX normal RX
+4,DCS RR,146.570000,,0,DTCS,88.5,88.5,031,RR,032,Tone->Tone,FM,5,,10W,Reverse both directions
+60,CROSS C D,446.000000,,0,Cross,123.0,88.5,023,NR,025,Tone->DTCS,FM,12.5,S,5W,CTCSS TX DCS RX
+12,CROSS D C,446.010000,,0,Cross,88.5,136.5,047,RN,023,DTCS->Tone,FM,12.5,,5W,DCS TX CTCSS RX
+9,CROSS C C,446.020000,,0,Cross,100.0,110.9,023,NN,023,Tone->Tone,FM,12.5,,5W,Different CTCSS frequencies
+31,CROSS D D,446.030000,,0,Cross,88.5,88.5,023,RR,025,DTCS->DTCS,FM,12.5,,5W,Different DCS codes
+22,RX DCS,446.040000,,0,Cross,88.5,88.5,023,NR,043,->DTCS,FM,12.5,,5W,DCS receive only
+6,TX DCS,446.050000,,0,Cross,88.5,88.5,065,RN,023,DTCS->,FM,12.5,,5W,DCS transmit only
+99,RX CTCSS,446.060000,,0,Cross,88.5,151.4,023,NN,023,->Tone,FM,12.5,,5W,CTCSS receive only
+17,CROSS TX TONE,446.070000,,0,Cross,127.3,88.5,023,NN,023,Tone->,FM,12.5,,5W,Transmit CTCSS cross spelling

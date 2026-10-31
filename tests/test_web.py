@@ -67,6 +67,7 @@ def test_chirp_import_returns_builder_channels(encoding: str) -> None:
     (b"Location,Comment\n0,Missing data\n", "missing required columns"),
     (b"Name,Frequency\n", "does not contain any channels"),
     (b"Name,Frequency\nBAD,nope\n", "Invalid CHIRP CSV row 2"),
+    (b"Name,Frequency\nBAD,1e308\n", "Invalid CHIRP CSV row 2: Frequency is too large"),
     (b"Name,Frequency\nBAD,146.52,extra\n", "row 2: too many columns"),
     (b"Name,Frequency,Tone,DtcsCode\nBAD,146.52,DTCS,001\n", "standard DCS code"),
 ])

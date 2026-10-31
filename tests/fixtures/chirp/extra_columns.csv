@@ -1,0 +1,5 @@
+Location,Name,Frequency,Duplex,Mode,TStep,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE,Bank,VendorNote
+99,Répéteur,146.520001,,FM,5,5W,"Café, say ""hello""",CQCQCQ,IGNORED,IGNORED,0,Local,Harmless metadata
+3,SECOND,446.006250,,NFM,6.25,2.5W,"Line one
+Line two",,,,,Other,Additional column
+42,THIRD,121.500000,off,AM,25,10W,Last file row,,,,,,

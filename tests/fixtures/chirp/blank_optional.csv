@@ -1,0 +1,4 @@
+Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment
+9,DEFAULTS,146.520000,,,,,,,,,,,,,,
+2,BLANK TONE DEFAULTS,446.000000,,,Tone,100.0,,,,,,,,,,
+5,BLANK RX CODE,444.500000,,,DTCS,,,023,,,,FM,,,5W,
