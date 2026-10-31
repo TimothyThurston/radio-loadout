@@ -373,11 +373,17 @@ Remaining Version 1 work:
 - Implement verified satellite frequency presets, including source attribution and last-checked information; add channel sets for Doppler where practical
 - Implement initial radio-specific compatibility profiles (exact model/firmware, supported modes, memory/name limits, and device settings)
 - Add a **Radio Settings** tab for selected models: squelch, backlight and display options, battery saver, VOX, dual watch, scan behavior, timeout, beeps, and other settings only where supported by each radio
+- Add a **Recommended Settings** beginner-friendly preset for each verified radio model/firmware profile: populate a conservative, documented everyday-use baseline without changing channel memories or transmitting frequencies
+- Show a clear preview/diff before applying a recommended preset; explain every proposed setting in plain language, highlight trade-offs and any unsupported fields, and allow individual changes to be deselected or adjusted
+- Make recommended settings editable and reversible: save the current configuration first, provide a reset-to-previous-settings path, and require separate user confirmation before writing to a connected radio
+- Keep per-radio preset data versioned and tested alongside driver/firmware profiles; mark unverified combinations unsupported rather than guessing settings or modifying calibration/service/password regions
 - Save and restore model-specific settings with full radio image backups, not just channel CSV or generic loadout JSON
 - Prototype and verify direct browser read/edit/write of radio settings for at least one supported radio family using an appropriate browser hardware API; do not claim this capability for untested models
 - Before device writes, confirm the exact model/firmware, save the original device image, preserve unsupported fields, validate settings, and read back when supported
 - Add GitHub Actions CI, browser/end-to-end tests, updated documentation, and a selected project license
 - Polish the responsive user interface, harden upload and deployment behavior, and deploy the public website
+
+Recommended profiles are model- and firmware-specific starting points, not universal optimal settings. Initial V1 profiles should offer an Everyday / Beginner default. Consider Battery Saver and High-Noise profiles later, only if there is verified value and no unsafe transmit behavior. Preset values must be sourced from manufacturer manuals and tested against each supported radio; the model's currently read settings are the source of truth. Recommended presets should never override repeater access tones, transmit authorization, regional band limits, or emergency configuration without explicit user choice.
 
 A radio settings editor without a compatible device driver cannot apply global settings through generic CHIRP CSV. Direct browser radio programming is a targeted V1 capability for **selected, verified devices**, not a promise to replace every CHIRP driver by V1. Unsupported settings remain read-only or hidden; never write protected calibration/service regions.
 
