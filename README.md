@@ -13,12 +13,14 @@ Radio Loadout is currently in early development, but its analog channel builder 
 The current version includes:
 
 - A working browser-based channel builder
-- CHIRP Generic CSV downloads
+- CHIRP Generic CSV downloads and imports
+- Portable Radio Loadout JSON backup and restore
+- CHIRP Generic CSV compatibility reviews
 - Analog tone and repeater configuration
 - Browser draft saving
 - Verified channel presets
 - Automated model, exporter, and web tests
-- **23 passing automated tests**
+- Automated tests for model validation, CHIRP import/export, compatibility reviews, and web endpoints
 
 Radio Loadout is not yet considered a production-ready release. Generated files should be reviewed and tested with backups before programming a radio.
 
@@ -328,11 +330,10 @@ radio-loadout/
 
 Radio Loadout does not currently provide:
 
-- CHIRP CSV import
-- Portable JSON loadout import and export
 - Server-side user accounts or cloud synchronization
 - A production database
 - Radio-specific compatibility profiles
+- Radio-wide settings editing and direct browser read/write
 - ZIP-code repeater lookup
 - Satellite channel presets
 - DMR codeplug export
@@ -344,7 +345,7 @@ The current CHIRP exporter supports analog channels only.
 
 ## Roadmap
 
-### Version 1 — Analog web application
+### Version 1 — Polished analog web application
 
 The first public release will focus on creating a dependable analog channel-planning application.
 
@@ -358,34 +359,37 @@ Completed or substantially implemented:
 - Power, tuning-step, and scan settings
 - Channel duplication and reordering
 - Automatic browser draft saving
+- CHIRP CSV import
+- Portable JSON backup and restore
+- CHIRP compatibility report with channel-level warnings and errors
 - NOAA Weather preset
 - Amateur Calling preset
 - Automated tests
 
 Remaining Version 1 work:
 
-- Improve user-facing validation and error messages
-- Add known-good CHIRP compatibility fixtures
-- Verify exported files through repeated CHIRP testing
-- Add CHIRP CSV import
-- Add portable JSON backup and restoration
-- Add initial radio compatibility profiles
-- Add broader browser and end-to-end testing
-- Update user documentation
-- Prepare and deploy the public website
+- Verify CHIRP CSV import/export in the real CHIRP application, including regression fixtures and radio-specific limitations
+- Implement ZIP-code/location repeater lookup with radius, band filters, selection into loadouts, and approved data-source access
+- Implement verified satellite frequency presets, including source attribution and last-checked information; add channel sets for Doppler where practical
+- Implement initial radio-specific compatibility profiles (exact model/firmware, supported modes, memory/name limits, and device settings)
+- Add a **Radio Settings** tab for selected models: squelch, backlight and display options, battery saver, VOX, dual watch, scan behavior, timeout, beeps, and other settings only where supported by each radio
+- Save and restore model-specific settings with full radio image backups, not just channel CSV or generic loadout JSON
+- Prototype and verify direct browser read/edit/write of radio settings for at least one supported radio family using an appropriate browser hardware API; do not claim this capability for untested models
+- Before device writes, confirm the exact model/firmware, save the original device image, preserve unsupported fields, validate settings, and read back when supported
+- Add GitHub Actions CI, browser/end-to-end tests, updated documentation, and a selected project license
+- Polish the responsive user interface, harden upload and deployment behavior, and deploy the public website
 
-### Version 2 — Data sources and digital radio
+A radio settings editor without a compatible device driver cannot apply global settings through generic CHIRP CSV. Direct browser radio programming is a targeted V1 capability for **selected, verified devices**, not a promise to replace every CHIRP driver by V1. Unsupported settings remain read-only or hidden; never write protected calibration/service regions.
+
+### Version 2 — Digital radio
 
 Planned Version 2 features include:
 
-- Repeater lookup by ZIP code or location
-- Satellite presets
-- Emergency and monitoring presets
-- Source attribution and last-updated information
-- Maintainable frequency-data update pipelines
-- Change detection for updated repeater and satellite records
 - Initial DMR channel, contact, talkgroup, and zone models
 - The first verified DMR codeplug workflow
+- More digital device profiles and verified browser programming
+- Further repeater/satellite data-source integrations and update automation
+- Emergency and monitoring preset expansions
 
 ### Version 3 — Broader radio compatibility
 
@@ -398,7 +402,7 @@ Longer-term work may include:
 - Export bundles containing multiple formats
 - More extensive radio compatibility testing
 - Selected app-based radio workflows
-- Research into safe direct-radio programming
+- Expand safe browser-based direct-radio programming to additional verified radio families and interfaces
 
 Support will be added one verified format and radio family at a time.
 
