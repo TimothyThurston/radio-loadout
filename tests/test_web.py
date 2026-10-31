@@ -4,11 +4,84 @@ import csv
 import json
 from io import StringIO
 
+import pytest
 from fastapi.testclient import TestClient
 
 from radio_loadout.web.app import app
 
 client = TestClient(app)
+
+
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
+def test_chirp_import_returns_builder_channels(encoding: str) -> None:
+    csv_text = (
+        "Name,Frequency,Duplex,Offset,Mode,Tone,rToneFreq,cToneFreq,"
+        "DtcsCode,RxDtcsCode,DtcsPolarity,CrossMode,Power,TStep,Skip,Comment\n"
+        "Répéteur,146.94,-,0.6,FM,Tone,100,,,,NN,,2.5W,12.5,S,Local\n"
+        "Weather,162.55,off,,NFM,,,,,,NN,,,25,P,Receive only\n"
+        "DCS,444.5,+,5,FM,DTCS,,,023,023,NR,,5W,5,,\n"
+        "Cross,446,,0,FM,Cross,123,,023,025,NR,Tone->DTCS,5W,5,,\n"
+        "Squelch,145.5,,0,FM,TSQL,88.5,88.5,,,NN,,5W,5,,\n"
+    )
+    response = client.post(
+        "/imports/chirp.csv",
+        files={"file": ("channels.csv", csv_text.encode(encoding), "text/csv")},
+    )
+
+    assert response.status_code == 200, response.text
+    channels = response.json()["channels"]
+    assert len(channels) == 5
+    assert channels[0]["name"] == "Répéteur"
+    assert channels[0]["receive_frequency_mhz"] == 146.94
+    assert channels[0]["transmit_frequency_mhz"] == 146.34
+    assert channels[0]["power_watts"] == 2.5
+    assert channels[0]["tuning_step_khz"] == 12.5
+    assert channels[0]["scan_behavior"] == "S"
+    assert channels[0]["comment"] == "Local"
+    assert channels[0]["transmit_ctcss_frequency_hz"] == 100
+    assert channels[1]["receive_only"] is True
+    assert channels[1]["transmit_frequency_mhz"] is None
+    assert channels[1]["mode"] == "NFM"
+    assert channels[1]["power_watts"] == 5
+    assert channels[1]["tone_mode"] == "none"
+    assert channels[2]["transmit_dcs_code"] == 23
+    assert channels[2]["receive_dcs_polarity"] == "R"
+    assert channels[3]["tone_mode"] == "cross"
+    assert channels[3]["transmit_tone_mode"] == "ctcss"
+    assert channels[3]["receive_tone_mode"] == "dcs"
+    assert channels[3]["receive_dcs_code"] == 25
+
+    exported = client.post(
+        "/downloads/chirp.csv", data={"channels_json": json.dumps(channels)},
+    )
+    assert exported.status_code == 200
+    rows = _read_csv_response(exported.text)
+    assert [row["Tone"] for row in rows] == ["Tone", "", "DTCS", "Cross", "TSQL"]
+    assert rows[2]["DtcsPolarity"] == "NR"
+    assert rows[3]["CrossMode"] == "Tone->DTCS"
+
+
+@pytest.mark.parametrize(("content", "message"), [
+    (b"\xff", "UTF-8"),
+    (b"", "CSV header"),
+    (b"Location,Comment\n0,Missing data\n", "missing required columns"),
+    (b"Name,Frequency\n", "does not contain any channels"),
+    (b"Name,Frequency\nBAD,nope\n", "Invalid CHIRP CSV row 2"),
+    (b"Name,Frequency\nBAD,146.52,extra\n", "row 2: too many columns"),
+    (b"Name,Frequency,Tone,DtcsCode\nBAD,146.52,DTCS,001\n", "standard DCS code"),
+])
+def test_chirp_import_rejects_invalid_file(content: bytes, message: str) -> None:
+    response = client.post(
+        "/imports/chirp.csv",
+        files={"file": ("invalid.csv", content, "text/csv")},
+    )
+    assert response.status_code == 422
+    assert message in response.json()["detail"]
+
+
+def test_chirp_import_requires_upload() -> None:
+    response = client.post("/imports/chirp.csv")
+    assert response.status_code == 422
 
 
 def _read_csv_response(
@@ -339,6 +412,63 @@ def test_builder_validation_feedback_assets() -> None:
     assert "window.fetch" in script_response.text
     assert "getResponseErrorMessage" in script_response.text
     assert "URL.createObjectURL" in script_response.text
+
+
+def test_builder_chirp_import_assets() -> None:
+    page_response = client.get("/builder")
+    script_response = client.get("/static/builder.js")
+
+    assert page_response.status_code == 200
+    assert 'id="chirp-csv-file" type="file" accept=".csv"' in page_response.text
+    assert 'id="import-chirp-csv"' in page_response.text
+    assert "Import CHIRP CSV" in page_response.text
+    assert "A successful import replaces the current channels." in page_response.text
+
+    assert script_response.status_code == 200
+    script = script_response.text
+    assert 'importChirpCsvButton.addEventListener("click", importChirpCsv)' in script
+    import_handler = script.split("async function importChirpCsv() {", 1)[1].split(
+        "async function submitChannelForm", 1,
+    )[0]
+    assert 'upload.append("file", file)' in import_handler
+    assert 'window.fetch("/imports/chirp.csv"' in import_handler
+    assert 'method: "POST"' in import_handler
+    assert "getResponseErrorMessage(response, fallbackMessage)" in import_handler
+    assert "Array.isArray(result.channels)" in import_handler
+    assert import_handler.index("if (!response.ok)") < import_handler.index(
+        "replaceChannelCards(result.channels)"
+    ) < import_handler.index("saveDraft()")
+    assert 'showFormMessage("Choose a CHIRP CSV file to import.", "error")' in import_handler
+    assert '"success"' in import_handler
+    assert 'chirpCsvFileInput.value = ""' in import_handler
+    assert "finally" in import_handler
+    assert "importChirpCsvButton.disabled = false" in import_handler
+    assert "chirpCsvFileInput.disabled = false" in import_handler
+    failure_handler = import_handler.split("} catch (error) {", 1)[1]
+    assert "showFormMessage" in failure_handler
+    assert "replaceChannelCards" not in failure_handler
+    assert "saveDraft" not in failure_handler
+
+
+def test_builder_import_reuses_draft_card_restoration() -> None:
+    response = client.get("/static/builder.js")
+    assert response.status_code == 200
+    script = response.text
+    replacement = script.split("function replaceChannelCards(channels) {", 1)[1].split(
+        "function restoreDraft", 1,
+    )[0]
+    assert "document.createDocumentFragment()" in replacement
+    assert "createChannelCard(replacement)" in replacement
+    assert "applyDraftToCard(card, cardDraft)" in replacement
+    assert replacement.index("initializeChannelCard(card)") < replacement.index(
+        "channelList.replaceChildren(replacement)"
+    ) < replacement.index("updateChannelNumbers()")
+    assert "replaceChannelCards(savedDraft)" in script
+    assert 'field.checked = Boolean(value)' in script
+    assert 'field.matches("[data-ctcss-select]")' in script
+    assert "Number(value).toFixed(1)" in script
+    assert "field.value = toneValue" in script
+
 
 def test_invalid_channel_returns_specific_message() -> None:
     channels = [

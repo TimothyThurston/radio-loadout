@@ -56,7 +56,18 @@
                 <button id="add-amateur-calling" class="button button-secondary" type="button">
                     Add Amateur Calling — 3 channels
                 </button>
+
+                <label class="form-field" for="chirp-csv-file">
+                    <span>CHIRP CSV file</span>
+                    <input id="chirp-csv-file" type="file" accept=".csv">
+                </label>
+
+                <button id="import-chirp-csv" class="button button-secondary" type="button">
+                    Import CHIRP CSV
+                </button>
             </div>
+
+            <p>A successful import replaces the current channels.</p>
 
             <p id="preset-status" class="draft-status" aria-live="polite"></p>
         </section>

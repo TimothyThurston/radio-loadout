@@ -64,6 +64,8 @@ const draftStatus = document.querySelector("#draft-status");
 const presetStatus = document.querySelector("#preset-status");
 const formMessage = document.querySelector("#form-message");
 const generateCsvButton = document.querySelector("#generate-csv");
+const chirpCsvFileInput = document.querySelector("#chirp-csv-file");
+const importChirpCsvButton = document.querySelector("#import-chirp-csv");
 
 let pendingSaveTimer = null;
 let statusClearTimer = null;
@@ -280,12 +282,11 @@ function updateToneFields(card) {
     }
 }
 
-function createChannelCard() {
+function createChannelCard(container = channelList) {
     const newChannel = channelTemplate.content.cloneNode(true);
+    const newCard = newChannel.querySelector("[data-channel-card]");
 
-    channelList.appendChild(newChannel);
-
-    const newCard = getChannelCards().at(-1);
+    container.appendChild(newChannel);
 
     populateToneOptions(newCard);
 
@@ -386,11 +387,37 @@ function applyDraftToCard(card, cardDraft) {
                 || value === undefined
             ) {
                 field.value = "";
+            } else if (field.matches("[data-ctcss-select]")) {
+                // API numbers such as 100 must match option values such as 100.0.
+                const toneValue = Number(value).toFixed(1);
+
+                if (![...field.options].some((option) => option.value === toneValue)) {
+                    const option = document.createElement("option");
+                    option.value = toneValue;
+                    option.textContent = toneValue;
+                    field.appendChild(option);
+                }
+
+                field.value = toneValue;
             } else {
                 field.value = String(value);
             }
         }
     );
+}
+
+function replaceChannelCards(channels) {
+    const replacement = document.createDocumentFragment();
+
+    channels.forEach((cardDraft) => {
+        const card = createChannelCard(replacement);
+
+        applyDraftToCard(card, cardDraft);
+        initializeChannelCard(card);
+    });
+
+    channelList.replaceChildren(replacement);
+    updateChannelNumbers();
 }
 
 function restoreDraft() {
@@ -400,16 +427,7 @@ function restoreDraft() {
         return false;
     }
 
-    channelList.replaceChildren();
-
-    savedDraft.forEach((cardDraft) => {
-        const card = createChannelCard();
-
-        applyDraftToCard(card, cardDraft);
-        initializeChannelCard(card);
-    });
-
-    updateChannelNumbers();
+    replaceChannelCards(savedDraft);
     showDraftStatus("Saved draft restored.");
 
     return true;
@@ -823,11 +841,9 @@ function channelDataFromCard(card) {
     };
 }
 
-async function getResponseErrorMessage(response) {
-    const fallbackMessage =
+async function getResponseErrorMessage(response, fallbackMessage =
         "Radio Loadout could not generate the CSV. "
-        + "Please review the channel settings and try again.";
-
+        + "Please review the channel settings and try again.") {
     try {
         const responseData = await response.json();
 
@@ -882,6 +898,65 @@ function downloadBlob(blob, filename) {
     window.setTimeout(() => {
         URL.revokeObjectURL(downloadUrl);
     }, 0);
+}
+
+async function importChirpCsv() {
+    clearFormMessage();
+    const file = chirpCsvFileInput.files[0];
+
+    if (!file) {
+        showFormMessage("Choose a CHIRP CSV file to import.", "error");
+        return;
+    }
+
+    const fallbackMessage = "Could not import the CHIRP CSV. Please try again.";
+    importChirpCsvButton.disabled = true;
+    chirpCsvFileInput.disabled = true;
+    importChirpCsvButton.textContent = "Importing...";
+
+    try {
+        const upload = new FormData();
+        upload.append("file", file);
+        const response = await window.fetch("/imports/chirp.csv", {
+            method: "POST",
+            body: upload,
+        });
+
+        if (!response.ok) {
+            throw new Error(await getResponseErrorMessage(response, fallbackMessage));
+        }
+
+        const result = await response.json();
+
+        if (
+            !Array.isArray(result.channels)
+            || result.channels.length === 0
+            || result.channels.some((channel) => (
+                channel === null
+                || typeof channel !== "object"
+                || Array.isArray(channel)
+            ))
+        ) {
+            throw new Error("The import response did not contain valid channels.");
+        }
+
+        replaceChannelCards(result.channels);
+        saveDraft();
+        chirpCsvFileInput.value = "";
+        showFormMessage(
+            `Imported ${result.channels.length} channels from CHIRP CSV.`,
+            "success"
+        );
+    } catch (error) {
+        showFormMessage(
+            error instanceof Error ? error.message : fallbackMessage,
+            "error"
+        );
+    } finally {
+        importChirpCsvButton.disabled = false;
+        chirpCsvFileInput.disabled = false;
+        importChirpCsvButton.textContent = "Import CHIRP CSV";
+    }
 }
 
 async function submitChannelForm(event) {
@@ -944,6 +1019,8 @@ async function submitChannelForm(event) {
 addChannelButton.addEventListener("click", () => {
     addChannel();
 });
+
+importChirpCsvButton.addEventListener("click", importChirpCsv);
 
 addNoaaWeatherButton.addEventListener(
     "click",

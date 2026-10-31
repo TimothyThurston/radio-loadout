@@ -1,9 +1,10 @@
 """Radio Loadout web application."""
 
+import csv
 from pathlib import Path
 from typing import Annotated, Literal
 
-from fastapi import FastAPI, Form, HTTPException, Request, Response
+from fastapi import FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import (
@@ -15,6 +16,7 @@ from pydantic import (
 )
 
 from radio_loadout.exporters.chirp_csv import export_chirp_csv
+from radio_loadout.importers.chirp_csv import import_chirp_csv
 from radio_loadout.models import (
     TUNING_STEPS_KHZ,
     AnalogSettings,
@@ -434,6 +436,74 @@ def _build_channel(form_data: ChannelFormData) -> Channel:
         scan_behavior=form_data.scan_behavior,
         comment=form_data.comment.strip(),
     )
+
+
+def _channel_to_form_data(channel: Channel) -> ChannelFormData:
+    """Represent imported tones using the builder's independent tone controls."""
+    settings = channel.analog_settings or AnalogSettings()
+    transmit = settings.transmit_tone
+    receive = settings.receive_tone
+    tone_fields = {}
+
+    for direction, tone in (("transmit", transmit), ("receive", receive)):
+        tone_fields[f"{direction}_tone_mode"] = tone.mode.value.lower()
+        tone_fields[f"{direction}_ctcss_frequency_hz"] = (
+            tone.value if tone.mode is ToneMode.CTCSS else None
+        )
+        tone_fields[f"{direction}_dcs_code"] = (
+            tone.value if tone.mode is ToneMode.DCS else None
+        )
+        tone_fields[f"{direction}_dcs_polarity"] = tone.polarity.value
+
+    return ChannelFormData(
+        name=channel.name,
+        receive_frequency_mhz=channel.receive_frequency_hz / 1_000_000,
+        transmit_frequency_mhz=(
+            channel.transmit_frequency_hz / 1_000_000
+            if channel.transmit_frequency_hz is not None else None
+        ),
+        receive_only=channel.receive_only,
+        mode=channel.mode,
+        power_watts=settings.power_watts if settings.power_watts is not None else 5.0,
+        tone_mode=(
+            "none" if transmit.mode is ToneMode.NONE and receive.mode is ToneMode.NONE
+            else "cross"
+        ),
+        tuning_step_khz=channel.tuning_step_khz,
+        scan_behavior=channel.scan_behavior,
+        comment=channel.comment,
+        **tone_fields,
+    )
+
+
+@app.post("/imports/chirp.csv")
+async def upload_chirp_csv(
+    file: Annotated[UploadFile, File()],
+) -> dict[str, list[ChannelFormData]]:
+    try:
+        csv_text = (await file.read()).decode("utf-8-sig")
+    except UnicodeDecodeError as error:
+        raise HTTPException(
+            status_code=422,
+            detail="The CSV file must use UTF-8 encoding.",
+        ) from error
+    finally:
+        await file.close()
+
+    try:
+        channels = import_chirp_csv(csv_text)
+        form_channels = CHANNEL_FORM_LIST.validate_python([
+            _channel_to_form_data(channel) for channel in channels
+        ])
+    except ValidationError as error:
+        raise HTTPException(
+            status_code=422,
+            detail=_format_validation_error(error),
+        ) from error
+    except (ValueError, csv.Error) as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+    return {"channels": form_channels}
 
 
 def _sample_channels() -> list[Channel]:
