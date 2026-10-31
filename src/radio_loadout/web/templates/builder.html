@@ -9,7 +9,7 @@
     <title>Channel Builder | Radio Loadout</title>
 
     <link rel="stylesheet" href="/static/styles.css">
-    <script src="/static/builder.js" defer></script>
+    <script src="/static/builder.js?v=3" defer></script>
 </head>
 
 <body>
@@ -70,6 +70,23 @@
             <p>A successful import replaces the current channels.</p>
 
             <p id="preset-status" class="draft-status" aria-live="polite"></p>
+        </section>
+
+        <section class="preset-panel" aria-labelledby="backup-heading">
+            <h2 id="backup-heading">Radio Loadout backups</h2>
+            <p>Save every builder setting to JSON. Importing a backup replaces the current channels.</p>
+            <div class="preset-actions">
+                <button id="export-backup" class="button button-secondary" type="button">
+                    Export Backup
+                </button>
+                <label class="form-field" for="backup-file">
+                    <span>Radio Loadout JSON backup</span>
+                    <input id="backup-file" type="file" accept=".json">
+                </label>
+                <button id="import-backup" class="button button-secondary" type="button">
+                    Import Backup
+                </button>
+            </div>
         </section>
 
         <form id="channel-form" class="builder-form" action="/downloads/chirp.csv" method="post">

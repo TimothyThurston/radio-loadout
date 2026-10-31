@@ -426,7 +426,7 @@ def test_builder_chirp_import_assets() -> None:
 
     assert script_response.status_code == 200
     script = script_response.text
-    assert 'importChirpCsvButton.addEventListener("click", importChirpCsv)' in script
+    assert 'bindBuilderEvent(importChirpCsvButton, "click", importChirpCsv)' in script
     import_handler = script.split("async function importChirpCsv() {", 1)[1].split(
         "async function submitChannelForm", 1,
     )[0]
@@ -468,6 +468,104 @@ def test_builder_import_reuses_draft_card_restoration() -> None:
     assert 'field.matches("[data-ctcss-select]")' in script
     assert "Number(value).toFixed(1)" in script
     assert "field.value = toneValue" in script
+
+
+def test_builder_backup_controls() -> None:
+    response = client.get("/builder")
+    assert response.status_code == 200
+    assert 'id="export-backup" class="button button-secondary" type="button"' in response.text
+    assert '<script src="/static/builder.js?v=3" defer></script>' in response.text
+    assert 'id="import-backup"' in response.text
+    assert 'id="backup-file" type="file" accept=".json"' in response.text
+    assert "Export Backup" in response.text
+    assert "Import Backup" in response.text
+    assert "Radio Loadout JSON backup" in response.text
+
+
+def test_builder_backup_serialization_assets() -> None:
+    response = client.get("/static/builder.js")
+    assert response.status_code == 200
+    script = response.text
+    assert 'document.querySelector("#export-backup")' in script
+    assert 'bindBuilderEvent(exportBackupButton, "click", exportBackup)' in script
+    assert 'bindBuilderEvent(importBackupButton, "click", importBackup)' in script
+    export = script.split("function exportBackup() {", 1)[1].split(
+        "async function importBackup", 1,
+    )[0]
+    assert 'format: "radio-loadout"' in export
+    assert "version: 1" in export
+    # Draft snapshots preserve hidden controls as well as the active tone preset.
+    assert "channels: getChannelCards().map(getCardDraft)" in export
+    assert "JSON.stringify(backup, null, 2)" in export
+    assert 'type: "application/json;charset=utf-8"' in export
+    assert 'downloadBlob(blob, "radio_loadout_backup.json")' in export
+    assert export.index("downloadBlob(") < export.index('"success"')
+    assert "Backup download requested" in export
+    assert "channelDataFromCard" not in export
+
+
+def test_builder_download_and_initialization_assets() -> None:
+    response = client.get("/static/builder.js?v=3")
+    assert response.status_code == 200
+    script = response.text
+    download = script.split("function downloadBlob(blob, filename) {", 1)[1].split(
+        "function validateBackup", 1,
+    )[0]
+    assert "URL.createObjectURL(blob)" in download
+    assert 'document.createElement("a")' in download
+    assert "anchor.href = objectUrl" in download
+    assert "anchor.download = filename" in download
+    assert 'anchor.style.display = "none"' in download
+    assert download.index("document.body.appendChild(anchor)") < download.index(
+        "anchor.click()"
+    ) < download.index("anchor?.remove()") < download.index("URL.revokeObjectURL")
+    assert "finally" in download
+    assert "}, 1000)" in download
+    registration = script.split("function bindBuilderEvent(element, eventName, handler) {", 1)[1]
+    assert registration.index("if (!element)") < registration.index("element.addEventListener")
+    assert "console.warn" in registration
+    assert 'console.error("Builder initialization failed:", error)' in registration
+    assert 'console.error("Backup export failed:", error)' in script
+
+
+def test_builder_backup_validation_and_restore_assets() -> None:
+    response = client.get("/static/builder.js")
+    assert response.status_code == 200
+    script = response.text
+    validation = script.split("function validateBackup(backup) {", 1)[1].split(
+        "function exportBackup", 1,
+    )[0]
+    assert 'backup.format !== "radio-loadout"' in validation
+    assert "backup.version !== 1" in validation
+    assert "Array.isArray(backup.channels)" in validation
+    assert "backup.channels.length === 0" in validation
+    assert "Object.hasOwn(channel, name)" in validation
+    assert 'typeof value !== "boolean"' in validation
+    assert 'typeof value !== "string"' in validation
+    assert "field.options" in validation
+    assert "Number.isFinite" in validation
+    assert "field.validity.rangeUnderflow" in validation
+    assert "field.maxLength" in validation
+
+    restore = script.split("async function importBackup() {", 1)[1].split(
+        "async function importChirpCsv", 1,
+    )[0]
+    assert "await file.text()" in restore
+    assert "JSON.parse" in restore
+    assert restore.index("validateBackup(backup)") < restore.index(
+        "replaceChannelCards(channels)"
+    ) < restore.index("saveDraft()")
+    assert "window.fetch" not in restore
+    assert "import_chirp_csv" not in restore
+    assert "getResponseErrorMessage" not in restore
+    assert "not valid JSON" in restore
+    assert '"success"' in restore
+    failure = restore.split("} catch (error) {", 1)[1]
+    assert "showFormMessage" in failure
+    assert "replaceChannelCards" not in failure
+    assert "saveDraft" not in failure
+    assert "importBackupButton.disabled = false" in failure
+    assert "backupFileInput.disabled = false" in failure
 
 
 def test_invalid_channel_returns_specific_message() -> None:

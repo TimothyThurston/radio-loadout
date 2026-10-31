@@ -66,6 +66,9 @@ const formMessage = document.querySelector("#form-message");
 const generateCsvButton = document.querySelector("#generate-csv");
 const chirpCsvFileInput = document.querySelector("#chirp-csv-file");
 const importChirpCsvButton = document.querySelector("#import-chirp-csv");
+const exportBackupButton = document.querySelector("#export-backup");
+const importBackupButton = document.querySelector("#import-backup");
+const backupFileInput = document.querySelector("#backup-file");
 
 let pendingSaveTimer = null;
 let statusClearTimer = null;
@@ -92,6 +95,10 @@ function optionalNumber(card, fieldName) {
 }
 
 function showDraftStatus(message) {
+    if (!draftStatus) {
+        console.warn("Builder draft status element is missing:", message);
+        return;
+    }
     window.clearTimeout(statusClearTimer);
     draftStatus.textContent = message;
 
@@ -101,6 +108,10 @@ function showDraftStatus(message) {
 }
 
 function showPresetStatus(message) {
+    if (!presetStatus) {
+        console.warn("Builder preset status element is missing:", message);
+        return;
+    }
     window.clearTimeout(presetStatusClearTimer);
     presetStatus.textContent = message;
 
@@ -110,6 +121,9 @@ function showPresetStatus(message) {
 }
 
 function clearFormMessage() {
+    if (!formMessage) {
+        return;
+    }
     formMessage.textContent = "";
     formMessage.classList.remove(
         "form-message-error",
@@ -119,6 +133,10 @@ function clearFormMessage() {
 }
 
 function showFormMessage(message, type) {
+    if (!formMessage) {
+        console.error("Builder message element is missing:", message);
+        return;
+    }
     formMessage.textContent = message;
     formMessage.classList.remove(
         "form-message-error",
@@ -886,18 +904,169 @@ function getResponseFilename(response) {
 }
 
 function downloadBlob(blob, filename) {
-    const downloadUrl = URL.createObjectURL(blob);
-    const downloadLink = document.createElement("a");
+    const objectUrl = URL.createObjectURL(blob);
+    let anchor;
 
-    downloadLink.href = downloadUrl;
-    downloadLink.download = filename;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    downloadLink.remove();
+    try {
+        anchor = document.createElement("a");
+        anchor.href = objectUrl;
+        anchor.download = filename;
+        anchor.style.display = "none";
+        document.body.appendChild(anchor);
+        anchor.click();
+    } finally {
+        // Give the browser time to start consuming the URL before releasing it.
+        window.setTimeout(() => {
+            anchor?.remove();
+            URL.revokeObjectURL(objectUrl);
+        }, 1000);
+    }
+}
 
-    window.setTimeout(() => {
-        URL.revokeObjectURL(downloadUrl);
-    }, 0);
+function validateBackup(backup) {
+    if (
+        backup === null
+        || typeof backup !== "object"
+        || Array.isArray(backup)
+        || backup.format !== "radio-loadout"
+    ) {
+        throw new Error("Choose a Radio Loadout JSON backup (format: radio-loadout).");
+    }
+
+    if (backup.version !== 1) {
+        throw new Error("Unsupported backup version. This builder supports version 1.");
+    }
+
+    if (!Array.isArray(backup.channels) || backup.channels.length === 0) {
+        throw new Error("The backup must contain a non-empty channels array.");
+    }
+
+    // Use the actual builder controls as the schema, without changing visible cards.
+    const schemaCard = createChannelCard(document.createDocumentFragment());
+    const fields = [...schemaCard.querySelectorAll("[data-field]")];
+    const fieldNames = fields.map((field) => field.dataset.field);
+
+    backup.channels.forEach((channel, index) => {
+        const fail = (message) => {
+            throw new Error(`Backup channel ${index + 1}: ${message}`);
+        };
+
+        if (
+            channel === null
+            || typeof channel !== "object"
+            || Array.isArray(channel)
+            || Object.keys(channel).length !== fieldNames.length
+            || !fieldNames.every((name) => Object.hasOwn(channel, name))
+        ) {
+            fail("expected an object containing every builder field.");
+        }
+
+        fields.forEach((field) => {
+            const value = channel[field.dataset.field];
+            const label = field.dataset.field.replaceAll("_", " ");
+
+            if (field.type === "checkbox") {
+                if (typeof value !== "boolean") {
+                    fail(`${label} must be true or false.`);
+                }
+                return;
+            }
+
+            if (typeof value !== "string") {
+                fail(`${label} must be a string.`);
+            }
+
+            if (field.matches("[data-ctcss-select]")) {
+                if (value !== "" && (
+                    !Number.isFinite(Number(value))
+                    || Number(value) < 50
+                    || Number(value) > 300
+                    || Number(value) !== Number(Number(value).toFixed(1))
+                )) {
+                    fail(`${label} must be between 50 and 300 Hz, with at most one decimal place.`);
+                }
+            } else if (field.tagName === "SELECT") {
+                const optionalTone = field.matches("[data-dcs-select]") && value === "";
+                if (!optionalTone && ![...field.options].some((option) => option.value === value)) {
+                    fail(`${label} has an unsupported value.`);
+                }
+            } else if (field.type === "number" && value !== "") {
+                field.value = value;
+                if (
+                    !Number.isFinite(Number(value))
+                    || field.value !== value
+                    || field.validity.rangeUnderflow
+                    || field.validity.rangeOverflow
+                    || field.validity.stepMismatch
+                ) {
+                    fail(`${label} must be a valid number within the builder's allowed range and step.`);
+                }
+            } else if (field.maxLength >= 0 && value.length > field.maxLength) {
+                fail(`${label} must be at most ${field.maxLength} characters.`);
+            }
+        });
+    });
+
+    // Empty editable fields are permitted so unfinished drafts can be backed up.
+    return backup.channels;
+}
+
+function exportBackup() {
+    try {
+        clearFormMessage();
+        if (!channelList || getChannelCards().length === 0) {
+            throw new Error("No builder channels are available to back up.");
+        }
+        const backup = {
+            format: "radio-loadout",
+            version: 1,
+            channels: getChannelCards().map(getCardDraft),
+        };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], {
+            type: "application/json;charset=utf-8",
+        });
+        downloadBlob(blob, "radio_loadout_backup.json");
+        showFormMessage(
+            "Backup download requested. Check your browser's downloads for radio_loadout_backup.json.",
+            "success"
+        );
+    } catch (error) {
+        console.error("Backup export failed:", error);
+        showFormMessage("Could not export the backup. Please try again.", "error");
+    }
+}
+
+async function importBackup() {
+    clearFormMessage();
+    const file = backupFileInput.files[0];
+
+    if (!file) {
+        showFormMessage("Choose a Radio Loadout JSON backup to restore.", "error");
+        return;
+    }
+
+    importBackupButton.disabled = true;
+    backupFileInput.disabled = true;
+    importBackupButton.textContent = "Restoring...";
+
+    try {
+        const text = await file.text();
+        const backup = JSON.parse(text.replace(/^\uFEFF/, ""));
+        const channels = validateBackup(backup);
+        replaceChannelCards(channels);
+        saveDraft();
+        backupFileInput.value = "";
+        showFormMessage(`Restored ${channels.length} channels from backup.`, "success");
+    } catch (error) {
+        const message = error instanceof SyntaxError
+            ? "The backup is not valid JSON."
+            : error instanceof Error ? error.message : "Could not read the backup file.";
+        showFormMessage(message, "error");
+    } finally {
+        importBackupButton.disabled = false;
+        backupFileInput.disabled = false;
+        importBackupButton.textContent = "Import Backup";
+    }
 }
 
 async function importChirpCsv() {
@@ -1016,28 +1185,42 @@ async function submitChannelForm(event) {
     }
 }
 
-addChannelButton.addEventListener("click", () => {
+function bindBuilderEvent(element, eventName, handler) {
+    if (!element) {
+        console.warn(`Builder control missing; skipped ${handler.name || eventName} listener.`);
+        return;
+    }
+    element.addEventListener(eventName, handler);
+}
+
+// Register export independently so a missing optional control cannot disable it.
+bindBuilderEvent(exportBackupButton, "click", exportBackup);
+bindBuilderEvent(importBackupButton, "click", importBackup);
+bindBuilderEvent(importChirpCsvButton, "click", importChirpCsv);
+
+bindBuilderEvent(addChannelButton, "click", () => {
     addChannel();
 });
 
-importChirpCsvButton.addEventListener("click", importChirpCsv);
-
-addNoaaWeatherButton.addEventListener(
+bindBuilderEvent(
+    addNoaaWeatherButton,
     "click",
     addNoaaWeatherPreset
 );
 
-addAmateurCallingButton.addEventListener(
+bindBuilderEvent(
+    addAmateurCallingButton,
     "click",
     addAmateurCallingPreset
 );
 
-clearDraftButton.addEventListener(
+bindBuilderEvent(
+    clearDraftButton,
     "click",
     clearDraft
 );
 
-channelList.addEventListener("click", (event) => {
+bindBuilderEvent(channelList, "click", (event) => {
     const card = event.target.closest(
         "[data-channel-card]"
     );
@@ -1083,7 +1266,7 @@ channelList.addEventListener("click", (event) => {
     saveDraft();
 });
 
-channelList.addEventListener("input", (event) => {
+bindBuilderEvent(channelList, "input", (event) => {
     if (
         event.target.closest("[data-channel-card]")
     ) {
@@ -1091,7 +1274,7 @@ channelList.addEventListener("input", (event) => {
     }
 });
 
-channelList.addEventListener("change", (event) => {
+bindBuilderEvent(channelList, "change", (event) => {
     const card = event.target.closest(
         "[data-channel-card]"
     );
@@ -1141,11 +1324,20 @@ channelList.addEventListener("change", (event) => {
     saveDraft();
 });
 
-form.addEventListener(
+bindBuilderEvent(
+    form,
     "submit",
     submitChannelForm
 );
 
-if (!restoreDraft()) {
-    addChannel(false);
+try {
+    if (!channelList || !channelTemplate || !form) {
+        throw new Error("Required builder elements are missing.");
+    }
+    if (!restoreDraft()) {
+        addChannel(false);
+    }
+} catch (error) {
+    console.error("Builder initialization failed:", error);
+    showFormMessage("The builder could not initialize. Please reload the page.", "error");
 }
