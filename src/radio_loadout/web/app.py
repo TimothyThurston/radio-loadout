@@ -1,6 +1,8 @@
 """Radio Loadout web application."""
 
 import csv
+import json
+import math
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -15,6 +17,12 @@ from pydantic import (
     model_validator,
 )
 
+from radio_loadout.compatibility import (
+    CompatibilityIssue,
+    CompatibilityReport,
+    check_chirp_compatibility,
+    validation_report,
+)
 from radio_loadout.exporters.chirp_csv import export_chirp_csv
 from radio_loadout.importers.chirp_csv import import_chirp_csv
 from radio_loadout.models import (
@@ -172,13 +180,14 @@ class ChannelFormData(BaseModel):
     """One channel submitted by the browser-based builder."""
 
     name: str = Field(min_length=1, max_length=32)
-    receive_frequency_mhz: float = Field(gt=0)
+    receive_frequency_mhz: float = Field(gt=0, allow_inf_nan=False)
     transmit_frequency_mhz: float | None = Field(
         default=None,
         gt=0,
+        allow_inf_nan=False,
     )
     mode: ChannelMode = ChannelMode.FM
-    power_watts: float = Field(default=5.0, gt=0)
+    power_watts: float = Field(default=5.0, gt=0, allow_inf_nan=False)
     receive_only: bool = False
 
     tone_mode: Literal[
@@ -336,7 +345,10 @@ def _format_validation_error(
 
 
 def _mhz_to_hz(frequency_mhz: float) -> int:
-    return round(frequency_mhz * 1_000_000)
+    frequency_hz = frequency_mhz * 1_000_000
+    if not math.isfinite(frequency_hz):
+        raise ValueError("Frequency must be finite and representable in Hz.")
+    return round(frequency_hz)
 
 
 def _build_independent_tone(
@@ -427,7 +439,7 @@ def _build_channel(form_data: ChannelFormData) -> Channel:
         receive_frequency_hz=receive_frequency_hz,
         transmit_frequency_hz=transmit_frequency_hz,
         mode=form_data.mode,
-        analog_settings=AnalogSettings(
+        analog_settings=None if form_data.mode is ChannelMode.DMR else AnalogSettings(
             transmit_tone=transmit_tone,
             receive_tone=receive_tone,
             power_watts=form_data.power_watts,
@@ -436,6 +448,37 @@ def _build_channel(form_data: ChannelFormData) -> Channel:
         scan_behavior=form_data.scan_behavior,
         comment=form_data.comment.strip(),
     )
+
+
+def _construct_channels(
+    form_channels: list[ChannelFormData],
+) -> tuple[list[Channel], list[CompatibilityIssue]]:
+    channels = []
+    issues = []
+    for index, form_channel in enumerate(form_channels):
+        try:
+            channels.append(_build_channel(form_channel))
+        except (TypeError, ValueError, OverflowError) as error:
+            issues.append(CompatibilityIssue(
+                "error", index, form_channel.name, "settings", str(error),
+            ))
+    return channels, issues
+
+
+@app.post("/validation/chirp.csv")
+def review_chirp_compatibility(channels_json: Annotated[str, Form()]) -> dict:
+    try:
+        form_channels = CHANNEL_FORM_LIST.validate_json(channels_json)
+    except ValidationError as error:
+        try:
+            submitted = json.loads(channels_json)
+        except (ValueError, TypeError):
+            submitted = None
+        return validation_report(error.errors(include_url=False), submitted).to_dict()
+    channels, issues = _construct_channels(form_channels)
+    if issues:
+        return CompatibilityReport(len(form_channels), tuple(issues)).to_dict()
+    return check_chirp_compatibility(channels).to_dict()
 
 
 def _channel_to_form_data(channel: Channel) -> ChannelFormData:
@@ -581,10 +624,17 @@ def download_custom_chirp(
             detail="At least one channel is required.",
         )
 
-    channels = [
-        _build_channel(form_channel)
-        for form_channel in form_channels
-    ]
+    channels, issues = _construct_channels(form_channels)
+    report = CompatibilityReport(len(form_channels), tuple(issues)) if issues else (
+        check_chirp_compatibility(channels)
+    )
+    if not report.compatible:
+        detail = " ".join(
+            f"Channel {issue.channel_index + 1} ({issue.channel_name}): {issue.message}"
+            if issue.channel_index is not None else issue.message
+            for issue in report.issues if issue.severity == "error"
+        )
+        raise HTTPException(status_code=422, detail=detail)
 
     csv_text = export_chirp_csv(channels)
 

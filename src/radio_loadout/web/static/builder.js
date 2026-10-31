@@ -69,6 +69,14 @@ const importChirpCsvButton = document.querySelector("#import-chirp-csv");
 const exportBackupButton = document.querySelector("#export-backup");
 const importBackupButton = document.querySelector("#import-backup");
 const backupFileInput = document.querySelector("#backup-file");
+const reviewCompatibilityButton = document.querySelector("#review-compatibility");
+const compatibilityPanel = document.querySelector("#compatibility-results");
+const compatibilitySummary = document.querySelector("#compatibility-summary");
+const compatibilityIssues = document.querySelector("#compatibility-issues");
+
+let compatibilityReport = null;
+let compatibilityRequestId = 0;
+let csvGenerationInProgress = false;
 
 let pendingSaveTimer = null;
 let statusClearTimer = null;
@@ -331,6 +339,7 @@ function getCardDraft(card) {
 }
 
 function saveDraft() {
+    invalidateCompatibilityReport();
     window.clearTimeout(pendingSaveTimer);
     pendingSaveTimer = null;
 
@@ -349,6 +358,7 @@ function saveDraft() {
 }
 
 function scheduleDraftSave() {
+    invalidateCompatibilityReport();
     window.clearTimeout(pendingSaveTimer);
 
     pendingSaveTimer = window.setTimeout(() => {
@@ -435,6 +445,7 @@ function replaceChannelCards(channels) {
     });
 
     channelList.replaceChildren(replacement);
+    invalidateCompatibilityReport();
     updateChannelNumbers();
 }
 
@@ -452,6 +463,7 @@ function restoreDraft() {
 }
 
 function addChannel(shouldSave = true) {
+    invalidateCompatibilityReport();
     const newCard = createChannelCard();
 
     initializeChannelCard(newCard);
@@ -1128,6 +1140,92 @@ async function importChirpCsv() {
     }
 }
 
+function invalidateCompatibilityReport() {
+    compatibilityRequestId += 1;
+    compatibilityReport = null;
+    if (generateCsvButton) {
+        generateCsvButton.disabled = csvGenerationInProgress;
+    }
+    if (compatibilityPanel && compatibilitySummary && compatibilityIssues && !compatibilityPanel.hidden) {
+        compatibilityPanel.dataset.state = "outdated";
+        compatibilitySummary.textContent = "This report is outdated. Review compatibility again after your changes.";
+        compatibilityIssues.replaceChildren();
+    }
+}
+
+function renderCompatibilityReport(report) {
+    compatibilityReport = report;
+    const errors = report.issues.filter((issue) => issue.severity === "error");
+    const warnings = report.issues.filter((issue) => issue.severity === "warning");
+    if (generateCsvButton) {
+        generateCsvButton.disabled = csvGenerationInProgress || errors.length > 0;
+    }
+    if (!compatibilityPanel || !compatibilitySummary || !compatibilityIssues) {
+        console.error("Compatibility results panel is missing.");
+        return;
+    }
+    compatibilityPanel.hidden = false;
+    compatibilityPanel.dataset.state = errors.length ? "error" : warnings.length ? "warning" : "compatible";
+    compatibilitySummary.textContent = errors.length
+        ? `Fix ${errors.length} compatibility error(s) before generating CHIRP CSV.`
+        : `All ${report.channel_count} channels are compatible with CHIRP Generic CSV.`
+            + (warnings.length ? ` Review ${warnings.length} warning(s); export is allowed.` : "");
+    compatibilityIssues.replaceChildren();
+    report.issues.forEach((issue) => {
+        const item = document.createElement("li");
+        const channel = Number.isInteger(issue.channel_index)
+            ? `Channel ${issue.channel_index + 1} (${issue.channel_name || "unnamed"})`
+            : "Loadout";
+        item.textContent = `${issue.severity.toUpperCase()} — ${channel}, ${issue.field}: ${issue.message}`;
+        compatibilityIssues.appendChild(item);
+    });
+}
+
+async function requestCompatibilityReport(channels) {
+    const data = new FormData();
+    data.append("channels_json", JSON.stringify(channels));
+    const response = await window.fetch("/validation/chirp.csv", {
+        method: "POST",
+        body: data,
+    });
+    if (!response.ok) {
+        throw new Error(await getResponseErrorMessage(response, "Could not review compatibility. Please try again."));
+    }
+    const report = await response.json();
+    if (
+        typeof report?.compatible !== "boolean"
+        || !Array.isArray(report.issues)
+        || !Number.isInteger(report.channel_count)
+        || report.issues.some((issue) => (
+            !issue || !["info", "warning", "error"].includes(issue.severity)
+            || typeof issue.message !== "string" || typeof issue.field !== "string"
+        ))
+        || report.compatible === report.issues.some((issue) => issue.severity === "error")
+    ) {
+        throw new Error("The compatibility service returned an invalid report. Please try again.");
+    }
+    return report;
+}
+
+async function reviewCompatibility(channels = getChannelCards().map(channelDataFromCard)) {
+    const requestId = ++compatibilityRequestId;
+    if (reviewCompatibilityButton) reviewCompatibilityButton.disabled = true;
+    try {
+        const report = await requestCompatibilityReport(channels);
+        // Editing or another review supersedes this in-flight response.
+        if (requestId !== compatibilityRequestId) return null;
+        renderCompatibilityReport(report);
+        return report;
+    } catch (error) {
+        if (requestId === compatibilityRequestId) {
+            showFormMessage(error instanceof Error ? error.message : "Could not review compatibility.", "error");
+        }
+        return null;
+    } finally {
+        if (reviewCompatibilityButton) reviewCompatibilityButton.disabled = false;
+    }
+}
+
 async function submitChannelForm(event) {
     event.preventDefault();
     clearFormMessage();
@@ -1142,9 +1240,13 @@ async function submitChannelForm(event) {
     );
 
     generateCsvButton.disabled = true;
+    csvGenerationInProgress = true;
     generateCsvButton.textContent = "Generating...";
 
     try {
+        const report = await reviewCompatibility(channels);
+        if (!report || !report.compatible) return;
+
         const response = await window.fetch(
             form.action,
             {
@@ -1179,7 +1281,8 @@ async function submitChannelForm(event) {
 
         showFormMessage(errorMessage, "error");
     } finally {
-        generateCsvButton.disabled = false;
+        csvGenerationInProgress = false;
+        generateCsvButton.disabled = compatibilityReport !== null && !compatibilityReport.compatible;
         generateCsvButton.textContent =
             "Generate CHIRP CSV";
     }
@@ -1197,6 +1300,10 @@ function bindBuilderEvent(element, eventName, handler) {
 bindBuilderEvent(exportBackupButton, "click", exportBackup);
 bindBuilderEvent(importBackupButton, "click", importBackup);
 bindBuilderEvent(importChirpCsvButton, "click", importChirpCsv);
+bindBuilderEvent(reviewCompatibilityButton, "click", () => {
+    clearFormMessage();
+    reviewCompatibility();
+});
 
 bindBuilderEvent(addChannelButton, "click", () => {
     addChannel();

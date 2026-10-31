@@ -782,6 +782,7 @@ textarea:focus {
 
 .builder-actions {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     gap: 1rem;
     margin-top: 1.5rem;
@@ -893,4 +894,29 @@ textarea:focus {
     cursor: wait;
     opacity: 0.6;
     transform: none;
+}
+
+.compatibility-panel {
+    margin-top: 1.5rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #64748b;
+    border-radius: 0.75rem;
+    line-height: 1.5;
+}
+
+.compatibility-panel[data-state="compatible"] {
+    border-color: #4ade80;
+}
+
+.compatibility-panel[data-state="warning"] {
+    border-color: #fbbf24;
+}
+
+.compatibility-panel[data-state="error"] {
+    border-color: #f87171;
+}
+
+.compatibility-panel li {
+    margin-block: 0.5rem;
+    overflow-wrap: anywhere;
 }

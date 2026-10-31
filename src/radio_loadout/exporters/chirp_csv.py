@@ -36,6 +36,8 @@ CHIRP_HEADERS = [
     "DVCODE",
 ]
 
+CHIRP_SUPPORTED_MODES = (ChannelMode.FM, ChannelMode.NFM, ChannelMode.AM)
+
 
 def export_chirp_csv(channels: Iterable[Channel]) -> str:
     """Convert channels into text using CHIRP's generic CSV format."""
@@ -51,7 +53,7 @@ def export_chirp_csv(channels: Iterable[Channel]) -> str:
 
 
 def _channel_to_row(location: int, channel: Channel) -> list[str]:
-    if channel.mode is ChannelMode.DMR:
+    if channel.mode not in CHIRP_SUPPORTED_MODES:
         raise ValueError(
             "CHIRP CSV export currently supports analog channels only."
         )

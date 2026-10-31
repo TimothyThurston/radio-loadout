@@ -145,6 +145,27 @@ The exporter supports:
 
 Unsupported DMR channels are explicitly rejected instead of producing a file that only appears valid.
 
+### Compatibility review
+
+Select **Review Compatibility** to check the current loadout against the CHIRP
+Generic CSV exporter. The report identifies each channel by number and name and
+shows informational notes, warnings, and errors. Warnings permit export; errors
+must be fixed first. Editing, reordering, adding, removing, or importing channels
+marks the report as outdated. Generating CSV also requests a current review, and
+the download endpoint enforces compatibility independently of the browser.
+
+Compatible with CHIRP Generic CSV does not guarantee support by every radio.
+This review adds no radio-specific frequency ranges, name lengths, or memory
+counts. It can warn about default power and precision lost during CSV formatting.
+
+`POST /validation/chirp.csv` accepts the same `channels_json` form field as
+`POST /downloads/chirp.csv`. It returns `target`, `compatible`, `channel_count`,
+and `issues`. Each issue contains `severity` (`info`, `warning`, or `error`),
+`channel_index` (zero-based, or null for a loadout issue), `channel_name`, `field`,
+and `message`. Incompatible submissions return a report with `compatible: false`;
+they are rejected with HTTP 422 by the download endpoint. Both endpoints reuse
+the existing builder form validation and channel construction.
+
 ## How it works
 
 1. Open the Radio Loadout channel builder.
@@ -238,7 +259,14 @@ Run the automated test suite:
 pytest
 ```
 
-Both commands should complete successfully before committing changes.
+Run the JavaScript regression tests with Node.js:
+
+```bash
+node --check src/radio_loadout/web/static/builder.js
+node --test tests/js/*.mjs
+```
+
+All checks should complete successfully before committing changes.
 
 The test suite currently covers:
 

@@ -9,7 +9,7 @@
     <title>Channel Builder | Radio Loadout</title>
 
     <link rel="stylesheet" href="/static/styles.css">
-    <script src="/static/builder.js?v=3" defer></script>
+    <script src="/static/builder.js?v=4" defer></script>
 </head>
 
 <body>
@@ -106,10 +106,23 @@
                     Clear draft
                 </button>
 
+                <button id="review-compatibility" class="button button-secondary" type="button"
+                    aria-controls="compatibility-results">
+                    Review Compatibility
+                </button>
+
                 <button id="generate-csv" class="button button-primary" type="submit">
                     Generate CHIRP CSV
                 </button>
             </div>
+
+            <p>Compatible with CHIRP Generic CSV does not guarantee support by every radio.</p>
+            <section id="compatibility-results" class="compatibility-panel" aria-live="polite"
+                aria-atomic="true" aria-labelledby="compatibility-heading" hidden>
+                <h2 id="compatibility-heading">CHIRP Generic CSV compatibility</h2>
+                <p id="compatibility-summary"></p>
+                <ul id="compatibility-issues"></ul>
+            </section>
 
             <p id="draft-status" class="draft-status" aria-live="polite"></p>
         </form>

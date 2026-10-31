@@ -475,7 +475,7 @@ def test_builder_backup_controls() -> None:
     response = client.get("/builder")
     assert response.status_code == 200
     assert 'id="export-backup" class="button button-secondary" type="button"' in response.text
-    assert '<script src="/static/builder.js?v=3" defer></script>' in response.text
+    assert '<script src="/static/builder.js?v=4" defer></script>' in response.text
     assert 'id="import-backup"' in response.text
     assert 'id="backup-file" type="file" accept=".json"' in response.text
     assert "Export Backup" in response.text
@@ -506,7 +506,7 @@ def test_builder_backup_serialization_assets() -> None:
 
 
 def test_builder_download_and_initialization_assets() -> None:
-    response = client.get("/static/builder.js?v=3")
+    response = client.get("/static/builder.js?v=4")
     assert response.status_code == 200
     script = response.text
     download = script.split("function downloadBlob(blob, filename) {", 1)[1].split(
