@@ -14,6 +14,7 @@ import time
 from html.parser import HTMLParser
 from io import StringIO
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.parse import urlencode, urljoin, urlsplit
 from urllib.request import ProxyHandler, Request, build_opener
 
@@ -56,8 +57,12 @@ def verify_imports(repo: Path, manifest: Path) -> Path:
     return package
 
 
-def verify_http(base: str, package: Path) -> None:
-    from radio_loadout.importers.chirp_csv import import_chirp_csv
+def verify_http(base: str, package: Path, *, installed_importer: bool = True) -> None:
+    if installed_importer:
+        from radio_loadout.importers.chirp_csv import import_chirp_csv
+    else:
+        def import_chirp_csv(text):
+            return list(csv.DictReader(StringIO(text)))
 
     opener = build_opener(ProxyHandler({}))  # Never send synthetic local traffic through a proxy.
 
@@ -136,16 +141,39 @@ def verify_http(base: str, package: Path) -> None:
     print("PASS: sample CSV download and synthetic custom CSV export -> BOM upload -> identical re-export.")
 
 
+def verify_oversized(base: str, package: Path) -> None:
+    opener = build_opener(ProxyHandler({}))
+    limits = json.loads((package / "web/static/input-limits.json").read_text())
+    boundary = "synthetic-staging-limit-check"
+    upload = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="oversized.csv"\r\n'
+              'Content-Type: text/csv\r\n\r\n').encode() + b"x" * (limits["csv_upload_bytes"] + 1) + f"\r\n--{boundary}--\r\n".encode()
+    requests = [("/imports/chirp.csv", upload, f"multipart/form-data; boundary={boundary}")]
+    for path in ("/validation/chirp.csv", "/downloads/chirp.csv"):
+        requests.append((path, urlencode({"channels_json": " " * (limits["channels_json_bytes"] + 1)}).encode(),
+                         "application/x-www-form-urlencoded"))
+    for path, content, content_type in requests:
+        try:
+            opener.open(Request(base + path, data=content, headers={"Content-Type": content_type}), timeout=15).close()
+        except HTTPError as response:
+            assert response.code == 413, (path, response.code)
+            assert response.headers["Cache-Control"] == "no-store"
+            assert isinstance(json.load(response)["detail"], str)
+            response.close()
+        else:
+            raise AssertionError(f"Oversized request accepted: {path}")
+    print("PASS: all three oversized-input rejections.")
+
+
 def main() -> None:
     package = verify_imports(Path(sys.argv[1]).resolve(), Path(sys.argv[2]))
     import uvicorn
 
-    from radio_loadout.web.app import app
+    from radio_loadout.web.production import create_app
 
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
         port = listener.getsockname()[1]
-        server = uvicorn.Server(uvicorn.Config(app, log_level="warning", access_log=False, lifespan="off"))
+        server = uvicorn.Server(uvicorn.Config(create_app(), log_level="warning", access_log=False, lifespan="off"))
         thread = threading.Thread(target=server.run, kwargs={"sockets": [listener]}, daemon=True)
         thread.start()
         try:
@@ -155,6 +183,10 @@ def main() -> None:
                     raise RuntimeError("Installed test server failed to start.")
                 threading.Event().wait(0.05)
             verify_http(f"http://127.0.0.1:{port}", package)
+            # The same installed staging boundary also serves the liveness probe.
+            with build_opener(ProxyHandler({})).open(f"http://127.0.0.1:{port}/healthz", timeout=5) as response:
+                assert json.load(response) == {"status": "ok"}
+            verify_oversized(f"http://127.0.0.1:{port}", package)
         finally:
             server.should_exit = True
             thread.join(timeout=10)

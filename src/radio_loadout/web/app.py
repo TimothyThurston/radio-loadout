@@ -63,6 +63,11 @@ app.mount(
 templates = Jinja2Templates(directory=WEB_DIRECTORY / "templates")
 
 
+@app.get("/healthz", include_in_schema=False)
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
 def _validate_independent_tone(
     label: str,
     mode: IndependentToneMode,

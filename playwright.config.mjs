@@ -39,9 +39,13 @@ export default defineConfig({
         { name: "chromium-narrow", use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 } } },
     ],
     webServer: {
-        command: `"${python}" -m uvicorn radio_loadout.web.app:app --host 127.0.0.1 --port ${port} --no-access-log --log-level warning`,
+        command: `"${python}" -m radio_loadout.web.serve`,
         cwd: root,
-        env: { PYTHONPATH: path.join(root, "src"), PYTHONNOUSERSITE: "1" },
+        env: {
+            PYTHONPATH: path.join(root, "src"), PYTHONNOUSERSITE: "1",
+            HOST: "127.0.0.1", PORT: String(port),
+            RADIO_LOADOUT_ALLOWED_HOSTS: "localhost,127.0.0.1", RADIO_LOADOUT_FORWARDED_ALLOW_IPS: "",
+        },
         url: `${baseURL}/builder`,
         reuseExistingServer: false,
         timeout: 30_000,

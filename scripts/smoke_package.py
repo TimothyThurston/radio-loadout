@@ -97,9 +97,10 @@ def audit_distributions(wheel: Path, sdist: Path, root: Path = ROOT) -> dict:
             raise RuntimeError(f"Source distribution omits/changes runtime file: {name}")
     # A usable source archive must also contain the test fixtures and smoke tooling.
     development_files = {"README.md", "pyproject.toml", "MANIFEST.in", "package.json",
-                         "package-lock.json", "playwright.config.mjs"}
+                         "package-lock.json", "playwright.config.mjs", "Dockerfile", ".dockerignore"}
     for directory, extensions in (("tests", {".py", ".mjs", ".csv", ".json", ".md"}),
-                                  ("docs", {".md"}), ("scripts", {".py", ".mjs"})):
+                                  ("docs", {".md"}), ("scripts", {".py", ".mjs"}),
+                                  ("deploy", {".in", ".lock"})):
         development_files.update(
             filename.relative_to(root).as_posix() for filename in (root / directory).rglob("*")
             if filename.is_file() and (filename.suffix in extensions or filename.name == ".gitattributes")

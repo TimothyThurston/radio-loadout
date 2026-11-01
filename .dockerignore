@@ -1,0 +1,26 @@
+# Allowlist only build inputs. Backups, secrets, caches and test output stay out.
+**
+!Dockerfile
+!.dockerignore
+!pyproject.toml
+!README.md
+!deploy/
+!deploy/requirements-build.lock
+!deploy/requirements-runtime.lock
+!src/
+!src/radio_loadout/
+!src/radio_loadout/*.py
+!src/radio_loadout/exporters/
+!src/radio_loadout/exporters/*.py
+!src/radio_loadout/importers/
+!src/radio_loadout/importers/*.py
+!src/radio_loadout/web/
+!src/radio_loadout/web/*.py
+!src/radio_loadout/web/static/
+!src/radio_loadout/web/static/backup-format.js
+!src/radio_loadout/web/static/builder.js
+!src/radio_loadout/web/static/styles.css
+!src/radio_loadout/web/static/input-limits.json
+!src/radio_loadout/web/templates/
+!src/radio_loadout/web/templates/index.html
+!src/radio_loadout/web/templates/builder.html

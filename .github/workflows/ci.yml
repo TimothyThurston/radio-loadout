@@ -98,6 +98,36 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  container:
+    name: Staging container (Linux amd64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python smoke driver
+        uses: actions/setup-python@v7.1.0
+        with:
+          python-version: '3.13'
+      - name: Build the local staging image
+        run: docker build --platform linux/amd64 --tag radio-loadout:staging-ci .
+      - name: Run with restricted privileges and temporary storage
+        run: |
+          docker run --detach --name radio-loadout-staging-ci --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=256m,mode=1777 --cap-drop ALL \
+            --security-opt no-new-privileges --memory 512m --cpus 1 --pids-limit 128 \
+            --publish 127.0.0.1:8000:8000 radio-loadout:staging-ci
+      - name: Verify non-root runtime and absence of development tools
+        run: |
+          docker exec radio-loadout-staging-ci python -c "import os,importlib.util; assert os.getuid() == 10001; assert importlib.util.find_spec('pytest') is None; assert importlib.util.find_spec('build') is None; assert not os.path.exists('/build')"
+      - name: Smoke-test health, assets, CSV workflows and limits
+        run: python scripts/staging_smoke.py --base-url http://127.0.0.1:8000
+      - name: Stop the local test container
+        if: ${{ always() }}
+        run: docker rm --force radio-loadout-staging-ci
+
   browser:
     name: Browser journeys (Chromium)
     runs-on: ubuntu-latest

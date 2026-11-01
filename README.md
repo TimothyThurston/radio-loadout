@@ -308,6 +308,12 @@ for wheel installation commands, the included assets, and isolation details.
 
 ## Development checks
 
+Staging/container preparation, local smoke commands, production settings, and
+rollback steps are documented in [staging deployment](docs/staging.md).
+The container uses the installable wheel and a non-root user. No deployment is
+performed by these commands or by CI. Review the [dependency license inventory](docs/dependency-licenses.md)
+before any public redistribution; Radio Loadout still has no selected license.
+
 Use Python 3.11 or newer. Activate your virtual environment and install the project
 and development dependencies as described above. CI tests Python 3.11 and 3.13.
 

@@ -23,6 +23,7 @@ source distribution contains the inputs needed to build the wheel.
 
 The source archive also includes Python/JavaScript/browser tests, synthetic
 fixtures, docs, npm manifests/lockfile, browser configuration, and smoke scripts.
+It includes the Dockerfile, context allowlist and deployment dependency locks.
 It intentionally excludes virtual environments, node modules, browser output,
 bytecode, Git metadata, personal configuration and generated distributions.
 The wheel contains runtime files and distribution metadata, not development tests.
@@ -77,6 +78,10 @@ The driver uses only the standard library plus the `build` development dependenc
 6. Verify the sample CSV download, a two-channel synthetic custom CSV export,
    UTF-8 BOM multipart CSV upload, identical re-export, and compatibility reports
    for both supported channels and unsupported DMR. Stop the server afterward.
+
+The installed HTTP probe uses the staging factory and verifies minimal health
+plus oversized-input rejection too. Staging smoke and container commands are described
+in [staging deployment](staging.md).
 
 No runtime application or test fixture is imported from the checkout by the
 probe. It uses no personal files, browser profiles or stored drafts. Installing

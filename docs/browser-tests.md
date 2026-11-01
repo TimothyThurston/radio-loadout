@@ -41,6 +41,8 @@ The server uses the repository's `.venv` Python when present, otherwise `python`
 To use a different installed Python, set `PLAYWRIGHT_PYTHON` to its executable
 path. The test server uses the repository's `src` directory, binds only loopback,
 and has no reload process.
+The test server now uses `radio_loadout.web.serve`, exercising the staging host,
+security-header and server settings with an explicit loopback-only test config.
 
 Useful commands:
 
