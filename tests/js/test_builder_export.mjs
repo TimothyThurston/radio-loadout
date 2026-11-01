@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { createContext, runInContext } from "node:vm";
 
+const backupSource = readFileSync(new URL("../../src/radio_loadout/web/static/backup-format.js", import.meta.url), "utf8");
 const source = readFileSync(
     new URL("../../src/radio_loadout/web/static/builder.js", import.meta.url),
     "utf8"
@@ -82,6 +83,7 @@ function setup({ missingMessage = false, failClick = false } = {}) {
             },
         },
     });
+    runInContext(backupSource, context);
     runInContext(source, context);
     assert.equal(typeof button.click, "function");
     assert.ok(warnings.length > 0, "missing optional controls produce diagnostics");

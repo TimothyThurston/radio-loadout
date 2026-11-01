@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { createContext, runInContext } from "node:vm";
 
+const backupSource = readFileSync(new URL("../../src/radio_loadout/web/static/backup-format.js", import.meta.url), "utf8");
 const source = readFileSync(new URL("../../src/radio_loadout/web/static/builder.js", import.meta.url), "utf8");
 
 class Element {
@@ -70,6 +71,7 @@ function setup(responder) {
     });
     // Exercise real event registration and workflow functions. Only replace card
     // serialization here; DOM card rendering has its own existing asset checks.
+    runInContext(backupSource, context);
     runInContext(source, context);
     runInContext(`
         getChannelCards = () => channels;

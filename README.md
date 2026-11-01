@@ -102,6 +102,20 @@ Saved drafts are restored when the builder is reopened. Users can also clear the
 
 Draft saving is currently local to the browser and is not synchronized between devices.
 
+### Portable JSON backups
+
+**Export Backup** downloads a version-1 `radio_loadout_backup.json` containing the
+complete draft, including unfinished channels and inactive tone controls.
+**Import Backup** validates the entire file before replacing cards and autosaving
+the restored draft. Missing optional legacy fields receive explicit historical
+defaults. Unknown fields, unsupported versions, malformed data, and wrong types
+produce clear errors without changing existing cards or the saved draft.
+
+The schema is independent of HTML controls. Draft restoration is separate from
+CSV export readiness: unfinished settings can be restored and corrected using
+**Review Compatibility**. See the [backup format contract](docs/backup-format.md)
+for field types, defaults, allowed values, normalization, and fixture coverage.
+
 ### Channel presets
 
 #### NOAA Weather
@@ -284,6 +298,7 @@ Use Node.js 24 LTS for the same JavaScript runtime major as CI. Verify that
 These tests use Node's built-in modules; no npm installation step is required.
 
 ```bash
+node --check src/radio_loadout/web/static/backup-format.js
 node --check src/radio_loadout/web/static/builder.js
 node --test tests/js/*.mjs
 ```
@@ -295,6 +310,8 @@ variable. Enumerate the test files explicitly to avoid shell wildcard difference
 ```powershell
 $nodeExecutable = 'C:\path\to\node.exe' # Replace with your actual Node.js 24 executable.
 & $nodeExecutable --version
+& $nodeExecutable --check src/radio_loadout/web/static/backup-format.js
+if ($LASTEXITCODE -ne 0) { throw 'Backup format JavaScript syntax check failed.' }
 & $nodeExecutable --check src/radio_loadout/web/static/builder.js
 if ($LASTEXITCODE -ne 0) { throw 'Builder JavaScript syntax check failed.' }
 $jsTests = @(Get-ChildItem -LiteralPath tests/js -File -Filter '*.mjs' |
@@ -315,7 +332,7 @@ run for the same workflow and branch or pull-request ref.
 
 The Python matrix installs `.[dev]`, then runs `ruff check .` and
 `python -m pytest` on Python 3.11 and 3.13. The separate JavaScript job installs
-Node.js 24 LTS and runs the builder syntax check and every `tests/js/*.mjs` test.
+Node.js 24 LTS and runs both browser-script syntax checks and every `tests/js/*.mjs` test.
 Checks are separate steps under Bash with failure propagation; no check is allowed
 to fail silently. Matrix fail-fast is disabled so both Python versions can report
 their results. This workflow tests the project; it does not publish or deploy it.

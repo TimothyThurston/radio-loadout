@@ -1,0 +1,8 @@
+{
+  "format": "radio-loadout",
+  "version": 1,
+  "channels": [
+    { "name": "LEGACY", "receive_frequency_mhz": "146.52" },
+    { "name": "", "receive_frequency_mhz": "" }
+  ]
+}

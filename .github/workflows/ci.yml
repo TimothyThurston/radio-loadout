@@ -59,7 +59,9 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
-      - name: Builder JavaScript syntax
-        run: node --check src/radio_loadout/web/static/builder.js
+      - name: Browser JavaScript syntax
+        run: |
+          node --check src/radio_loadout/web/static/backup-format.js
+          node --check src/radio_loadout/web/static/builder.js
       - name: JavaScript tests
         run: node --test tests/js/*.mjs

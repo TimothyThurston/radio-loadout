@@ -1,0 +1,6 @@
+{
+  "format": "radio-loadout",
+  "version": 1,
+  "channels": [{ "name": "TEST", "receive_frequency_mhz": "146.52" }],
+  "future_metadata": { "preserve_me": true }
+}

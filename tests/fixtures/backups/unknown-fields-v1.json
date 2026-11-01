@@ -1,0 +1,8 @@
+{
+  "format": "radio-loadout",
+  "version": 1,
+  "channels": [
+    { "name": "FIRST", "receive_frequency_mhz": "146.52" },
+    { "name": "FUTURE", "receive_frequency_mhz": "446", "future_radio_feature": true }
+  ]
+}

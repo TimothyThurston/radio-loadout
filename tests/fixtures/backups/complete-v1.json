@@ -1,0 +1,36 @@
+{
+  "format": "radio-loadout",
+  "version": 1,
+  "channels": [
+    {
+      "name": "MATCHED 777", "receive_frequency_mhz": "444.5", "transmit_frequency_mhz": "449.5",
+      "receive_only": false, "mode": "NFM", "power_watts": "2.5",
+      "tone_mode": "dtcs", "tone_frequency_hz": "123.4", "dcs_code": "777", "dcs_polarity": "NR",
+      "transmit_tone_mode": "ctcss", "transmit_ctcss_frequency_hz": "151.4",
+      "transmit_dcs_code": "1", "transmit_dcs_polarity": "R",
+      "receive_tone_mode": "dcs", "receive_ctcss_frequency_hz": "110.9",
+      "receive_dcs_code": "0", "receive_dcs_polarity": "N",
+      "tuning_step_khz": "12.5", "scan_behavior": "S", "comment": "Preserve hidden controls too"
+    },
+    {
+      "name": "CROSS", "receive_frequency_mhz": "446", "transmit_frequency_mhz": "446",
+      "receive_only": false, "mode": "FM", "power_watts": "5.0",
+      "tone_mode": "cross", "tone_frequency_hz": "100.0", "dcs_code": "23", "dcs_polarity": "RN",
+      "transmit_tone_mode": "dcs", "transmit_ctcss_frequency_hz": "123.4",
+      "transmit_dcs_code": "777", "transmit_dcs_polarity": "R",
+      "receive_tone_mode": "dcs", "receive_ctcss_frequency_hz": "100.0",
+      "receive_dcs_code": "1", "receive_dcs_polarity": "N",
+      "tuning_step_khz": "6.25", "scan_behavior": "P", "comment": "Independent polarities"
+    },
+    {
+      "name": "AM RX", "receive_frequency_mhz": "121.5", "transmit_frequency_mhz": "",
+      "receive_only": true, "mode": "AM", "power_watts": "1.0",
+      "tone_mode": "none", "tone_frequency_hz": "100.0", "dcs_code": "23", "dcs_polarity": "NN",
+      "transmit_tone_mode": "none", "transmit_ctcss_frequency_hz": "100.0",
+      "transmit_dcs_code": "23", "transmit_dcs_polarity": "N",
+      "receive_tone_mode": "none", "receive_ctcss_frequency_hz": "100.0",
+      "receive_dcs_code": "23", "receive_dcs_polarity": "R",
+      "tuning_step_khz": "25", "scan_behavior": "", "comment": "Last card, receive only"
+    }
+  ]
+}

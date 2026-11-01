@@ -1,0 +1,29 @@
+{
+  "format": "radio-loadout",
+  "version": 1,
+  "channels": [
+    {
+      "name": "",
+      "mode": "FM",
+      "receive_frequency_mhz": "",
+      "transmit_frequency_mhz": "",
+      "power_watts": "5.0",
+      "tuning_step_khz": "5",
+      "scan_behavior": "",
+      "tone_mode": "none",
+      "tone_frequency_hz": "100.0",
+      "dcs_code": "23",
+      "dcs_polarity": "NN",
+      "transmit_tone_mode": "none",
+      "receive_tone_mode": "none",
+      "transmit_ctcss_frequency_hz": "100.0",
+      "receive_ctcss_frequency_hz": "100.0",
+      "transmit_dcs_code": "23",
+      "transmit_dcs_polarity": "N",
+      "receive_dcs_code": "23",
+      "receive_dcs_polarity": "N",
+      "comment": "",
+      "receive_only": false
+    }
+  ]
+}

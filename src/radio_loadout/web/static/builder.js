@@ -241,7 +241,7 @@ function setSectionVisible(card, selector, visible) {
     });
 }
 
-function updateTransmitField(card) {
+function updateTransmitField(card, clearValue = true) {
     const receiveOnlyInput = getField(
         card,
         "receive_only"
@@ -253,7 +253,7 @@ function updateTransmitField(card) {
 
     transmitInput.disabled = receiveOnlyInput.checked;
 
-    if (receiveOnlyInput.checked) {
+    if (receiveOnlyInput.checked && clearValue) {
         transmitInput.value = "";
     }
 }
@@ -320,7 +320,7 @@ function createChannelCard(container = channelList) {
 }
 
 function initializeChannelCard(card) {
-    updateTransmitField(card);
+    updateTransmitField(card, false);
     updateToneFields(card);
 }
 
@@ -392,14 +392,7 @@ function loadDraft() {
 }
 
 function normalizeDcsCode(value) {
-    if (typeof value === "number" && Number.isInteger(value)) {
-        value = String(value);
-    }
-    if (typeof value === "string") value = value.trim();
-    if (typeof value !== "string" || !/^[0-7]{1,3}$/.test(value)) {
-        throw new Error("A DCS code must be an integer represented by three octal digits (000–777).");
-    }
-    return String(Number(value));
+    return RadioLoadoutBackup.normalizeDcsCode(value);
 }
 
 function applyDraftToCard(card, cardDraft) {
@@ -428,8 +421,12 @@ function applyDraftToCard(card, cardDraft) {
             ) {
                 field.value = "";
             } else if (field.matches("[data-ctcss-select]")) {
-                // API numbers such as 100 must match option values such as 100.0.
-                const toneValue = Number(value).toFixed(1);
+                // Match existing numeric choices, preserving draft precision when
+                // a custom value has no equivalent option (e.g. 50.04 Hz).
+                const existing = [...field.options].find((option) => (
+                    Number(option.value) === Number(value)
+                ));
+                const toneValue = existing ? existing.value : String(value);
 
                 if (![...field.options].some((option) => option.value === toneValue)) {
                     const option = document.createElement("option");
@@ -957,98 +954,7 @@ function downloadBlob(blob, filename) {
 }
 
 function validateBackup(backup) {
-    if (
-        backup === null
-        || typeof backup !== "object"
-        || Array.isArray(backup)
-        || backup.format !== "radio-loadout"
-    ) {
-        throw new Error("Choose a Radio Loadout JSON backup (format: radio-loadout).");
-    }
-
-    if (backup.version !== 1) {
-        throw new Error("Unsupported backup version. This builder supports version 1.");
-    }
-
-    if (!Array.isArray(backup.channels) || backup.channels.length === 0) {
-        throw new Error("The backup must contain a non-empty channels array.");
-    }
-
-    // Use the actual builder controls as the schema, without changing visible cards.
-    const schemaCard = createChannelCard(document.createDocumentFragment());
-    const fields = [...schemaCard.querySelectorAll("[data-field]")];
-    const fieldNames = fields.map((field) => field.dataset.field);
-
-    backup.channels.forEach((channel, index) => {
-        const fail = (message) => {
-            throw new Error(`Backup channel ${index + 1}: ${message}`);
-        };
-
-        if (
-            channel === null
-            || typeof channel !== "object"
-            || Array.isArray(channel)
-            || Object.keys(channel).length !== fieldNames.length
-            || !fieldNames.every((name) => Object.hasOwn(channel, name))
-        ) {
-            fail("expected an object containing every builder field.");
-        }
-
-        fields.forEach((field) => {
-            const value = channel[field.dataset.field];
-            const label = field.dataset.field.replaceAll("_", " ");
-
-            if (field.type === "checkbox") {
-                if (typeof value !== "boolean") {
-                    fail(`${label} must be true or false.`);
-                }
-                return;
-            }
-
-            if (typeof value !== "string") {
-                fail(`${label} must be a string.`);
-            }
-
-            if (field.matches("[data-ctcss-select]")) {
-                if (value !== "" && (
-                    !Number.isFinite(Number(value))
-                    || Number(value) < 50
-                    || Number(value) > 300
-                    || Number(value) !== Number(Number(value).toFixed(1))
-                )) {
-                    fail(`${label} must be between 50 and 300 Hz, with at most one decimal place.`);
-                }
-            } else if (field.matches("[data-dcs-select]")) {
-                if (value !== "") {
-                    try {
-                        normalizeDcsCode(value);
-                    } catch {
-                        fail(`${label} must contain three octal digits (000–777).`);
-                    }
-                }
-            } else if (field.tagName === "SELECT") {
-                if (![...field.options].some((option) => option.value === value)) {
-                    fail(`${label} has an unsupported value.`);
-                }
-            } else if (field.type === "number" && value !== "") {
-                field.value = value;
-                if (
-                    !Number.isFinite(Number(value))
-                    || field.value !== value
-                    || field.validity.rangeUnderflow
-                    || field.validity.rangeOverflow
-                    || field.validity.stepMismatch
-                ) {
-                    fail(`${label} must be a valid number within the builder's allowed range and step.`);
-                }
-            } else if (field.maxLength >= 0 && value.length > field.maxLength) {
-                fail(`${label} must be at most ${field.maxLength} characters.`);
-            }
-        });
-    });
-
-    // Empty editable fields are permitted so unfinished drafts can be backed up.
-    return backup.channels;
+    return RadioLoadoutBackup.validate(backup);
 }
 
 function exportBackup() {

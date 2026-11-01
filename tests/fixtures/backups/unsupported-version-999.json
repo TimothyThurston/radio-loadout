@@ -1,0 +1,5 @@
+{
+  "format": "radio-loadout",
+  "version": 999,
+  "channels": [{ "name": "FUTURE", "receive_frequency_mhz": "146.52" }]
+}

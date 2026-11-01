@@ -1,0 +1,26 @@
+{
+  "format": "radio-loadout",
+  "version": 1,
+  "channels": [
+    {
+      "name": "", "receive_frequency_mhz": "", "transmit_frequency_mhz": "",
+      "receive_only": false, "mode": "FM", "power_watts": "",
+      "tone_mode": "tsql", "tone_frequency_hz": "50.04", "dcs_code": "", "dcs_polarity": "NN",
+      "transmit_tone_mode": "none", "transmit_ctcss_frequency_hz": "",
+      "transmit_dcs_code": "", "transmit_dcs_polarity": "N",
+      "receive_tone_mode": "none", "receive_ctcss_frequency_hz": "300.0",
+      "receive_dcs_code": "", "receive_dcs_polarity": "R",
+      "tuning_step_khz": "", "scan_behavior": "", "comment": "Still editing"
+    },
+    {
+      "name": "REPAIR ME", "receive_frequency_mhz": "-1", "transmit_frequency_mhz": "145.5",
+      "receive_only": true, "mode": "NFM", "power_watts": "0",
+      "tone_mode": "cross", "tone_frequency_hz": "100.0", "dcs_code": "23", "dcs_polarity": "RR",
+      "transmit_tone_mode": "none", "transmit_ctcss_frequency_hz": "100.0",
+      "transmit_dcs_code": "777", "transmit_dcs_polarity": "R",
+      "receive_tone_mode": "none", "receive_ctcss_frequency_hz": "100.0",
+      "receive_dcs_code": "1", "receive_dcs_polarity": "N",
+      "tuning_step_khz": "5", "scan_behavior": "P", "comment": "Incomplete cross mode"
+    }
+  ]
+}

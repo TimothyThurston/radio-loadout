@@ -467,7 +467,8 @@ def test_builder_import_reuses_draft_card_restoration() -> None:
     assert "replaceChannelCards(savedDraft)" in script
     assert 'field.checked = Boolean(value)' in script
     assert 'field.matches("[data-ctcss-select]")' in script
-    assert "Number(value).toFixed(1)" in script
+    assert "Number(option.value) === Number(value)" in script
+    assert "existing ? existing.value : String(value)" in script
     assert "field.value = toneValue" in script
 
 
@@ -475,7 +476,9 @@ def test_builder_backup_controls() -> None:
     response = client.get("/builder")
     assert response.status_code == 200
     assert 'id="export-backup" class="button button-secondary" type="button"' in response.text
-    assert '<script src="/static/builder.js?v=5" defer></script>' in response.text
+    assert '<script src="/static/backup-format.js?v=1" defer></script>' in response.text
+    assert '<script src="/static/builder.js?v=6" defer></script>' in response.text
+    assert response.text.index("/static/backup-format.js") < response.text.index("/static/builder.js")
     assert 'id="import-backup"' in response.text
     assert 'id="backup-file" type="file" accept=".json"' in response.text
     assert "Export Backup" in response.text
@@ -506,7 +509,7 @@ def test_builder_backup_serialization_assets() -> None:
 
 
 def test_builder_download_and_initialization_assets() -> None:
-    response = client.get("/static/builder.js?v=5")
+    response = client.get("/static/builder.js?v=6")
     assert response.status_code == 200
     script = response.text
     download = script.split("function downloadBlob(blob, filename) {", 1)[1].split(
@@ -536,17 +539,12 @@ def test_builder_backup_validation_and_restore_assets() -> None:
     validation = script.split("function validateBackup(backup) {", 1)[1].split(
         "function exportBackup", 1,
     )[0]
-    assert 'backup.format !== "radio-loadout"' in validation
-    assert "backup.version !== 1" in validation
-    assert "Array.isArray(backup.channels)" in validation
-    assert "backup.channels.length === 0" in validation
-    assert "Object.hasOwn(channel, name)" in validation
-    assert 'typeof value !== "boolean"' in validation
-    assert 'typeof value !== "string"' in validation
-    assert "field.options" in validation
-    assert "Number.isFinite" in validation
-    assert "field.validity.rangeUnderflow" in validation
-    assert "field.maxLength" in validation
+    assert "RadioLoadoutBackup.validate(backup)" in validation
+    assert "createChannelCard" not in validation
+    schema = client.get("/static/backup-format.js?v=1")
+    assert schema.status_code == 200
+    assert "globalThis.RadioLoadoutBackup" in schema.text
+    assert "document." not in schema.text
 
     restore = script.split("async function importBackup() {", 1)[1].split(
         "async function importChirpCsv", 1,
