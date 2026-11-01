@@ -291,6 +291,21 @@ The channel builder is available at:
 http://127.0.0.1:8000/builder
 ```
 
+### Installable distributions
+
+Build and verify the actual wheel and source archive with:
+
+```sh
+python scripts/smoke_package.py
+```
+
+This builds both formats, audits their contents, installs the wheel in a fresh
+temporary environment outside the repository, and checks the installed web app
+and CSV workflows from a separate directory without editable/PYTHONPATH access.
+Verified artifacts and diagnostic logs are kept in the ignored `dist/` directory.
+For build-only use, run `python -m build`. See [packaging and installation](docs/packaging.md)
+for wheel installation commands, the included assets, and isolation details.
+
 ## Development checks
 
 Use Python 3.11 or newer. Activate your virtual environment and install the project
@@ -375,6 +390,8 @@ Node.js 24 LTS and runs both browser-script syntax checks and every `tests/js/*.
 The browser job installs locked npm dependencies and managed Chromium, then runs
 the desktop and narrow Playwright projects with accessibility checks. Synthetic
 failure traces/screenshots and the HTML report are retained for seven days.
+The packaging matrix builds and audits both distribution formats and smoke-tests
+the installed wheel from external temporary environments on Python 3.11 and 3.13.
 Checks are separate steps under Bash with failure propagation; no check is allowed
 to fail silently. Matrix fail-fast is disabled so both Python versions can report
 their results. This workflow tests the project; it does not publish or deploy it.

@@ -17,12 +17,18 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "build>=1.2",
     "pytest",
     "ruff",
 ]
 
+[tool.setuptools]
+include-package-data = false
+
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["radio_loadout", "radio_loadout.*"]
+namespaces = false
 
 [tool.setuptools.package-data]
 radio_loadout = [
