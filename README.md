@@ -264,7 +264,10 @@ http://127.0.0.1:8000/builder
 
 ## Development checks
 
-Run the formatter and lint checks:
+Use Python 3.11 or newer. Activate your virtual environment and install the project
+and development dependencies as described above. CI tests Python 3.11 and 3.13.
+
+Run the Python lint checks (this command does not reformat files):
 
 ```bash
 ruff check .
@@ -273,17 +276,54 @@ ruff check .
 Run the automated test suite:
 
 ```bash
-pytest
+python -m pytest
 ```
 
-Run the JavaScript regression tests with Node.js:
+Use Node.js 24 LTS for the same JavaScript runtime major as CI. Verify that
+`node --version` works in your terminal, then run the syntax and regression checks.
+These tests use Node's built-in modules; no npm installation step is required.
 
 ```bash
 node --check src/radio_loadout/web/static/builder.js
 node --test tests/js/*.mjs
 ```
 
+If PowerShell cannot find `node`, use the explicit path to your installed
+`node.exe`. PowerShell's call operator (`&`) runs an executable stored in a
+variable. Enumerate the test files explicitly to avoid shell wildcard differences:
+
+```powershell
+$nodeExecutable = 'C:\path\to\node.exe' # Replace with your actual Node.js 24 executable.
+& $nodeExecutable --version
+& $nodeExecutable --check src/radio_loadout/web/static/builder.js
+if ($LASTEXITCODE -ne 0) { throw 'Builder JavaScript syntax check failed.' }
+$jsTests = @(Get-ChildItem -LiteralPath tests/js -File -Filter '*.mjs' |
+    Sort-Object Name | Select-Object -ExpandProperty FullName)
+if ($jsTests.Count -eq 0) { throw 'No JavaScript test files found.' }
+& $nodeExecutable --test @jsTests
+if ($LASTEXITCODE -ne 0) { throw 'JavaScript tests failed.' }
+```
+
 All checks should complete successfully before committing changes.
+
+### GitHub Actions CI
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pushes to `main`
+and on pull requests. It uses Ubuntu runners with read-only repository contents
+permission and does not persist checkout credentials. A new run cancels an older
+run for the same workflow and branch or pull-request ref.
+
+The Python matrix installs `.[dev]`, then runs `ruff check .` and
+`python -m pytest` on Python 3.11 and 3.13. The separate JavaScript job installs
+Node.js 24 LTS and runs the builder syntax check and every `tests/js/*.mjs` test.
+Checks are separate steps under Bash with failure propagation; no check is allowed
+to fail silently. Matrix fail-fast is disabled so both Python versions can report
+their results. This workflow tests the project; it does not publish or deploy it.
+
+Official action releases checked for this workflow: [Checkout v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1),
+[Setup Python v7.1.0](https://github.com/actions/setup-python/releases/tag/v7.1.0),
+and [Setup Node v7.1.0](https://github.com/actions/setup-node/releases/tag/v7.1.0).
+Node.js 24 is listed as LTS in the [official release schedule](https://nodejs.org/en/about/previous-releases).
 
 The test suite currently covers:
 
