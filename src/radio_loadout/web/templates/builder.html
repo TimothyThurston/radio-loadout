@@ -9,8 +9,9 @@
     <title>Channel Builder | Radio Loadout</title>
 
     <link rel="stylesheet" href="/static/styles.css">
+    <script id="input-limits" type="application/json">{{ input_limits | tojson }}</script>
     <script src="/static/backup-format.js?v=1" defer></script>
-    <script src="/static/builder.js?v=6" defer></script>
+    <script src="/static/builder.js?v=7" defer></script>
 </head>
 
 <body>
@@ -71,6 +72,18 @@
             <p>A successful import replaces the current channels.</p>
 
             <p id="preset-status" class="draft-status" aria-live="polite"></p>
+            <section id="chirp-import-review" class="compatibility-panel" aria-live="polite"
+                aria-atomic="true" aria-labelledby="chirp-import-heading" hidden>
+                <h3 id="chirp-import-heading">CHIRP import review</h3>
+                <p id="chirp-import-summary"></p>
+                <ul id="chirp-import-messages"></ul>
+                <button id="confirm-chirp-import" class="button button-primary" type="button" hidden>
+                    Replace channels with reviewed import
+                </button>
+                <button id="cancel-chirp-import" class="button button-secondary" type="button" hidden>
+                    Cancel import
+                </button>
+            </section>
         </section>
 
         <section class="preset-panel" aria-labelledby="backup-heading">

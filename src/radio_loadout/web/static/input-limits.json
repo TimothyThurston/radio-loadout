@@ -1,0 +1,10 @@
+{
+  "csv_upload_bytes": 2097152,
+  "backup_bytes": 4194304,
+  "channels_json_bytes": 4194304,
+  "csv_rows": 5000,
+  "channels": 2000,
+  "read_chunk_bytes": 65536,
+  "import_messages": 1000,
+  "report_text_chars": 160
+}

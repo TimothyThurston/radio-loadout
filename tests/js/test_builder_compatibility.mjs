@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { createContext, runInContext } from "node:vm";
 
+const inputLimits = JSON.parse(readFileSync(new URL("../../src/radio_loadout/web/static/input-limits.json", import.meta.url), "utf8"));
 const backupSource = readFileSync(new URL("../../src/radio_loadout/web/static/backup-format.js", import.meta.url), "utf8");
 const source = readFileSync(new URL("../../src/radio_loadout/web/static/builder.js", import.meta.url), "utf8");
 
@@ -41,6 +42,7 @@ function setup(responder) {
     ];
     const requests = [];
     const downloads = [];
+    elements["#input-limits"] = { textContent: JSON.stringify(inputLimits) };
     const context = createContext({
         FormData: class extends FormData {
             constructor(form) {

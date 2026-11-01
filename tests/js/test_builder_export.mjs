@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { createContext, runInContext } from "node:vm";
 
+const inputLimits = JSON.parse(readFileSync(new URL("../../src/radio_loadout/web/static/input-limits.json", import.meta.url), "utf8"));
 const backupSource = readFileSync(new URL("../../src/radio_loadout/web/static/backup-format.js", import.meta.url), "utf8");
 const source = readFileSync(
     new URL("../../src/radio_loadout/web/static/builder.js", import.meta.url),
@@ -68,6 +69,7 @@ function setup({ missingMessage = false, failClick = false } = {}) {
             // Deliberately omit other controls and the template: they must not stop
             // export from registering or backing up already rendered channel cards.
             querySelector(selector) {
+                if (selector === "#input-limits") return { textContent: JSON.stringify(inputLimits) };
                 if (selector === "#export-backup") return button;
                 if (selector === "#channel-list") return { querySelectorAll: () => cards, addEventListener() {} };
                 if (selector === "#form-message" && !missingMessage) return message;

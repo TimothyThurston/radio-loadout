@@ -69,6 +69,13 @@ const importChirpCsvButton = document.querySelector("#import-chirp-csv");
 const exportBackupButton = document.querySelector("#export-backup");
 const importBackupButton = document.querySelector("#import-backup");
 const backupFileInput = document.querySelector("#backup-file");
+const chirpImportPanel = document.querySelector("#chirp-import-review");
+const chirpImportSummary = document.querySelector("#chirp-import-summary");
+const chirpImportMessages = document.querySelector("#chirp-import-messages");
+const confirmChirpImportButton = document.querySelector("#confirm-chirp-import");
+const cancelChirpImportButton = document.querySelector("#cancel-chirp-import");
+let pendingChirpImport = null;
+let chirpImportRequestId = 0;
 const reviewCompatibilityButton = document.querySelector("#review-compatibility");
 const compatibilityPanel = document.querySelector("#compatibility-results");
 const compatibilitySummary = document.querySelector("#compatibility-summary");
@@ -338,7 +345,7 @@ function getCardDraft(card) {
     return cardDraft;
 }
 
-function saveDraft() {
+function saveDraft(throwOnError = false) {
     invalidateCompatibilityReport();
     window.clearTimeout(pendingSaveTimer);
     pendingSaveTimer = null;
@@ -352,7 +359,8 @@ function saveDraft() {
         );
 
         showDraftStatus("Draft saved locally.");
-    } catch {
+    } catch (error) {
+        if (throwOnError) throw error;
         showDraftStatus("Draft could not be saved.");
     }
 }
@@ -954,7 +962,45 @@ function downloadBlob(blob, filename) {
 }
 
 function validateBackup(backup) {
+    if (Array.isArray(backup?.channels)) checkChannelCount(backup.channels.length);
     return RadioLoadoutBackup.validate(backup);
+}
+
+function getInputLimits() {
+    const config = document.querySelector("#input-limits");
+    const limits = config ? JSON.parse(config.textContent) : null;
+    if (!limits || ["csv_upload_bytes", "backup_bytes", "channels_json_bytes", "channels"].some(
+        (key) => !Number.isInteger(limits[key]) || limits[key] <= 0
+    )) throw new Error("Input limits are unavailable. Please reload the builder.");
+    return limits;
+}
+
+function checkChannelCount(count) {
+    if (count > getInputLimits().channels) throw new Error(`Channel count exceeds the ${getInputLimits().channels}-channel limit.`);
+}
+
+function checkFileBytes(size, maximum, label) {
+    if (size > maximum) throw new Error(`${label} exceeds the ${maximum}-byte limit.`);
+}
+
+function applyImportedChannels(channels) {
+    const previousCards = [...channelList.children];
+    const previousSaved = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+    try {
+        replaceChannelCards(channels);
+        saveDraft(true);
+    } catch (error) {
+        const currentCards = [...channelList.children];
+        if (currentCards.length !== previousCards.length || currentCards.some((card, index) => card !== previousCards[index])) {
+            channelList.replaceChildren(...previousCards);
+            updateChannelNumbers();
+        }
+        if (window.localStorage.getItem(DRAFT_STORAGE_KEY) !== previousSaved) {
+            if (previousSaved === null) window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+            else window.localStorage.setItem(DRAFT_STORAGE_KEY, previousSaved);
+        }
+        throw error;
+    }
 }
 
 function exportBackup() {
@@ -968,9 +1014,11 @@ function exportBackup() {
             version: 1,
             channels: getChannelCards().map(getCardDraft),
         };
+        checkChannelCount(backup.channels.length);
         const blob = new Blob([JSON.stringify(backup, null, 2)], {
             type: "application/json;charset=utf-8",
         });
+        checkFileBytes(blob.size, getInputLimits().backup_bytes, "JSON backup");
         downloadBlob(blob, "radio_loadout_backup.json");
         showFormMessage(
             "Backup download requested. Check your browser's downloads for radio_loadout_backup.json.",
@@ -996,11 +1044,12 @@ async function importBackup() {
     importBackupButton.textContent = "Restoring...";
 
     try {
+        checkFileBytes(file.size, getInputLimits().backup_bytes, "JSON backup");
         const text = await file.text();
+        checkFileBytes(new Blob([text]).size, getInputLimits().backup_bytes, "JSON backup");
         const backup = JSON.parse(text.replace(/^\uFEFF/, ""));
         const channels = validateBackup(backup);
-        replaceChannelCards(channels);
-        saveDraft();
+        applyImportedChannels(channels);
         backupFileInput.value = "";
         showFormMessage(`Restored ${channels.length} channels from backup.`, "success");
     } catch (error) {
@@ -1017,6 +1066,9 @@ async function importBackup() {
 
 async function importChirpCsv() {
     clearFormMessage();
+    const requestId = ++chirpImportRequestId;
+    pendingChirpImport = null;
+    if (chirpImportPanel) chirpImportPanel.hidden = true;
     const file = chirpCsvFileInput.files[0];
 
     if (!file) {
@@ -1030,6 +1082,7 @@ async function importChirpCsv() {
     importChirpCsvButton.textContent = "Importing...";
 
     try {
+        checkFileBytes(file.size, getInputLimits().csv_upload_bytes, "CSV file");
         const upload = new FormData();
         upload.append("file", file);
         const response = await window.fetch("/imports/chirp.csv", {
@@ -1042,6 +1095,7 @@ async function importChirpCsv() {
         }
 
         const result = await response.json();
+        if (requestId !== chirpImportRequestId) return;
 
         if (
             !Array.isArray(result.channels)
@@ -1055,23 +1109,83 @@ async function importChirpCsv() {
             throw new Error("The import response did not contain valid channels.");
         }
 
-        replaceChannelCards(result.channels);
-        saveDraft();
+        checkChannelCount(result.channels.length);
+        const report = result.import_report;
+        if (!report || typeof report.requires_confirmation !== "boolean" || !Array.isArray(report.messages)
+            || !Number.isInteger(report.loss_count) || report.loss_count < 0
+            || report.requires_confirmation !== (report.loss_count > 0)
+            || (!report.requires_confirmation && report.messages.some((message) => message?.kind === "loss"))) {
+            throw new Error("The server did not provide a valid import review. Please reload and try again.");
+        }
+        renderChirpImportReport(report, file.name || "CSV file");
+        if (report.requires_confirmation) {
+            pendingChirpImport = JSON.parse(JSON.stringify(result.channels));
+            showFormMessage("Review the import information loss, then confirm replacement or cancel.", "error");
+            return;
+        }
+        applyImportedChannels(result.channels);
         chirpCsvFileInput.value = "";
         showFormMessage(
             `Imported ${result.channels.length} channels from CHIRP CSV.`,
             "success"
         );
     } catch (error) {
-        showFormMessage(
-            error instanceof Error ? error.message : fallbackMessage,
-            "error"
-        );
+        if (requestId === chirpImportRequestId) {
+            showFormMessage(error instanceof Error ? error.message : fallbackMessage, "error");
+        }
     } finally {
         importChirpCsvButton.disabled = false;
         chirpCsvFileInput.disabled = false;
         importChirpCsvButton.textContent = "Import CHIRP CSV";
     }
+}
+
+function renderChirpImportReport(report, filename) {
+    if (!chirpImportPanel || !chirpImportSummary || !chirpImportMessages || !confirmChirpImportButton || !cancelChirpImportButton) {
+        throw new Error("The import review panel is unavailable. Please reload the builder.");
+    }
+    chirpImportPanel.hidden = false;
+    chirpImportSummary.textContent = `Review for ${filename}. ` + (report.requires_confirmation
+        ? `${report.loss_count} information loss(es) detected on import or later CSV export. Confirm before replacing current channels.`
+        : "No meaningful information loss was detected. Normalization and defaults are listed below.");
+    chirpImportMessages.replaceChildren();
+    report.messages.forEach((message) => {
+        if (!message || !["normalization", "default", "loss"].includes(message.kind) || typeof message.message !== "string") {
+            throw new Error("The import review contains an invalid message.");
+        }
+        const item = document.createElement("li");
+        item.textContent = `${message.kind.toUpperCase()} — CSV row ${message.row_number}, channel ${message.channel_index + 1} (${message.channel_name}), ${message.field}: ${message.message}`;
+        chirpImportMessages.appendChild(item);
+    });
+    if (report.omitted_messages) {
+        const item = document.createElement("li");
+        item.textContent = `${report.omitted_messages} additional messages omitted to keep this report bounded. Review the original CSV before confirming.`;
+        chirpImportMessages.appendChild(item);
+    }
+    confirmChirpImportButton.hidden = !report.requires_confirmation;
+    cancelChirpImportButton.hidden = !report.requires_confirmation;
+}
+
+function confirmChirpImport() {
+    if (!pendingChirpImport) return;
+    const channels = pendingChirpImport;
+    try {
+        applyImportedChannels(channels);
+        pendingChirpImport = null;
+        confirmChirpImportButton.hidden = true;
+        cancelChirpImportButton.hidden = true;
+        chirpCsvFileInput.value = "";
+        showFormMessage(`Imported ${channels.length} reviewed channels from CHIRP CSV.`, "success");
+    } catch (error) {
+        showFormMessage(error instanceof Error ? error.message : "Could not apply the reviewed import.", "error");
+    }
+}
+
+function cancelChirpImport() {
+    chirpImportRequestId += 1;
+    pendingChirpImport = null;
+    if (chirpImportPanel) chirpImportPanel.hidden = true;
+    showFormMessage("Import cancelled. Existing channels and saved draft are unchanged.", "success");
 }
 
 function invalidateCompatibilityReport() {
@@ -1116,8 +1230,11 @@ function renderCompatibilityReport(report) {
 }
 
 async function requestCompatibilityReport(channels) {
+    checkChannelCount(channels.length);
+    const channelsJson = JSON.stringify(channels);
+    checkFileBytes(new Blob([channelsJson]).size, getInputLimits().channels_json_bytes, "channels_json");
     const data = new FormData();
-    data.append("channels_json", JSON.stringify(channels));
+    data.append("channels_json", channelsJson);
     const response = await window.fetch("/validation/chirp.csv", {
         method: "POST",
         body: data,
@@ -1234,6 +1351,8 @@ function bindBuilderEvent(element, eventName, handler) {
 bindBuilderEvent(exportBackupButton, "click", exportBackup);
 bindBuilderEvent(importBackupButton, "click", importBackup);
 bindBuilderEvent(importChirpCsvButton, "click", importChirpCsv);
+bindBuilderEvent(confirmChirpImportButton, "click", confirmChirpImport);
+bindBuilderEvent(cancelChirpImportButton, "click", cancelChirpImport);
 bindBuilderEvent(reviewCompatibilityButton, "click", () => {
     clearFormMessage();
     reviewCompatibility();

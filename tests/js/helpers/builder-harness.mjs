@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { createContext, runInContext } from "node:vm";
 
+const inputLimits = JSON.parse(readFileSync(new URL("../../../src/radio_loadout/web/static/input-limits.json", import.meta.url), "utf8"));
 const backupSource = readFileSync(new URL("../../../src/radio_loadout/web/static/backup-format.js", import.meta.url), "utf8");
 const source = readFileSync(new URL("../../../src/radio_loadout/web/static/builder.js", import.meta.url), "utf8");
 const html = readFileSync(new URL("../../../src/radio_loadout/web/templates/builder.html", import.meta.url), "utf8");
@@ -91,11 +92,13 @@ function makeCard() {
     };
 }
 
-export function setupBuilderHarness(importedChannels = []) {
+export function setupBuilderHarness(importedChannels = [], hooks = {}) {
     const elements = Object.fromEntries([
         "channel-form", "channel-list", "generate-csv", "form-message", "draft-status",
-        "channels-json", "chirp-csv-file", "import-chirp-csv", "backup-file", "import-backup", "export-backup",
+        "input-limits", "chirp-import-review", "chirp-import-summary", "chirp-import-messages",
+        "confirm-chirp-import", "cancel-chirp-import", "channels-json", "chirp-csv-file", "import-chirp-csv", "backup-file", "import-backup", "export-backup",
     ].map((id) => [`#${id}`, new Element()]));
+    elements["#input-limits"].textContent = JSON.stringify(inputLimits);
     elements["#channel-form"].action = "/downloads/chirp.csv";
     const fragment = () => Object.assign(new Element(), { fragment: true });
     elements["#channel-template"] = { content: {
@@ -105,6 +108,7 @@ export function setupBuilderHarness(importedChannels = []) {
     const downloads = [];
     const blobs = new Map();
     const requests = [];
+    const storage = { getItem: (key) => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value), removeItem: (key) => saved.delete(key) };
     const context = createContext({
         Blob, FormData: class extends FormData {
             constructor(form) {
@@ -115,10 +119,11 @@ export function setupBuilderHarness(importedChannels = []) {
         console: { warn() {}, error() {} },
         window: {
             clearTimeout() {}, setTimeout() { return 1; },
-            localStorage: { getItem: (key) => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) },
+            localStorage: storage,
             fetch: async (url, options) => {
                 requests.push({ url, options });
-                if (url === "/imports/chirp.csv") return { ok: true, json: async () => ({ channels: importedChannels }) };
+                if (hooks.fetch) return hooks.fetch(url, options);
+                if (url === "/imports/chirp.csv") return { ok: true, json: async () => ({ channels: importedChannels, import_report: { requires_confirmation: false, messages: [], omitted_messages: 0, loss_count: 0 } }) };
                 if (url === "/validation/chirp.csv") return { ok: true, json: async () => ({
                     compatible: true, channel_count: elements["#channel-list"].children.length, issues: [],
                 }) };
@@ -143,7 +148,7 @@ export function setupBuilderHarness(importedChannels = []) {
     runInContext(backupSource, context);
     runInContext(source, context);
     return {
-        elements, downloads, requests, saved,
+        elements, downloads, requests, saved, storage,
         evaluate: (code) => runInContext(code, context),
         draft: () => JSON.parse(runInContext("JSON.stringify(getChannelCards().map(getCardDraft))", context)),
         field: (index, name) => elements["#channel-list"].children[index].fields.find((field) => field.dataset.field === name),

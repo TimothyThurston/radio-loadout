@@ -4,8 +4,10 @@ import csv
 import math
 from io import StringIO
 
+from radio_loadout import input_limits
 from radio_loadout.chirp_csv_validation import validate_chirp_ctcss
 from radio_loadout.dcs import parse_dcs_code
+from radio_loadout.importers.chirp_report import ChirpImportResult, describe_row
 from radio_loadout.models import (
     AnalogSettings,
     Channel,
@@ -20,54 +22,45 @@ REQUIRED_HEADERS = ["Name", "Frequency"]
 
 
 def import_chirp_csv(csv_text: str) -> list[Channel]:
-    """Convert CHIRP generic CSV text into Radio Loadout channels."""
+    """Convert CHIRP CSV into channels; detailed reporting is available separately."""
+    return import_chirp_csv_detailed(csv_text).channels
 
-    reader = csv.DictReader(
-        StringIO(csv_text.lstrip("\ufeff"))
-    )
 
-    if reader.fieldnames is None:
-        raise ValueError(
-            "The uploaded file does not contain a CSV header."
-        )
-
-    missing_headers = [
-        header
-        for header in REQUIRED_HEADERS
-        if header not in reader.fieldnames
-    ]
-
-    if missing_headers:
-        missing_text = ", ".join(missing_headers)
-
-        raise ValueError(
-            f"CHIRP CSV is missing required columns: "
-            f"{missing_text}."
-        )
-
-    channels = []
-
-    for row_number, row in enumerate(reader, start=2):
-        if None in row:
-            raise ValueError(
-                f"Invalid CHIRP CSV row {row_number}: too many columns."
-            )
-        if _is_blank_row(row):
-            continue
-
-        try:
-            channels.append(_row_to_channel(row))
-        except (TypeError, ValueError) as error:
-            raise ValueError(
-                f"Invalid CHIRP CSV row {row_number}: {error}"
-            ) from error
-
-    if not channels:
-        raise ValueError(
-            "The CHIRP CSV does not contain any channels."
-        )
-
-    return channels
+def import_chirp_csv_detailed(csv_text: str) -> ChirpImportResult:
+    """Validate all records and return channels plus bounded conversion reports."""
+    input_limits.check_bytes(len(csv_text.encode("utf-8")), input_limits.LIMITS.csv_upload_bytes, "CSV input")
+    reader = csv.reader(StringIO(csv_text.lstrip("\ufeff"), newline=""), strict=True)
+    result = ChirpImportResult()
+    try:
+        headers = next(reader, None)
+        if headers is None:
+            raise ValueError("The uploaded file does not contain a CSV header.")
+        missing = [header for header in REQUIRED_HEADERS if header not in headers]
+        if missing:
+            raise ValueError(f"CHIRP CSV is missing required columns: {', '.join(missing)}.")
+        if len(set(headers)) != len(headers):
+            raise ValueError("CHIRP CSV contains duplicate column headers.")
+        for row_number, values in enumerate(reader, start=2):
+            if row_number - 1 > input_limits.LIMITS.csv_rows:
+                raise input_limits.InputLimitError(f"CSV exceeds the {input_limits.LIMITS.csv_rows}-row limit.")
+            if len(values) > len(headers):
+                raise ValueError(f"Invalid CHIRP CSV row {row_number}: too many columns.")
+            row = dict(zip(headers, values, strict=False))
+            if _is_blank_row(row):
+                continue
+            input_limits.check_channel_count(len(result.channels) + 1)
+            try:
+                channel = _row_to_channel(row)
+                result.channels.append(channel)
+                result.source_rows.append(row_number)
+                describe_row(result, row, channel, row_number)
+            except (TypeError, ValueError) as error:
+                raise ValueError(f"Invalid CHIRP CSV row {row_number}: {error}") from error
+    except csv.Error as error:
+        raise ValueError(f"Invalid CHIRP CSV near line {reader.line_num}: {error}") from error
+    if not result.channels:
+        raise ValueError("The CHIRP CSV does not contain any channels.")
+    return result
 
 
 def _is_blank_row(row: dict[str, str | None]) -> bool:

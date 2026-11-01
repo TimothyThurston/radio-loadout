@@ -4,6 +4,7 @@ import csv
 from collections.abc import Iterable
 from io import StringIO
 
+from radio_loadout import input_limits
 from radio_loadout.chirp_csv_validation import format_chirp_ctcss
 from radio_loadout.dcs import format_dcs_code
 from radio_loadout.models import (
@@ -49,6 +50,7 @@ def export_chirp_csv(channels: Iterable[Channel]) -> str:
     writer.writerow(CHIRP_HEADERS)
 
     for location, channel in enumerate(channels):
+        input_limits.check_channel_count(location + 1)
         writer.writerow(_channel_to_row(location, channel))
 
     return output.getvalue()

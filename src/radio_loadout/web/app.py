@@ -6,7 +6,7 @@ import math
 from pathlib import Path
 from typing import Annotated, Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, Response, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import (
@@ -17,7 +17,9 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from radio_loadout import input_limits
 from radio_loadout.compatibility import (
     CompatibilityIssue,
     CompatibilityReport,
@@ -26,7 +28,7 @@ from radio_loadout.compatibility import (
 )
 from radio_loadout.dcs import parse_dcs_code
 from radio_loadout.exporters.chirp_csv import export_chirp_csv
-from radio_loadout.importers.chirp_csv import import_chirp_csv
+from radio_loadout.importers.chirp_csv import import_chirp_csv_detailed
 from radio_loadout.models import (
     TUNING_STEPS_KHZ,
     AnalogSettings,
@@ -42,6 +44,13 @@ WEB_DIRECTORY = Path(__file__).resolve().parent
 
 IndependentToneMode = Literal["none", "ctcss", "dcs"]
 DcsPolarity = Literal["N", "R"]
+CHANNELS_JSON_OPENAPI = {
+    "requestBody": {"required": True, "content": {
+        content_type: {"schema": {"type": "object", "required": ["channels_json"],
+                                 "properties": {"channels_json": {"type": "string"}}}}
+        for content_type in ("application/x-www-form-urlencoded", "multipart/form-data")
+    }},
+}
 
 app = FastAPI(title="Radio Loadout")
 
@@ -365,8 +374,29 @@ def _construct_channels(
     return channels, issues
 
 
-@app.post("/validation/chirp.csv")
-def review_chirp_compatibility(channels_json: Annotated[str, Form()]) -> dict:
+async def _submitted_channels_form(request: Request) -> str:
+    # Set the per-request multipart field bound explicitly; Starlette's default
+    # may be lower than our documented channels_json limit. No global changes.
+    try:
+        urlencoded = request.headers.get("content-type", "").split(";", 1)[0].strip().lower() == "application/x-www-form-urlencoded"
+        # Percent encoding can occupy three bytes per decoded UTF-8 byte.
+        part_limit = input_limits.LIMITS.channels_json_bytes * (3 if urlencoded else 1)
+        async with request.form(
+            max_files=0, max_fields=1, max_part_size=part_limit,
+        ) as form:
+            value = form.get("channels_json")
+            if not isinstance(value, str):
+                raise HTTPException(status_code=422, detail="channels_json must be a string form field.")
+            _check_submitted_limits(value)
+            return value
+    except StarletteHTTPException as error:
+        if error.status_code == 400 and "maximum size" in str(error.detail).lower():
+            raise HTTPException(status_code=413, detail="channels_json exceeds the encoded form field size limit.") from error
+        raise
+
+
+@app.post("/validation/chirp.csv", openapi_extra=CHANNELS_JSON_OPENAPI)
+def review_chirp_compatibility(channels_json: Annotated[str, Depends(_submitted_channels_form)]) -> dict:
     try:
         form_channels = CHANNEL_FORM_LIST.validate_json(channels_json)
     except ValidationError as error:
@@ -419,12 +449,36 @@ def _channel_to_form_data(channel: Channel) -> ChannelFormData:
     )
 
 
+def _check_submitted_limits(channels_json: str) -> None:
+    try:
+        input_limits.check_channels_json(channels_json)
+    except input_limits.InputLimitError as error:
+        raise HTTPException(status_code=413, detail=str(error)) from error
+
+
+async def _read_csv_upload(file: UploadFile) -> bytes:
+    data = bytearray()
+    while True:
+        chunk = await file.read(min(
+            input_limits.LIMITS.read_chunk_bytes,
+            input_limits.LIMITS.csv_upload_bytes - len(data) + 1,
+        ))
+        if not chunk:
+            return bytes(data)
+        input_limits.check_bytes(
+            len(data) + len(chunk), input_limits.LIMITS.csv_upload_bytes, "CSV upload",
+        )
+        data.extend(chunk)
+
+
 @app.post("/imports/chirp.csv")
 async def upload_chirp_csv(
     file: Annotated[UploadFile, File()],
-) -> dict[str, list[ChannelFormData]]:
+) -> dict:
     try:
-        csv_text = (await file.read()).decode("utf-8-sig")
+        csv_text = (await _read_csv_upload(file)).decode("utf-8-sig")
+    except input_limits.InputLimitError as error:
+        raise HTTPException(status_code=413, detail=str(error)) from error
     except UnicodeDecodeError as error:
         raise HTTPException(
             status_code=422,
@@ -434,10 +488,19 @@ async def upload_chirp_csv(
         await file.close()
 
     try:
-        channels = import_chirp_csv(csv_text)
-        form_channels = CHANNEL_FORM_LIST.validate_python([
-            _channel_to_form_data(channel) for channel in channels
-        ])
+        result = import_chirp_csv_detailed(csv_text)
+        form_channels = []
+        for index, channel in enumerate(result.channels):
+            label = f"Invalid CHIRP CSV row {result.source_rows[index]} ({channel.name})"
+            for field, value in (("Name", channel.name), ("Comment", channel.comment)):
+                if "\n" in value or "\r" in value:
+                    raise ValueError(f"{label}: multiline {field} is not supported by the builder's single-line control.")
+            try:
+                form_channels.append(_channel_to_form_data(channel))
+            except ValidationError as error:
+                raise ValueError(f"{label}: {_format_validation_error(error)}") from error
+    except input_limits.InputLimitError as error:
+        raise HTTPException(status_code=413, detail=str(error)) from error
     except ValidationError as error:
         raise HTTPException(
             status_code=422,
@@ -446,7 +509,7 @@ async def upload_chirp_csv(
     except (ValueError, csv.Error) as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
 
-    return {"channels": form_channels}
+    return {"channels": form_channels, "import_report": result.report()}
 
 
 def _sample_channels() -> list[Channel]:
@@ -501,12 +564,13 @@ def builder(request: Request) -> Response:
     return templates.TemplateResponse(
         request=request,
         name="builder.html",
+        context={"input_limits": input_limits.public_limits()},
     )
 
 
-@app.post("/downloads/chirp.csv")
+@app.post("/downloads/chirp.csv", openapi_extra=CHANNELS_JSON_OPENAPI)
 def download_custom_chirp(
-    channels_json: Annotated[str, Form()],
+    channels_json: Annotated[str, Depends(_submitted_channels_form)],
 ) -> Response:
     try:
         form_channels = CHANNEL_FORM_LIST.validate_json(

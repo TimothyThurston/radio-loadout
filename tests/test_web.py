@@ -437,8 +437,8 @@ def test_builder_chirp_import_assets() -> None:
     assert "getResponseErrorMessage(response, fallbackMessage)" in import_handler
     assert "Array.isArray(result.channels)" in import_handler
     assert import_handler.index("if (!response.ok)") < import_handler.index(
-        "replaceChannelCards(result.channels)"
-    ) < import_handler.index("saveDraft()")
+        "applyImportedChannels(result.channels)"
+    )
     assert 'showFormMessage("Choose a CHIRP CSV file to import.", "error")' in import_handler
     assert '"success"' in import_handler
     assert 'chirpCsvFileInput.value = ""' in import_handler
@@ -477,7 +477,7 @@ def test_builder_backup_controls() -> None:
     assert response.status_code == 200
     assert 'id="export-backup" class="button button-secondary" type="button"' in response.text
     assert '<script src="/static/backup-format.js?v=1" defer></script>' in response.text
-    assert '<script src="/static/builder.js?v=6" defer></script>' in response.text
+    assert '<script src="/static/builder.js?v=7" defer></script>' in response.text
     assert response.text.index("/static/backup-format.js") < response.text.index("/static/builder.js")
     assert 'id="import-backup"' in response.text
     assert 'id="backup-file" type="file" accept=".json"' in response.text
@@ -509,7 +509,7 @@ def test_builder_backup_serialization_assets() -> None:
 
 
 def test_builder_download_and_initialization_assets() -> None:
-    response = client.get("/static/builder.js?v=6")
+    response = client.get("/static/builder.js?v=7")
     assert response.status_code == 200
     script = response.text
     download = script.split("function downloadBlob(blob, filename) {", 1)[1].split(
@@ -552,8 +552,8 @@ def test_builder_backup_validation_and_restore_assets() -> None:
     assert "await file.text()" in restore
     assert "JSON.parse" in restore
     assert restore.index("validateBackup(backup)") < restore.index(
-        "replaceChannelCards(channels)"
-    ) < restore.index("saveDraft()")
+        "applyImportedChannels(channels)"
+    )
     assert "window.fetch" not in restore
     assert "import_chirp_csv" not in restore
     assert "getResponseErrorMessage" not in restore

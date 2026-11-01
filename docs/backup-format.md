@@ -105,6 +105,13 @@ replacement, then swap it into the builder. Only successful restoration saves
 the draft to local storage. Parse/validation failures leave the current cards and
 saved draft unchanged and display an explanatory error.
 
+File bytes and channel counts also have [central resource limits](imports-and-limits.md).
+The browser checks backup size before reading a native file and before parsing,
+and checks channel count before constructing cards. Storage failures during
+application roll back the original cards and autosave; storage must be available
+for a successful import. These bounds do not add completed-channel export rules
+to draft validation.
+
 Fixtures under [`tests/fixtures/backups`](../tests/fixtures/backups) include an
 existing version-1 export, complete settings, unfinished drafts, missing legacy
 optionals, unknown fields, version 999, malformed structures, invalid types, and

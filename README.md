@@ -116,6 +116,21 @@ CSV export readiness: unfinished settings can be restored and corrected using
 **Review Compatibility**. See the [backup format contract](docs/backup-format.md)
 for field types, defaults, allowed values, normalization, and fixture coverage.
 
+### CHIRP CSV import review
+
+CSV imports show defaults and expected normalization separately from information
+loss. Unsupported non-empty columns, reassigned Location numbers, and meaningful
+precision changes require confirmation before replacing channels. Cancelling or
+failing an import leaves current cards and autosave unchanged. Confirmation
+applies the captured reviewed data, even if another file is selected afterward.
+
+Central defaults permit 2 MiB CSV files, 4 MiB JSON backups/submitted channel JSON,
+5,000 CSV data records, and 2,000 channels. Browser checks match the server policy;
+the server reads uploads in bounded chunks and enforces request limits. These
+are application limits, not radio capabilities. See [import reporting and input
+limits](docs/imports-and-limits.md) for detailed API fields, normalization/loss
+rules, exact boundaries, bounded reports, and required deployment/proxy limits.
+
 ### Channel presets
 
 #### NOAA Weather
