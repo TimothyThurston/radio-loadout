@@ -77,6 +77,23 @@ test("leading-zero backup codes become selectable without substituting 023", () 
     assert.equal(state.field(0, "dcs_polarity").value, "NR");
 });
 
+test("copying a card preserves custom tone options and independent DCS polarities", () => {
+    const state = setup();
+    state.evaluate(`replaceChannelCards([{
+        name: "CUSTOM COPY", receive_frequency_mhz: 444.5, tone_mode: "dtcs",
+        dcs_code: "777", dcs_polarity: "NR", tone_frequency_hz: "123.4",
+        transmit_tone_mode: "dcs", transmit_dcs_code: "1", transmit_dcs_polarity: "R",
+        receive_tone_mode: "dcs", receive_dcs_code: "0", receive_dcs_polarity: "N"
+    }]);
+    const copied = createChannelCard();
+    copyChannelValues(getChannelCards()[0], copied);
+    initializeChannelCard(copied);`);
+    assert.deepEqual(state.draft()[1], state.draft()[0]);
+    for (const [field, value] of [["dcs_code", "777"], ["tone_frequency_hz", "123.4"], ["transmit_dcs_code", "1"], ["receive_dcs_code", "0"]]) {
+        assert.equal(state.field(1, field).options.filter((option) => option.value === value).length, 1);
+    }
+});
+
 test("invalid code values and types cannot change the existing builder", async () => {
     const state = setup();
     const original = state.draft();

@@ -501,25 +501,8 @@ function addChannel(shouldSave = true) {
 }
 
 function copyChannelValues(sourceCard, targetCard) {
-    sourceCard.querySelectorAll("[data-field]").forEach(
-        (sourceField) => {
-            const fieldName = sourceField.dataset.field;
-            const targetField = getField(
-                targetCard,
-                fieldName
-            );
-
-            if (!targetField) {
-                return;
-            }
-
-            if (sourceField.type === "checkbox") {
-                targetField.checked = sourceField.checked;
-            } else {
-                targetField.value = sourceField.value;
-            }
-        }
-    );
+    // The shared population path also adds imported/custom select options.
+    applyDraftToCard(targetCard, getCardDraft(sourceCard));
 }
 
 function duplicateChannel(card) {

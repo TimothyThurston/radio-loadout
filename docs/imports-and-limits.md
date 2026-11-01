@@ -81,8 +81,9 @@ Card construction continues to use the existing detached rendering functions and
 draft serializer. Errors restore original card nodes and the previous saved draft;
 storage failures are not reported as successful imports. JSON backup restoration
 uses the same application/rollback path. Browser storage must be available for a
-successful restore. Native storage and download behavior are not covered by the
-simulated-DOM tests.
+successful restore. Native storage and download behavior are exercised by the
+separate [Chromium browser suite](browser-tests.md); the simulated-DOM tests do
+not cover native browser behavior.
 
 Reports are bounded. If messages are omitted, the total loss count still requires
 confirmation, and the interface tells the user to inspect the original CSV. No

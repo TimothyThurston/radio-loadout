@@ -310,7 +310,8 @@ python -m pytest
 
 Use Node.js 24 LTS for the same JavaScript runtime major as CI. Verify that
 `node --version` works in your terminal, then run the syntax and regression checks.
-These tests use Node's built-in modules; no npm installation step is required.
+These simulated-DOM tests use Node's built-in modules; they can run without npm
+dependencies. Real-browser tests use the separate Playwright setup below.
 
 ```bash
 node --check src/radio_loadout/web/static/backup-format.js
@@ -338,6 +339,29 @@ if ($LASTEXITCODE -ne 0) { throw 'JavaScript tests failed.' }
 
 All checks should complete successfully before committing changes.
 
+### Real-browser journeys
+
+With Node.js 24 LTS, npm, and the Python development environment installed:
+
+```sh
+npm ci
+npx playwright install chromium
+npm run check:syntax
+npm run test:js
+npm run test:e2e
+```
+
+Playwright automatically starts an isolated loopback test server and uses a fresh,
+disposable browser context for every test. It never opens your browser profile or
+reads personal drafts. The suite tests real downloads/restores, card editing,
+import-loss confirmation, compatibility, autosave, responsive layout, keyboard
+focus and automated axe accessibility checks using synthetic data.
+
+Chromium is tested at desktop and narrow viewports; Firefox, WebKit and real
+mobile devices remain unverified. Automated checks do not replace manual
+screen-reader testing. See [browser testing](docs/browser-tests.md) for system
+dependencies, server/port configuration, commands, diagnostics and coverage.
+
 ### GitHub Actions CI
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pushes to `main`
@@ -348,6 +372,9 @@ run for the same workflow and branch or pull-request ref.
 The Python matrix installs `.[dev]`, then runs `ruff check .` and
 `python -m pytest` on Python 3.11 and 3.13. The separate JavaScript job installs
 Node.js 24 LTS and runs both browser-script syntax checks and every `tests/js/*.mjs` test.
+The browser job installs locked npm dependencies and managed Chromium, then runs
+the desktop and narrow Playwright projects with accessibility checks. Synthetic
+failure traces/screenshots and the HTML report are retained for seven days.
 Checks are separate steps under Bash with failure propagation; no check is allowed
 to fail silently. Matrix fail-fast is disabled so both Python versions can report
 their results. This workflow tests the project; it does not publish or deploy it.

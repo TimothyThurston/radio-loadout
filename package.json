@@ -1,0 +1,16 @@
+{
+  "name": "radio-loadout-browser-tests",
+  "private": true,
+  "engines": { "node": "24.x" },
+  "scripts": {
+    "test:js": "node --test tests/js/*.mjs",
+    "check:syntax": "node scripts/check-js-syntax.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1"
+  }
+}

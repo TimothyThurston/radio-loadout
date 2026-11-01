@@ -1,0 +1,2 @@
+Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,Bank
+42,<img src=x onerror=alert(1)>,146.940000,-,0.600000,Cross,100.0,88.5,023,NR,777,Tone->DTCS,NFM,6.25,S,2.5W,<script>window.__importInjected=true</script>,Synthetic bank
