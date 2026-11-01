@@ -124,6 +124,26 @@ jobs:
           docker exec radio-loadout-staging-ci python -c "import os,importlib.util; assert os.getuid() == 10001; assert importlib.util.find_spec('pytest') is None; assert importlib.util.find_spec('build') is None; assert not os.path.exists('/build')"
       - name: Smoke-test health, assets, CSV workflows and limits
         run: python scripts/staging_smoke.py --base-url http://127.0.0.1:8000
+      - name: Capture selected container state before cleanup
+        if: ${{ always() }}
+        run: |
+          mkdir -p generated/container-diagnostics
+          docker inspect --format '{"status":{{json .State.Status}},"exit_code":{{.State.ExitCode}},"OOMKilled":{{.State.OOMKilled}},"runtime_error":{{json .State.Error}}}' \
+            radio-loadout-staging-ci > generated/container-diagnostics/state.json
+      - name: Capture container logs before cleanup
+        if: ${{ always() }}
+        run: |
+          mkdir -p generated/container-diagnostics
+          docker logs --timestamps --tail 200 radio-loadout-staging-ci \
+            > generated/container-diagnostics/container.log 2>&1
+      - name: Upload container diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: staging-container-diagnostics
+          path: generated/container-diagnostics/
+          retention-days: 7
+          if-no-files-found: warn
       - name: Stop the local test container
         if: ${{ always() }}
         run: docker rm --force radio-loadout-staging-ci

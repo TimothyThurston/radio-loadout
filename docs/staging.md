@@ -26,6 +26,22 @@ observable health, checks health/headers, homepage, builder, exact packaged asse
 bytes, downloads, CSV export/BOM import/re-export, compatibility, and HTTP 413 for
 oversized CSV and both submitted-JSON endpoints. It logs results, not payloads.
 
+Readiness retries only startup connection failures: resets, refused/aborted
+connections, broken pipes, timeouts, and premature disconnects/incomplete reads.
+Retries, per-attempt socket timeouts and pauses use the finite readiness budget
+(`--wait-seconds`, default 30). The final connection error is reported on expiry.
+HTTP errors (including 400/500), invalid health bodies, assertions and configuration
+errors fail immediately. The subsequent workflow checks are not retried or ignored.
+
+CI captures the last 200 container log lines plus only status, exit code,
+`OOMKilled` and runtime error before cleanup, even when smoke testing fails.
+The `staging-container-diagnostics` artifact is retained for seven days. No full
+container inspect, environment dump or Docker log `--details` is used. These logs
+are for the synthetic CI test container only. Inspect them for startup crashes,
+OOM kills or configuration errors; connection retries are not evidence that the
+application started correctly. Collection/upload failures do not turn checks green,
+and cleanup still runs after diagnostics.
+
 The multi-stage Dockerfile uses Python **3.13.15 slim Bookworm**, pinned to an
 official-image manifest digest. Python 3.13 remains security-maintained according
 to the [official support table](https://devguide.python.org/versions/). Build and
