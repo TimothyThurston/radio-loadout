@@ -4,6 +4,8 @@ import csv
 import math
 from io import StringIO
 
+from radio_loadout.chirp_csv_validation import validate_chirp_ctcss
+from radio_loadout.dcs import parse_dcs_code
 from radio_loadout.models import (
     AnalogSettings,
     Channel,
@@ -234,6 +236,15 @@ def _parse_channel_mode(value: str) -> ChannelMode:
 def _parse_tones(
     row: dict[str, str | None],
 ) -> tuple[Tone, Tone]:
+    # CHIRP validates populated CSV tone cells even when the current tone mode
+    # does not use them. Empty optional cells continue to be allowed.
+    for field in ("rToneFreq", "cToneFreq"):
+        if _row_value(row, field):
+            try:
+                _parse_ctcss_tone(_row_value(row, field))
+            except ValueError as error:
+                raise ValueError(f"{field}: {error}") from error
+
     tone_mode = _row_value(row, "Tone").casefold()
     transmit_polarity, receive_polarity = (
         _parse_dcs_polarities(
@@ -254,9 +265,6 @@ def _parse_tones(
 
     if tone_mode == "tsql":
         # CHIRP TSQL uses ctone in both directions; rtone is inactive.
-        # Keep validating populated inactive fields instead of accepting bad CSV.
-        if _row_value(row, "rToneFreq"):
-            _parse_ctcss_tone(_row_value(row, "rToneFreq"))
         frequency = (
             _row_value(row, "cToneFreq")
             or _required_row_value(row, "rToneFreq")
@@ -374,26 +382,21 @@ def _parse_ctcss_tone(value: str) -> Tone:
             "CTCSS frequency must be numeric."
         ) from error
 
-    return Tone(
+    tone = Tone(
         mode=ToneMode.CTCSS,
         value=frequency_hz,
     )
+    validate_chirp_ctcss(frequency_hz)
+    return tone
 
 
 def _parse_dcs_tone(
     value: str,
     polarity: TonePolarity,
 ) -> Tone:
-    try:
-        code = int(value)
-    except ValueError as error:
-        raise ValueError(
-            "DCS code must be an integer."
-        ) from error
-
     return Tone(
         mode=ToneMode.DCS,
-        value=code,
+        value=parse_dcs_code(value),
         polarity=polarity,
     )
 

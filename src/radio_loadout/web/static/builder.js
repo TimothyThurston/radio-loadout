@@ -391,6 +391,17 @@ function loadDraft() {
     }
 }
 
+function normalizeDcsCode(value) {
+    if (typeof value === "number" && Number.isInteger(value)) {
+        value = String(value);
+    }
+    if (typeof value === "string") value = value.trim();
+    if (typeof value !== "string" || !/^[0-7]{1,3}$/.test(value)) {
+        throw new Error("A DCS code must be an integer represented by three octal digits (000–777).");
+    }
+    return String(Number(value));
+}
+
 function applyDraftToCard(card, cardDraft) {
     if (
         cardDraft === null
@@ -413,6 +424,7 @@ function applyDraftToCard(card, cardDraft) {
             } else if (
                 value === null
                 || value === undefined
+                || value === ""
             ) {
                 field.value = "";
             } else if (field.matches("[data-ctcss-select]")) {
@@ -427,6 +439,15 @@ function applyDraftToCard(card, cardDraft) {
                 }
 
                 field.value = toneValue;
+            } else if (field.matches("[data-dcs-select]")) {
+                const code = normalizeDcsCode(value);
+                if (![...field.options].some((option) => option.value === code)) {
+                    const option = document.createElement("option");
+                    option.value = code;
+                    option.textContent = `${code.padStart(3, "0")} (generic)`;
+                    field.appendChild(option);
+                }
+                field.value = code;
             } else {
                 field.value = String(value);
             }
@@ -997,9 +1018,16 @@ function validateBackup(backup) {
                 )) {
                     fail(`${label} must be between 50 and 300 Hz, with at most one decimal place.`);
                 }
+            } else if (field.matches("[data-dcs-select]")) {
+                if (value !== "") {
+                    try {
+                        normalizeDcsCode(value);
+                    } catch {
+                        fail(`${label} must contain three octal digits (000–777).`);
+                    }
+                }
             } else if (field.tagName === "SELECT") {
-                const optionalTone = field.matches("[data-dcs-select]") && value === "";
-                if (!optionalTone && ![...field.options].some((option) => option.value === value)) {
+                if (![...field.options].some((option) => option.value === value)) {
                     fail(`${label} has an unsupported value.`);
                 }
             } else if (field.type === "number" && value !== "") {

@@ -4,6 +4,8 @@ import csv
 from collections.abc import Iterable
 from io import StringIO
 
+from radio_loadout.chirp_csv_validation import format_chirp_ctcss
+from radio_loadout.dcs import format_dcs_code
 from radio_loadout.models import (
     AnalogSettings,
     Channel,
@@ -128,14 +130,14 @@ def _tone_fields(
     cross_mode = "Tone->Tone"
 
     if transmit_tone.mode is ToneMode.CTCSS:
-        transmit_ctcss = f"{float(transmit_tone.value):.1f}"
+        transmit_ctcss = _format_ctcss(transmit_tone.value, "Transmit")
     elif transmit_tone.mode is ToneMode.DCS:
-        transmit_dcs = f"{int(transmit_tone.value):03d}"
+        transmit_dcs = format_dcs_code(transmit_tone.value)
 
     if receive_tone.mode is ToneMode.CTCSS:
-        receive_ctcss = f"{float(receive_tone.value):.1f}"
+        receive_ctcss = _format_ctcss(receive_tone.value, "Receive")
     elif receive_tone.mode is ToneMode.DCS:
-        receive_dcs = f"{int(receive_tone.value):03d}"
+        receive_dcs = format_dcs_code(receive_tone.value)
 
     if (
         transmit_tone.mode is ToneMode.NONE
@@ -174,6 +176,13 @@ def _tone_fields(
         receive_dcs,
         cross_mode,
     )
+
+
+def _format_ctcss(value: float, direction: str) -> str:
+    try:
+        return format_chirp_ctcss(value)
+    except ValueError as error:
+        raise ValueError(f"{direction} CTCSS: {error}") from error
 
 
 def _matching_tones(

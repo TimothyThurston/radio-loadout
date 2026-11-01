@@ -45,7 +45,7 @@ def test_review_valid_multi_channel_loadout() -> None:
     ({"power_watts": -1}, "power_watts"),
     ({"power_watts": float("inf")}, "power_watts"),
     ({"tone_mode": "tone", "tone_frequency_hz": 400}, "tone_frequency_hz"),
-    ({"tone_mode": "dtcs", "dcs_code": 89}, "settings"),
+    ({"tone_mode": "dtcs", "dcs_code": 89}, "dcs_code"),
     ({"dcs_polarity": "XX"}, "dcs_polarity"),
     ({"tone_mode": "cross", "transmit_tone_mode": "ctcss"}, "settings"),
 ])

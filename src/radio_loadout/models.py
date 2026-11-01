@@ -3,6 +3,8 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+from radio_loadout.dcs import validate_dcs_code
+
 TUNING_STEPS_KHZ = (
     1.0,
     2.5,
@@ -95,20 +97,10 @@ class Tone:
                 )
 
         if self.mode is ToneMode.DCS:
-            if isinstance(self.value, bool) or not isinstance(
-                self.value,
-                int,
-            ):
-                raise ValueError("A DCS code must be an integer.")
-
-            digits = f"{self.value:03d}"
-
-            if len(digits) != 3 or any(
-                digit not in "01234567" for digit in digits
-            ):
-                raise ValueError(
-                    "A DCS code must contain three octal digits."
-                )
+            try:
+                validate_dcs_code(self.value)
+            except TypeError as error:
+                raise ValueError(str(error)) from error
 
 
 @dataclass(frozen=True, slots=True)

@@ -69,7 +69,7 @@ def test_chirp_import_returns_builder_channels(encoding: str) -> None:
     (b"Name,Frequency\nBAD,nope\n", "Invalid CHIRP CSV row 2"),
     (b"Name,Frequency\nBAD,1e308\n", "Invalid CHIRP CSV row 2: Frequency is too large"),
     (b"Name,Frequency\nBAD,146.52,extra\n", "row 2: too many columns"),
-    (b"Name,Frequency,Tone,DtcsCode\nBAD,146.52,DTCS,001\n", "standard DCS code"),
+    (b"Name,Frequency,Tone,DtcsCode\nBAD,146.52,DTCS,089\n", "three octal digits"),
 ])
 def test_chirp_import_rejects_invalid_file(content: bytes, message: str) -> None:
     response = client.post(
@@ -475,7 +475,7 @@ def test_builder_backup_controls() -> None:
     response = client.get("/builder")
     assert response.status_code == 200
     assert 'id="export-backup" class="button button-secondary" type="button"' in response.text
-    assert '<script src="/static/builder.js?v=4" defer></script>' in response.text
+    assert '<script src="/static/builder.js?v=5" defer></script>' in response.text
     assert 'id="import-backup"' in response.text
     assert 'id="backup-file" type="file" accept=".json"' in response.text
     assert "Export Backup" in response.text
@@ -506,7 +506,7 @@ def test_builder_backup_serialization_assets() -> None:
 
 
 def test_builder_download_and_initialization_assets() -> None:
-    response = client.get("/static/builder.js?v=4")
+    response = client.get("/static/builder.js?v=5")
     assert response.status_code == 200
     script = response.text
     download = script.split("function downloadBlob(blob, filename) {", 1)[1].split(

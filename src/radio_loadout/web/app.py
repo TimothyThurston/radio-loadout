@@ -14,6 +14,7 @@ from pydantic import (
     Field,
     TypeAdapter,
     ValidationError,
+    field_validator,
     model_validator,
 )
 
@@ -23,6 +24,7 @@ from radio_loadout.compatibility import (
     check_chirp_compatibility,
     validation_report,
 )
+from radio_loadout.dcs import parse_dcs_code
 from radio_loadout.exporters.chirp_csv import export_chirp_csv
 from radio_loadout.importers.chirp_csv import import_chirp_csv
 from radio_loadout.models import (
@@ -37,113 +39,6 @@ from radio_loadout.models import (
 )
 
 WEB_DIRECTORY = Path(__file__).resolve().parent
-
-STANDARD_DCS_CODES = (
-    23,
-    25,
-    26,
-    31,
-    32,
-    36,
-    43,
-    47,
-    51,
-    53,
-    54,
-    65,
-    71,
-    72,
-    73,
-    74,
-    114,
-    115,
-    116,
-    122,
-    125,
-    131,
-    132,
-    134,
-    143,
-    145,
-    152,
-    155,
-    156,
-    162,
-    165,
-    172,
-    174,
-    205,
-    212,
-    223,
-    225,
-    226,
-    243,
-    244,
-    245,
-    246,
-    251,
-    252,
-    255,
-    261,
-    263,
-    265,
-    266,
-    271,
-    274,
-    306,
-    311,
-    315,
-    325,
-    331,
-    332,
-    343,
-    346,
-    351,
-    356,
-    364,
-    365,
-    371,
-    411,
-    412,
-    413,
-    423,
-    431,
-    432,
-    445,
-    446,
-    452,
-    454,
-    455,
-    462,
-    464,
-    465,
-    466,
-    503,
-    506,
-    516,
-    523,
-    526,
-    532,
-    546,
-    565,
-    606,
-    612,
-    624,
-    627,
-    631,
-    632,
-    654,
-    662,
-    664,
-    703,
-    712,
-    723,
-    731,
-    732,
-    734,
-    743,
-    754,
-)
 
 IndependentToneMode = Literal["none", "ctcss", "dcs"]
 DcsPolarity = Literal["N", "R"]
@@ -170,9 +65,9 @@ def _validate_independent_tone(
             f"{label} CTCSS frequency is required."
         )
 
-    if mode == "dcs" and dcs_code not in STANDARD_DCS_CODES:
+    if mode == "dcs" and dcs_code is None:
         raise ValueError(
-            f"{label} DCS code must be a standard DCS code."
+            f"{label} DCS code is required."
         )
 
 
@@ -233,6 +128,11 @@ class ChannelFormData(BaseModel):
     scan_behavior: ScanBehavior = ScanBehavior.NORMAL
     comment: str = Field(default="", max_length=120)
 
+    @field_validator("dcs_code", "transmit_dcs_code", "receive_dcs_code", mode="before")
+    @classmethod
+    def validate_generic_dcs_code(cls, value: object) -> int | None:
+        return None if value is None else parse_dcs_code(value)
+
     @model_validator(mode="after")
     def validate_channel_settings(
         self,
@@ -248,10 +148,10 @@ class ChannelFormData(BaseModel):
 
         if (
             self.tone_mode == "dtcs"
-            and self.dcs_code not in STANDARD_DCS_CODES
+            and self.dcs_code is None
         ):
             raise ValueError(
-                "A standard DCS code is required when "
+                "A DCS code is required when "
                 "DCS is enabled."
             )
 

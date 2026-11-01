@@ -5,6 +5,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import asdict, dataclass, replace
 from typing import Literal
 
+from radio_loadout.chirp_csv_validation import format_chirp_ctcss
 from radio_loadout.exporters.chirp_csv import CHIRP_SUPPORTED_MODES, export_chirp_csv
 from radio_loadout.models import (
     TUNING_STEPS_KHZ,
@@ -127,10 +128,12 @@ def check_chirp_compatibility(channels: Sequence[Channel]) -> CompatibilityRepor
                         raise TypeError("Choose no tone, CTCSS, or DCS.")
                     if not isinstance(tone.polarity, TonePolarity):
                         raise TypeError("DCS polarity must be normal (N) or reverse (R).")
+                    if tone.mode is ToneMode.CTCSS:
+                        formatted_ctcss = format_chirp_ctcss(tone.value)
                 except (TypeError, ValueError) as error:
                     add("error", field, str(error))
                     continue
-                if tone.mode is ToneMode.CTCSS and round(tone.value, 1) != tone.value:
+                if tone.mode is ToneMode.CTCSS and float(formatted_ctcss) != tone.value:
                     add("warning", field, "CTCSS will be rounded to one decimal place on export.")
 
     try:

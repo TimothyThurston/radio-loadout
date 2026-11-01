@@ -77,6 +77,15 @@ The builder supports:
 
 The CHIRP exporter maps these settings into the appropriate generic CSV fields.
 
+Generic DCS support accepts integer codes whose three-digit spelling contains
+only digits 0–7, including `023`, `001`, `000`, and `777`. Codes are stored as
+integers (for example, 23) and exported with leading zeros (`023`). Booleans,
+floats, negative values, and digits 8 or 9 are rejected. Conventional codes remain
+the default dropdown choices; valid imported or restored codes outside that list
+receive a selectable option labeled “generic.” JSON backups preserve these codes
+and independent TX/RX polarity settings. Generic acceptance does not guarantee
+that a physical radio supports the code; radio-specific restrictions remain separate.
+
 ### Scan behavior
 
 Channels can be configured for:
@@ -159,6 +168,12 @@ the download endpoint enforces compatibility independently of the browser.
 Compatible with CHIRP Generic CSV does not guarantee support by every radio.
 This review adds no radio-specific frequency ranges, name lengths, or memory
 counts. It can warn about default power and precision lost during CSV formatting.
+CHIRP CTCSS values must be strictly above 50.0 Hz and below 300.0 Hz. Review and
+export also reject values whose one-decimal CSV representation reaches either
+boundary. Intermediate values are supported, including values outside the
+builder's conventional tone list. Import validates populated source CTCSS cells
+against the same open interval; an interior value can be imported yet require
+correction before export if one-decimal rounding would reach a boundary.
 
 `POST /validation/chirp.csv` accepts the same `channels_json` form field as
 `POST /downloads/chirp.csv`. It returns `target`, `compatible`, `channel_count`,
