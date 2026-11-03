@@ -312,7 +312,8 @@ Staging/container preparation, local smoke commands, production settings, and
 rollback steps are documented in [staging deployment](docs/staging.md).
 The container uses the installable wheel and a non-root user. No deployment is
 performed by these commands or by CI. Review the [dependency license inventory](docs/dependency-licenses.md)
-before any public redistribution; Radio Loadout still has no selected license.
+for third-party notice obligations and outstanding reviews. The project license
+does not authorize redistribution; additional permissions require a separate agreement.
 
 Use Python 3.11 or newer. Activate your virtual environment and install the project
 and development dependencies as described above. CI tests Python 3.11 and 3.13.
@@ -517,7 +518,7 @@ Remaining Version 1 work:
 - Save and restore model-specific settings with full radio image backups, not just channel CSV or generic loadout JSON
 - Prototype and verify direct browser read/edit/write of radio settings for at least one supported radio family using an appropriate browser hardware API; do not claim this capability for untested models
 - Before device writes, confirm the exact model/firmware, save the original device image, preserve unsupported fields, validate settings, and read back when supported
-- Add GitHub Actions CI, browser/end-to-end tests, updated documentation, and a selected project license
+- Maintain GitHub Actions CI, browser/end-to-end tests, documentation, and project licensing notices
 - Polish the responsive user interface, harden upload and deployment behavior, and deploy the public website
 
 Recommended profiles are model- and firmware-specific starting points, not universal optimal settings. Initial V1 profiles should offer an Everyday / Beginner default. Consider Battery Saver and High-Noise profiles later, only if there is verified value and no unsafe transmit behavior. Preset values must be sourced from manufacturer manuals and tested against each supported radio; the model's currently read settings are the source of truth. Recommended presets should never override repeater access tones, transmit authorization, regional band limits, or emergency configuration without explicit user choice.
@@ -596,15 +597,11 @@ Always review generated files before importing them into programming software or
 
 ## Contributing
 
-Useful contributions may include:
-
-- Verified sample files
-- Exporter tests
-- Validation tests
-- Radio-specific field-limit research
-- Documentation corrections
-- Reproducible bug reports
-- Authorized and appropriately licensed data-source integrations
+Bug reports and radio/format research are welcome. Before preparing or submitting
+code patches, tests, documentation patches, or other changes to project material,
+arrange and agree on the necessary permissions with Timothy Thurston. The project
+license does not itself authorize modification or redistribution. See
+[contributing guidance](CONTRIBUTING.md).
 
 Bug reports should include:
 
@@ -623,4 +620,21 @@ Radio Loadout is developed by Timothy Thurston.
 
 ## License
 
-A project license has not yet been selected.
+Copyright (c) Timothy Thurston. Radio Loadout's original project material is
+**source-available, not open source**, under the
+[PolyForm Strict License 1.0.0](LICENSE). See the separate [copyright and scope
+notice](COPYRIGHT).
+
+Strict permits its defined noncommercial uses, including the personal uses and
+noncommercial organization uses specified in the license. It does not authorize
+modification, derivative works, or redistribution. Additional permissions require
+a separate agreement with Timothy Thurston. Rights under applicable law,
+including fair use, are preserved by the license.
+
+Third-party components are excluded from the project's license and copyright
+claim; their licenses and notices remain applicable. See the
+[dependency inventory](docs/dependency-licenses.md) for pending reviews.
+
+No ownership of users' channel data is claimed, and this source-code license is
+not imposed on their generated CSV/JSON configurations. Rights or restrictions
+in third-party source data continue to apply.

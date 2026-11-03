@@ -6,7 +6,7 @@ ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1 SOURCE_DATE_EPOCH=1704067
 WORKDIR /build
 COPY deploy/requirements-build.lock deploy/requirements-runtime.lock /build/
 RUN python -m pip install --require-hashes --only-binary=:all: -r requirements-build.lock
-COPY pyproject.toml README.md /build/
+COPY pyproject.toml README.md LICENSE COPYRIGHT /build/
 COPY src/ /build/src/
 RUN python -m build --wheel --no-isolation --outdir /wheels \
     && python -m venv /opt/venv \

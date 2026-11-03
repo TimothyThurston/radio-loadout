@@ -1,7 +1,8 @@
 # Production staging preparation
 
 These files prepare a staging deployment; they do not provision a host, configure
-external infrastructure, publish an image, or select a project license. No
+external infrastructure or publish an image. Original project material is covered
+by [PolyForm Strict 1.0.0](../LICENSE); see [COPYRIGHT](../COPYRIGHT) for scope. No
 database, user accounts, or external service credentials are required by the app.
 
 ## Local container build and smoke test

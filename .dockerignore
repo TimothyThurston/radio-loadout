@@ -4,6 +4,8 @@
 !.dockerignore
 !pyproject.toml
 !README.md
+!LICENSE
+!COPYRIGHT
 !deploy/
 !deploy/requirements-build.lock
 !deploy/requirements-runtime.lock

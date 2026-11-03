@@ -1,4 +1,5 @@
-include README.md pyproject.toml MANIFEST.in
+include README.md pyproject.toml MANIFEST.in LICENSE COPYRIGHT CONTRIBUTING.md
+include .gitattributes
 include package.json package-lock.json playwright.config.mjs
 include Dockerfile .dockerignore
 recursive-include deploy *.in *.lock

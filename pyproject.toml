@@ -7,6 +7,8 @@ name = "radio-loadout"
 version = "0.1.0"
 description = "Universal radio channel planning and configuration exporter for CHIRP, DMR codeplugs, and manufacturer programming software."
 readme = "README.md"
+license = "LicenseRef-PolyForm-Strict-1.0.0"
+license-files = ["LICENSE", "COPYRIGHT"]
 requires-python = ">=3.11"
 authors = [
     { name = "Timothy Thurston" }

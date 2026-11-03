@@ -1,0 +1,28 @@
+Radio Loadout original project material
+Copyright (c) Timothy Thurston
+
+The original code, documentation, and other original project material supplied
+by Timothy Thurston are licensed under the PolyForm Strict License 1.0.0 in
+LICENSE. Radio Loadout is source-available, not open source.
+
+Strict permits its defined noncommercial uses, including its specified personal
+uses and uses by noncommercial organizations. It does not authorize modification,
+creation of derivative works, or redistribution of the project material.
+Additional permissions require a separate agreement with Timothy Thurston.
+The license preserves rights available under applicable law, including fair use.
+
+Third-party components, dependencies, and separately attributed material are
+excluded from this project license and copyright claim. Their own licenses,
+copyrights, and notices continue to apply and must be preserved. See
+docs/dependency-licenses.md for the dependency inventory and pending reviews.
+
+No ownership of users' channel data is claimed. This project license does not
+apply to users' channel data or their generated CSV/JSON configurations. Any
+rights or restrictions associated with third-party source data still apply.
+
+LICENSE is the unmodified official plain-text download from
+https://polyformproject.org/licenses/strict/1.0.0.txt, linked from
+https://polyformproject.org/licenses/strict/1.0.0.
+The license text is provided by the PolyForm Project; the official page credits
+PolyForm Project Inc. This project copyright notice does not claim authorship
+or ownership of that license text.

@@ -27,6 +27,11 @@ It includes the Dockerfile, context allowlist and deployment dependency locks.
 It intentionally excludes virtual environments, node modules, browser output,
 bytecode, Git metadata, personal configuration and generated distributions.
 The wheel contains runtime files and distribution metadata, not development tests.
+Both archives include the unmodified `LICENSE` and separate `COPYRIGHT` notice;
+the wheel stores them under `.dist-info/licenses/`. Metadata declares
+`LicenseRef-PolyForm-Strict-1.0.0`. The container builder copies both files into its build
+context and installs the wheel with these notices into the runtime environment.
+Third-party licenses/notices remain separate and must be preserved.
 
 Package discovery is restricted to regular `radio_loadout` packages; implicit
 namespace discovery is disabled. Runtime package data uses explicit patterns in

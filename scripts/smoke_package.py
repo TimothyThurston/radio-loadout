@@ -11,6 +11,7 @@ import tarfile
 import tempfile
 import venv
 import zipfile
+from email.parser import BytesParser
 from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,12 +93,27 @@ def audit_distributions(wheel: Path, sdist: Path, root: Path = ROOT) -> dict:
         name not in expected and PurePosixPath(name).parts[0] not in metadata_roots for name in wheel_files
     ):
         raise RuntimeError("Unexpected top-level wheel files or metadata directories.")
+    metadata_root = next(iter(metadata_roots))
+    for name in ("LICENSE", "COPYRIGHT"):
+        original = (root / name).read_bytes()
+        if wheel_files.get(f"{metadata_root}/licenses/{name}") != original:
+            raise RuntimeError(f"Wheel omits/changes license notice: {name}")
+        if source_files.get(name) != original:
+            raise RuntimeError(f"Source distribution omits/changes license notice: {name}")
+    for label, data in (("wheel", wheel_files[f"{metadata_root}/METADATA"]),
+                        ("sdist", source_files["PKG-INFO"])):
+        metadata = BytesParser().parsebytes(data)
+        if metadata["License-Expression"] != "LicenseRef-PolyForm-Strict-1.0.0":
+            raise RuntimeError(f"Incorrect {label} license expression")
+        if set(metadata.get_all("License-File", [])) != {"LICENSE", "COPYRIGHT"}:
+            raise RuntimeError(f"Incorrect {label} license file metadata")
     for name, data in expected.items():
         if source_files.get(f"src/{name}") != data:
             raise RuntimeError(f"Source distribution omits/changes runtime file: {name}")
     # A usable source archive must also contain the test fixtures and smoke tooling.
     development_files = {"README.md", "pyproject.toml", "MANIFEST.in", "package.json",
-                         "package-lock.json", "playwright.config.mjs", "Dockerfile", ".dockerignore"}
+                         "package-lock.json", "playwright.config.mjs", "Dockerfile", ".dockerignore",
+                         "LICENSE", "COPYRIGHT", "CONTRIBUTING.md", ".gitattributes"}
     for directory, extensions in (("tests", {".py", ".mjs", ".csv", ".json", ".md"}),
                                   ("docs", {".md"}), ("scripts", {".py", ".mjs"}),
                                   ("deploy", {".in", ".lock"})):

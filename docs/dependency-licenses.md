@@ -22,10 +22,12 @@ table and must be included in a full distribution inventory.
 
 Items still needing review:
 
-- Radio Loadout has no selected project license. **Absence of a LICENSE file
-  does not grant general reuse, modification or redistribution permission.**
-  Do not describe the project/image as licensed for public reuse. The rights
-  holder must make that decision; see GitHub's [no-license explanation](https://choosealicense.com/no-permission/).
+- Radio Loadout's original material is source-available under PolyForm Strict
+  License 1.0.0; see [LICENSE](../LICENSE) and [COPYRIGHT](../COPYRIGHT).
+  Third-party components are excluded from that license and copyright claim.
+  Their licenses and notices remain applicable. Strict does not authorize
+  modification or redistribution of the project's original material; additional
+  permissions require a separate agreement with Timothy Thurston.
 - Review all transitive dependencies selected by `fastapi[standard]`, including
   CLI, telemetry, native wheels and their bundled components. The Linux runtime
   lock currently resolves 59 distributions; the direct FastAPI MIT license is
@@ -42,5 +44,4 @@ Items still needing review:
   promise about every future install. Runtime/build locks pin the container's
   dependency inputs but are not a legal or vulnerability audit.
 
-No Radio Loadout license has been chosen and no third-party rights are granted
-by this document.
+This inventory grants no third-party rights and is not completed legal clearance.
