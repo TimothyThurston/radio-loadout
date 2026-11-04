@@ -56,8 +56,15 @@ the uploaded diagnostics directory and is not uploaded.
 See [final-image inventory collection](image-inventory.md) for commands, exact
 output scope, limits, partial-failure handling and review requirements. The
 seven-day artifact is diagnostic evidence, not permanent source access or a
-license-compliance determination. Actual image inspection remains pending until
-the updated CI job executes; Docker is unavailable locally.
+license-compliance determination. The supplied checksum-verified CI artifact
+establishes successful collection for the [recorded image](native-component-notices.md);
+Docker remains unavailable locally. The new supplemental native notice bundle
+travels as package data through the wheel into `/opt/venv`. An additional
+`always()` step verifies its exact collected installed bytes and reviewed native
+identities before upload/cleanup, even after smoke failures. Its result is
+`supplemental-notices-check.json` in the same seven-day diagnostics. Verification
+of this new payload in a built image requires the next Linux CI execution.
+Collection success does not complete notice/source-access or compliance review.
 
 The multi-stage Dockerfile uses Python **3.13.15 slim Bookworm**, pinned to an
 official-image manifest digest. Python 3.13 remains security-maintained according

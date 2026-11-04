@@ -14,6 +14,8 @@ import zipfile
 from email.parser import BytesParser
 from pathlib import Path, PurePosixPath
 
+from verify_third_party_notices import bundle_payload
+
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_ASSETS = {
     "radio_loadout/web/static/backup-format.js",
@@ -46,6 +48,8 @@ def source_payload(root: Path) -> dict[str, bytes]:
         ):
             continue
         payload[relative] = filename.read_bytes()
+    payload.update({"radio_loadout/third_party_notices/v1/" + name: data
+                    for name, data in bundle_payload(root).items()})
     missing = REQUIRED_ASSETS - payload.keys()
     if missing:
         raise RuntimeError(f"Required source assets are missing: {sorted(missing)}")

@@ -9,6 +9,47 @@ upstream inventory evidence remain historical. This is an evidence record and a
 release checklist,
 not completed legal clearance or an opinion that ownership has been established.
 
+## Actual-image evidence and native notice supplement — 2026-11-04
+
+The supplied `staging-container-diagnostics.zip` matches SHA-256
+`5843bdb76cc1caf20fc0f9132369cc4e6e62bad55771bf362c496e180de076d4`.
+It records successful, error-free collection at checkout
+`7cc898267d5874724eeb5d4d251d92b4c694533b` from Linux amd64 image
+`sha256:bdb65d39b44c3e8843f29ce31e74e7b2eaf812c83b532e2f613c6b4b80bf24bf`.
+Both interpreters report CPython 3.13.15 / UID 10001. Actual evidence includes
+61 venv distributions (59 locked runtime packages, pip and the project), base and
+ensurepip pip 26.2.1/vendor contents, and 97 Debian binary/source package records.
+All 354 notice-origin records passed stored hash/size checks (155 unique texts).
+Collection executed successfully; **compliance review is not complete**.
+
+[The native-component evidence record](native-component-notices.md) gives the
+inventory/index hashes, base identifiers and limitations. This supplied evidence
+supersedes earlier statements that final-image evidence was pending. Docker is
+still unavailable locally; the supplied run was not independently reproduced.
+The BuildKit material is the configured multi-platform Python digest, without a
+separate established Linux child digest. Notice presence does not establish
+source access, complete native coverage or redistribution readiness.
+
+Installed uvloop/Pydantic Core binary hashes exactly match the reviewed release
+wheels. [Supplemental bundle 1](../src/radio_loadout/third_party_notices/v1/README.md)
+now preserves libuv 1.52.1's LICENSE, LICENSE-extra, tree.h BSD and inet.c ISC
+texts from uvloop 0.23.0's matching source archive. Exact Pydantic source/crate
+evidence supports adding ICU4X Unicode-3.0 (including ICU/IBM), PyO3/ffi 0.30.1
+MIT/Apache, and related url/idna-path notices. Source defaults and versioned
+binary paths support this scoped supplement, not inclusion of every Cargo.lock
+entry. The complete upstream feature/link graph remains unresolved.
+
+The bundle is package data in wheel/source archives and passes through the
+existing wheel-based container build. CI now collects its installed bytes and
+checks every bundle file plus the reviewed native identities, including after
+smoke failures and before cleanup. **Actual-image verification of this newly
+added bundle requires the next Linux CI execution**; the supplied ZIP predates
+it. Only the identified notice texts are supplemented. Other native coverage,
+certifi direct/vendor/bootstrap preferred-form and source access, Debian/CPython
+obligations, CHIRP provenance and project permissions remain open. The approved
+authorship statement is unchanged. Temporary artifacts are not permanent source
+access, and this work is not legal clearance.
+
 Radio Loadout's original material remains under **PolyForm Strict 1.0.0**.
 That license does not cover third-party material. Nothing here changes a
 component's license, supplies missing permissions, or claims users' channel data
@@ -87,7 +128,7 @@ image/OS review remain open.
 | Hosted channel builder (`/`, `/builder`) | Lower third-party distribution burden: the inspected templates use local project CSS/JS, and server dependencies are not sent with normal channel exports. No reviewed server license requires publishing the entire application merely to run it as a service. | Resolve the CHIRP provenance question for delivered JavaScript/data tables and project code. Production API-doc delivery was disabled in the 2026-11-04 follow-up. Confirm the actual deployment dependency set. |
 | Hosted API documentation | **Addressed in the 2026-11-04 production/staging code:** `/docs`, `/redoc`, and the OAuth redirect return 404; production links and identified browser-asset references are absent. Raw `/openapi.json` remains available. | Development docs remain enabled. The historical browser inventory below still applies to development and to any future decision to re-enable public docs; final container/OS and dependency-redistribution review remain separate. |
 | Downloadable project wheel/source archive, without dependencies bundled | The inspected archives contain project files and project notices, not dependency wheels, npm packages, or Python itself. Merely declaring dependencies is not redistribution of their contents. | Resolve CHIRP provenance before treating these artifacts as redistribution-ready. Recheck future artifacts. A wheelhouse, offline installer, or repackaged environment requires a separate dependency notice/source review. |
-| Distributed runtime container | **Hold redistribution pending corrective work.** The image would convey server wheels, native code, Python, pip/bootstrap contents, and Debian components. | Restore/confirm native notices, supply the applicable source-access information, and inspect the final image and OS inventory. Docker was unavailable; no final image was built or inspected. |
+| Distributed runtime container | **Hold redistribution pending corrective work.** The supplied actual-image inventory confirms server wheels, native code, Python, pip/bootstrap contents, and Debian components. | Verify the new supplemental notice bytes in the next built image, complete native/OS/Python coverage review, and establish applicable source access. Successful inventory collection is established; compliance is not. |
 | Distributed build/test image or browser-test environment | Broader scope than the runtime image. Includes additional vendored licenses and downloaded browser components. | Review setuptools' LGPL/MPL material, npm bundle notices, Node, Chromium/FFmpeg and their exact binaries before sharing such an environment. These tools are not automatically part of the project wheel or runtime image. |
 
 These conclusions concern third-party licensing only. They neither authorize
@@ -249,8 +290,14 @@ or the manifest's license string is inadequate.
 All 11 native-bearing runtime wheels were inspected. Their ELF dynamic
 dependencies include glibc/libpthread and, for some Rust wheels, libgcc_s,
 libdl/librt and the ELF loader; protobuf also needs libstdc++ and libm. Exact OS
-versions and applicable runtime exceptions remain unverified without the image.
+versions are now recorded in the supplied actual-image evidence; linkage and
+applicable runtime exception coverage still require review.
 ELF DT_NEEDED identifies dynamic dependencies, not all statically linked code.
+
+The table retains historical candidate-wheel/source findings. The
+[2026-11-04 native supplement](native-component-notices.md) confirms the actual
+uvloop/Pydantic binary matches and records the added texts and narrower inclusion
+evidence. It does not mark the entire native inventory addressed.
 
 | Wheel/component | Actual source/binary/notice evidence | Finding and smallest corrective action |
 | --- | --- | --- |
@@ -316,7 +363,7 @@ nor Node/npm are copied into the configured runtime image or project archives.
 CI-uploaded Playwright HTML reports may themselves embed third-party browser
 assets; review their actual exported bytes if distributing them publicly.
 
-## Container OS and Python: unverified final-image inventory
+## Container OS and Python: actual-image collection, incomplete obligation review
 
 **2026-11-04 collection implementation update:** the existing Linux-amd64 container
 CI job now uses a focused [final-image inventory collector](image-inventory.md)
@@ -328,23 +375,21 @@ binary/source versions. It retains existing notices and bounded native marker/
 ELF evidence, with selected resolved BuildKit image identifiers where available.
 Raw build metadata, environment variables and full Docker inspection are not uploaded.
 
-This implements reproducible collection, **not completed image inspection**.
-Docker remains unavailable locally; actual installed-image findings, missing
-notices and source-access requirements await the updated CI job's output and
-subsequent review. Collection errors retain partial evidence and fail visibly;
-missing notices and native inclusion remain qualified review items, not inferred
-compliance conclusions. The seven-day artifact is not a permanent source-access
-mechanism. CHIRP/provenance statements and all other licensing questions remain
-unchanged. The historical candidate-wheel findings above have not been replaced
-with claims about an uninspected final image.
+That implementation initially awaited CI evidence. The subsequently supplied ZIP
+now establishes successful collection from the image identified above; see the
+[actual-image evidence record](native-component-notices.md). Docker remains
+unavailable locally. Missing notices, source access and native inclusion still
+need component-specific review; the seven-day artifact is not a permanent
+source-access mechanism. Historical candidate-wheel evidence remains identified
+as such, with exact actual-image binary matches recorded for uvloop/Pydantic.
 
 | Component family | What is established | Required image evidence |
 | --- | --- | --- |
-| CPython | Dockerfile specifies upstream Python 3.13.15 on Debian Bookworm; pinned source LICENSE inspected (PSF plus historical terms). | Installed `/usr/local` license files, Python's incorporated-component notices and exact build configuration. Check OpenSSL, SQLite, zlib, libffi, expat, compression libraries and other enabled components against actual linkage. |
-| Debian Bookworm | Base-family selection is established; installed package names/versions are not. | `dpkg-query` package/source versions, each `/usr/share/doc/<package>/copyright`, referenced `/usr/share/common-licenses`, and corresponding-source plan for applicable GPL/LGPL packages. See [Debian copyright-file policy](https://www.debian.org/doc/debian-policy/ch-docs.html#copyright-information). |
+| CPython | Actual probes report 3.13.15; installed stdlib LICENSE.txt collected and hashed; pinned source LICENSE previously inspected. | Review incorporated-component notices, exact build configuration and enabled-component linkage (OpenSSL, SQLite, zlib, libffi, expat and compression). |
+| Debian Bookworm | 97 installed package/source-version records; all have a detected copyright path; common license files collected. | Review actual copyright text/exception applicability and corresponding-source arrangements for applicable GPL/LGPL packages. Presence is not sufficiency. See [Debian copyright-file policy](https://www.debian.org/doc/debian-policy/ch-docs.html#copyright-information). |
 | glibc, libgcc/libstdc++, loader and other shared libraries | Selected wheels' ELF references establish required SONAMEs, not the installed versions or license exception coverage. | Match every resolved shared object to its OS/source package; inspect LGPL and GCC runtime exceptions and any binary modification requirements. Do not infer that separate application code becomes GPL. |
-| OpenSSL, CA certificates, tzdata and base utilities | Expected review targets for this Python/Debian image family, not a confirmed installed package list. | Exact package versions, license/copyright texts, notices and source access where required. Debian CA bundles and certifi are separate components. |
-| pip / ensurepip / vendored bootstrap libraries | `python -m venv` seeds pip and the base also has Python packaging/bootstrap contents; exact final versions unverified. | Inventory both base and `/opt/venv` copies and their vendor directories. Local pip 26.2.1 has MIT plus many vendored licenses, including certifi; that is supporting scope evidence only. |
+| OpenSSL, CA certificates, tzdata and base utilities | Actual installed records include OpenSSL 3.0.20-1~deb12u2, ca-certificates 20250419~deb12u1 and tzdata 2026b-0+deb12u1. | Assess collected notice applicability, enabled usage and source access where required. Debian CA bundles and certifi are separate components. |
+| pip / ensurepip / vendored bootstrap libraries | Base and venv pip 26.2.1, ensurepip wheel/hash and 18-pin vendor manifests/notices collected. Vendor certifi is 2026.6.17, distinct from direct certifi 2026.10.23. | Review those exact vendored/bootstrap components and their notices/source access; a vendor pin is not proof of every component's runtime use. |
 
 The [official Python image documentation](https://hub.docker.com/_/python) does
 not substitute for notices for everything inside an image. A current upstream
@@ -429,11 +474,11 @@ recommends changing the project's chosen license. Preserve any third-party right
 
 | Priority | Finding/status | Smallest recommended follow-up |
 | --- | --- | --- |
-| P0 before container redistribution | Final image/OS/Python/bootstrap components remain uninspected locally; [CI collection is implemented](image-inventory.md), but its actual-image evidence is pending. Historical native notice gaps remain open. | Execute the updated container CI job, inspect its identities/packages/notices/errors, establish native inclusion and applicable source access, then supplement any confirmed notice gaps. The temporary artifact alone is not clearance or permanent source delivery. |
+| P0 before container redistribution | Successful actual-image collection is established from the checksum-verified ZIP. The [scoped native notice supplement](native-component-notices.md) is prepared; its delivery and other native/source-access findings remain open. | Run the updated Linux CI job to verify installed supplemental bytes, then complete native build-graph/OS/Python review and recipient source arrangements. Temporary diagnostics alone are not clearance or permanent source delivery. |
 | P0 before project redistribution | [Historical comparisons and a dated author-reported statement are recorded](chirp-provenance.md). Component-level creation sources and any applicable permissions remain unresolved; no particular copied expressive fragment was identified, which does not exclude copying. | Record any further component-specific recollection or surviving evidence; original chats/notes are reported unavailable, so leave unrecoverable details unknown. Assess any actual adaptation and applicable permissions without assuming clearance from recollection or table/row comparisons. |
 | P1 production API-doc delivery — addressed 2026-11-04 | Production/staging docs and OAuth redirect now return 404, production pages hide their links/assets, and development retains docs on independent instances. | Verified locally by regression/browser checks and the installed-wheel smoke probe; raw OpenAPI JSON remains available. Development/dependency redistribution notice questions and the uninspected final image remain separate. |
 | P1 before conveying dependency environment | certifi notice/source correspondence partly verified, but recipient source mechanism/preferred bundle source unresolved. | Retain the exact certifi notices, document matching source access and check preferred-form inputs. Include pip's vendored copy if present. Do not demand disclosure of the entire app. |
-| P1 for any bundled release | Existing package smoke audits verify project notices, not third-party image notices. | After the above evidence is available, add a notice-preservation check for the actual delivered environment; separately test archives if dependencies are ever vendored. No CI changes were made in this review. |
+| P1 for any bundled release | Package audits now verify exact supplemental notice bytes; an always-run actual-image evidence check is implemented for the new bundle. | Inspect the next Linux CI result; this check covers the versioned supplement, not every third-party obligation. Separately test archives if dependencies are ever vendored. |
 | P2 documentation | Existing direct inventory is metadata-based and incomplete: e.g. python-dotenv 1.2.4's actual notice is BSD-3; notify is CC0; setuptools has LGPL/MPL components. | Update the older inventory to point to the stronger artifact evidence when documentation changes beyond this report are authorized. |
 | P2 if shipping development artifacts | Test/browser/build bundles have extra components and licenses. | Preserve npm sidecars/NOTICE, inventory exported HTML reports and browser binaries, and review setuptools' covered material if the builder itself is distributed. |
 

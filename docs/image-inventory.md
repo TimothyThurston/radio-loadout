@@ -9,10 +9,12 @@ If both exist they must agree. It refuses a tag-only fallback when a staging
 container was requested, and rejects a non-Linux/amd64 or differently configured
 image user. This collects installed image evidence, not candidate-wheel metadata.
 
-**Actual image inspection remains pending until the updated CI job executes.**
-Docker is unavailable on the local Windows development machine. Local unit tests
-use synthetic files and Docker responses; they do not establish final image
-contents, missing notices or license compliance.
+The checksum-verified supplied CI artifact now establishes successful collection
+from the image recorded in the [native-component evidence review](native-component-notices.md).
+Compliance review remains incomplete. Docker is unavailable locally; unit tests
+use synthetic files/Docker responses. The new supplemental bundle and actual-image
+byte-verification step require the **next Linux CI execution**; the earlier
+artifact predates them.
 
 ## Build and local collection on a Docker-capable machine
 
@@ -80,6 +82,7 @@ The seven-day `staging-container-diagnostics` artifact includes:
 | `licenses/inventory.json` | Checkout commit, dirty-tree flag, collection time and collector hashes; projected image ID/OS/architecture/user/repository digests; selected BuildKit image materials/config digest when present; both interpreters' versions, prefixes, machine and UID; installed and nested vendored distribution metadata; vendor manifests/component paths; ensurepip wheel metadata/hashes; Debian binary/source package versions; native file hashes, ELF `DT_NEEDED` and selected marker names; review items, limitations and collection errors. |
 | `licenses/notices-index.json` | Original notice paths (including archive-member origins), collecting interpreter, size, SHA-256 and stored file. Identical bytes are deduplicated while origins remain distinct. |
 | `licenses/notices/<sha256>.txt` or `.gz` | Exact existing notice bytes, including compressed Debian notices. No replacement notices are generated. |
+| `supplemental-notices-check.json` (beside `licenses/`) | Pass/failure for exact installed bundle bytes and the reviewed native artifact identities. This supplements collection; it does not assert complete license coverage. |
 
 The source commit is the checkout HEAD at collection, with a dirty flag; CI
 builds and collects in the same checkout. It is not inferred from the package
@@ -95,6 +98,16 @@ members. Vendor paths with no usable version metadata remain explicitly unknown;
 a vendor manifest is not proof that every declared component is loaded. certifi
 CA bundles, including vendored/bootstrap copies, are hashed without copying
 their certificate contents into the notice artifact.
+
+The fixed `radio_loadout/third_party_notices/v1/manifest.json` and `README.md`
+are also retained along with the bundle's notice-named texts. No other arbitrary
+package JSON/Markdown/source files are copied. The subsequent `always()` CI step
+runs `scripts/verify_third_party_notices.py --inventory-dir ... --output ...`
+against this collected evidence. It compares every installed supplemental file
+with the checkout's validated bundle, including its manifest/README, and requires
+the reviewed uvloop/Pydantic versions and native-file hashes. Missing/changed
+bytes, identity drift or incomplete collection fail the check before artifact
+upload and cleanup. It does not install tools or change probe restrictions.
 
 The base-interpreter pass runs `dpkg-query` for installed binary package/version
 and source package/version fields. It copies notice-named files under installed
@@ -160,4 +173,6 @@ does not grant that privilege (19 inventory cases passed). Separate confinement
 tests passed without symlinks. JavaScript syntax, 53 JavaScript tests, 20 Chromium
 desktop/narrow browser tests and the isolated wheel/source packaging smoke passed.
 The workflow parsed as YAML. These results validate local logic and regressions,
-not Docker/Buildx execution or actual Linux image contents; those remain pending CI.
+not Docker/Buildx execution. The subsequently supplied ZIP establishes the older
+image collection; verification of the new supplemental payload remains pending
+the next CI run. See [the updated evidence and checks](native-component-notices.md).

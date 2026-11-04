@@ -1,0 +1,23 @@
+warning: in the working copy of '.dockerignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.gitattributes', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/workflows/ci.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/dependency-license-review.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/dependency-licenses.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/image-inventory.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/staging.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'pyproject.toml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/image_inventory_probe.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/smoke_package.py', LF will be replaced by CRLF the next time Git touches it
+ .dockerignore                     |  6 [32m+++[m
+ .gitattributes                    |  2 [32m+[m
+ .github/workflows/ci.yml          |  6 [32m+++[m
+ README.md                         |  4 [32m++[m
+ docs/dependency-license-review.md | 81 [32m++++++++++++++++++++++++++++++[m[31m---------[m
+ docs/dependency-licenses.md       | 13 [32m++++++[m[31m-[m
+ docs/image-inventory.md           | 25 [32m+++++++++[m[31m---[m
+ docs/staging.md                   | 11 [32m+++++[m[31m-[m
+ pyproject.toml                    |  3 [32m++[m
+ scripts/image_inventory_probe.py  |  7 [32m+++[m[31m-[m
+ scripts/smoke_package.py          |  4 [32m++[m
+ 11 files changed, 134 insertions(+), 28 deletions(-)

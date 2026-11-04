@@ -4,6 +4,14 @@ Recorded 2026-11-01 from project manifests/lock files and upstream package
 metadata. This is an inventory and review checklist, not a license clearance
 opinion or a new license for Radio Loadout.
 
+For the stronger artifact-based evidence, see the
+[dependency review](dependency-license-review.md) and
+[2026-11-04 actual-image/native notice follow-up](native-component-notices.md).
+The supplied ZIP's collection succeeded; compliance review is incomplete.
+[Supplemental notice bundle 1](../src/radio_loadout/third_party_notices/v1/README.md)
+preserves selected libuv/ICU/PyO3/URL-path notices in project distributions and
+the container build. The next Linux CI run must verify its installed bytes.
+
 | Direct dependency/tool | Recorded version | Reported license | Scope/source |
 | --- | --- | --- | --- |
 | FastAPI (`standard` extra) | 0.162.0 in runtime lock | MIT | Runtime; [upstream license](https://github.com/fastapi/fastapi/blob/master/LICENSE), [release metadata](https://pypi.org/pypi/fastapi/0.162.0/json) |
@@ -37,8 +45,9 @@ Items still needing review:
   notices and any modifications/distribution involving the MPL-2.0 accessibility
   package; the test package is not part of the runtime image.
 - Review CPython, Debian, pip/bootstrap packages, native wheel contents and any
-  browser binaries shipped separately. Docker is unavailable locally, so an OS
-  package/license inventory and final image inspection have not been performed.
+  browser binaries shipped separately. The supplied actual-image inventory now
+  records installed packages/notices; obligation review and recipient source
+  arrangements remain open. Docker is still unavailable locally.
 - Recheck the inventory when changing locks or tools. Python dev dependencies
   are not fully locked by `pyproject.toml`; observed local versions are not a
   promise about every future install. Runtime/build locks pin the container's

@@ -634,6 +634,10 @@ including fair use, are preserved by the license.
 Third-party components are excluded from the project's license and copyright
 claim; their licenses and notices remain applicable. See the
 [dependency inventory](docs/dependency-licenses.md) for pending reviews.
+The [versioned supplemental notices](src/radio_loadout/third_party_notices/v1/README.md)
+travel with the wheel, source archive and runtime image as supporting distribution
+documentation. Their [evidence and coverage limits](docs/native-component-notices.md)
+are separate from the project's license; they do not complete third-party review.
 
 No ownership of users' channel data is claimed, and this source-code license is
 not imposed on their generated CSV/JSON configurations. Rights or restrictions

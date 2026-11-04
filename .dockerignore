@@ -12,6 +12,12 @@
 !src/
 !src/radio_loadout/
 !src/radio_loadout/*.py
+!src/radio_loadout/third_party_notices/
+!src/radio_loadout/third_party_notices/v1/
+!src/radio_loadout/third_party_notices/v1/manifest.json
+!src/radio_loadout/third_party_notices/v1/README.md
+!src/radio_loadout/third_party_notices/v1/*/
+!src/radio_loadout/third_party_notices/v1/*/*.txt
 !src/radio_loadout/exporters/
 !src/radio_loadout/exporters/*.py
 !src/radio_loadout/importers/

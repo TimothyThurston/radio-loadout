@@ -136,6 +136,12 @@ jobs:
           python scripts/collect_image_inventory.py --container radio-loadout-staging-ci \
             --image-id-file generated/container-build/image-id \
             --build-metadata generated/container-build/metadata.json
+      - name: Verify supplemental notice bytes in the final image
+        if: ${{ always() }}
+        run: |
+          python scripts/verify_third_party_notices.py \
+            --inventory-dir generated/container-diagnostics/licenses \
+            --output generated/container-diagnostics/supplemental-notices-check.json
       - name: Capture selected container state before cleanup
         if: ${{ always() }}
         run: |

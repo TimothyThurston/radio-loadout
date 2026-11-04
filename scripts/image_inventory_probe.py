@@ -225,7 +225,12 @@ def collect_python(roots: list[Path], stdlib: Path, evidence: Evidence) -> dict:
                     evidence.error(path, "symlink escapes Python collection root")
                 continue
             try:
-                if NOTICE_NAME.search(path.name):
+                # Fixed package-data scope: retain the supplemental ledger/README as well as
+                # license-named texts so CI can compare every installed bundle byte.
+                bundle = root / "radio_loadout/third_party_notices/v1"
+                supplemental = (path.is_relative_to(bundle) and
+                                path.relative_to(bundle).as_posix() in {"manifest.json", "README.md"})
+                if NOTICE_NAME.search(path.name) or supplemental:
                     evidence.file_notice(path, [root])
                 elif path.name in {"METADATA", "PKG-INFO"} and path.parent.name.endswith((".dist-info", ".egg-info")):
                     if path.stat().st_size > MAX_NOTICE:

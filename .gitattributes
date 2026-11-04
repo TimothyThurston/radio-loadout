@@ -1,2 +1,4 @@
 # Preserve the official plain-text license bytes across platforms.
 /LICENSE -text
+# Preserve verbatim supplemental upstream notices across platforms.
+/src/radio_loadout/third_party_notices/v1/*/*.txt -text
