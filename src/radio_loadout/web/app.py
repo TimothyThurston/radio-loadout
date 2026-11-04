@@ -6,7 +6,7 @@ import math
 from pathlib import Path
 from typing import Annotated, Literal
 
-from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
+from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import (
@@ -52,18 +52,11 @@ CHANNELS_JSON_OPENAPI = {
     }},
 }
 
-app = FastAPI(title="Radio Loadout")
-
-app.mount(
-    "/static",
-    StaticFiles(directory=WEB_DIRECTORY / "static"),
-    name="static",
-)
-
+router = APIRouter()
 templates = Jinja2Templates(directory=WEB_DIRECTORY / "templates")
 
 
-@app.get("/healthz", include_in_schema=False)
+@router.get("/healthz", include_in_schema=False)
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
@@ -400,7 +393,7 @@ async def _submitted_channels_form(request: Request) -> str:
         raise
 
 
-@app.post("/validation/chirp.csv", openapi_extra=CHANNELS_JSON_OPENAPI)
+@router.post("/validation/chirp.csv", openapi_extra=CHANNELS_JSON_OPENAPI)
 def review_chirp_compatibility(channels_json: Annotated[str, Depends(_submitted_channels_form)]) -> dict:
     try:
         form_channels = CHANNEL_FORM_LIST.validate_json(channels_json)
@@ -476,7 +469,7 @@ async def _read_csv_upload(file: UploadFile) -> bytes:
         data.extend(chunk)
 
 
-@app.post("/imports/chirp.csv")
+@router.post("/imports/chirp.csv")
 async def upload_chirp_csv(
     file: Annotated[UploadFile, File()],
 ) -> dict:
@@ -556,15 +549,16 @@ def _sample_channels() -> list[Channel]:
     ]
 
 
-@app.get("/")
+@router.get("/")
 def home(request: Request) -> Response:
     return templates.TemplateResponse(
         request=request,
         name="index.html",
+        context={"api_docs_url": request.app.docs_url},
     )
 
 
-@app.get("/builder")
+@router.get("/builder")
 def builder(request: Request) -> Response:
     return templates.TemplateResponse(
         request=request,
@@ -573,7 +567,7 @@ def builder(request: Request) -> Response:
     )
 
 
-@app.post("/downloads/chirp.csv", openapi_extra=CHANNELS_JSON_OPENAPI)
+@router.post("/downloads/chirp.csv", openapi_extra=CHANNELS_JSON_OPENAPI)
 def download_custom_chirp(
     channels_json: Annotated[str, Depends(_submitted_channels_form)],
 ) -> Response:
@@ -618,7 +612,7 @@ def download_custom_chirp(
     )
 
 
-@app.get("/downloads/chirp-sample.csv")
+@router.get("/downloads/chirp-sample.csv")
 def download_chirp_sample() -> Response:
     csv_text = export_chirp_csv(_sample_channels())
 
@@ -631,3 +625,24 @@ def download_chirp_sample() -> Response:
             )
         },
     )
+
+
+def create_app(*, docs_enabled: bool = True) -> FastAPI:
+    """Create an independent app; raw OpenAPI JSON is available in both modes."""
+    application = FastAPI(
+        title="Radio Loadout",
+        docs_url="/docs" if docs_enabled else None,
+        redoc_url="/redoc" if docs_enabled else None,
+        swagger_ui_oauth2_redirect_url="/docs/oauth2-redirect" if docs_enabled else None,
+    )
+    application.mount(
+        "/static",
+        StaticFiles(directory=WEB_DIRECTORY / "static"),
+        name="static",
+    )
+    application.include_router(router)
+    return application
+
+
+# The documented development entry point retains interactive API documentation.
+app = create_app()

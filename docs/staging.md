@@ -77,8 +77,38 @@ binary components still need their own inventory/review.
 
 The container runs `python -I -B -u -m radio_loadout.web.serve` (isolated imports,
 no bytecode writes, unbuffered output). The same module can be
-run from an installed wheel for local staging without Docker. It wraps the
-existing application with `radio_loadout.web.production:create_app`.
+run from an installed wheel for local staging without Docker. The factory
+`radio_loadout.web.production:create_app` creates an independent web application
+and wraps it with the existing trusted-host and security/error boundaries.
+
+### API documentation in production and development
+
+Production/staging disables Swagger UI (`/docs`), ReDoc (`/redoc`), and the
+Swagger OAuth redirect (`/docs/oauth2-redirect`). Requests to those routes return
+404 with the production security headers and `Cache-Control: no-store`. The
+production homepage hides **View API**. The homepage and builder load no
+documentation CDN, Google Fonts, or FastAPI favicon assets.
+
+Raw **`/openapi.json` remains available** as JSON under the same trusted-host
+controls and production headers. It describes the existing application endpoints
+without loading interactive documentation scripts, fonts, or favicons. This
+change does not add authentication or restrict access to that schema.
+
+For development, the existing command
+`uvicorn radio_loadout.web.app:app --reload` retains Swagger UI, ReDoc, the OAuth
+redirect, raw OpenAPI JSON, and the homepage **View API** link. The shared endpoint
+router is registered on independently configured FastAPI instances; creating a
+staging instance does not remove routes from or otherwise reconfigure the
+development instance. Builder, validation, import/export, input limits, host
+controls, error privacy, and the existing security-header policy are preserved.
+
+Regression coverage lives in `tests/test_api_documentation.py` and
+`tests/e2e/production-docs.spec.mjs`. The local staging and isolated installed-wheel
+smoke checks also verify the production 404s, absent links/assets, and available
+JSON schema. The browser test blocks and records external requests while loading
+the production homepage and builder, and requires none. See the dated API-doc
+follow-up in [the dependency review](dependency-license-review.md) for results
+and remaining verification limits; other licensing findings remain open.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |

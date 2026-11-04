@@ -79,6 +79,11 @@ def verify_http(base: str, package: Path, *, installed_importer: bool = True) ->
         parser = AssetReferences()
         parser.feed(content.decode("utf-8"))
         assert "Radio Loadout" in content.decode("utf-8")
+        assert "View API" not in content.decode("utf-8")
+        assert not any(reference in content.decode("utf-8") for reference in (
+            "/docs", "/redoc", "cdn.jsdelivr.net", "fonts.googleapis.com",
+            "fonts.gstatic.com", "fastapi.tiangolo.com",
+        ))
         assets.update(urljoin(route, url) for url in parser.urls)
     assert any(urlsplit(asset).path == "/static/backup-format.js" for asset in assets)
     for asset in sorted(assets):
@@ -93,6 +98,21 @@ def verify_http(base: str, package: Path, *, installed_importer: bool = True) ->
     assert limits == (package / "web/static/input-limits.json").read_bytes()
     assert json.loads(limits)["channels"] >= 100
     print(f"PASS: homepage, builder, all {len(assets)} referenced local JS/CSS assets and input limits.")
+
+    for path in ("/docs", "/redoc", "/docs/oauth2-redirect"):
+        try:
+            opener.open(urljoin(base, path), timeout=10).close()
+        except HTTPError as response:
+            assert response.code == 404, (path, response.code)
+            assert response.headers["Cache-Control"] == "no-store"
+            assert response.headers["X-Content-Type-Options"] == "nosniff"
+            response.close()
+        else:
+            raise AssertionError(f"Production documentation enabled: {path}")
+    schema, headers = request("/openapi.json")
+    assert headers.get_content_type() == "application/json"
+    assert "/downloads/chirp.csv" in json.loads(schema)["paths"]
+    print("PASS: production API docs/redirect return 404; raw OpenAPI JSON remains available.")
 
     sample, headers = request("/downloads/chirp-sample.csv")
     assert "radio_loadout_sample.csv" in headers["Content-Disposition"]

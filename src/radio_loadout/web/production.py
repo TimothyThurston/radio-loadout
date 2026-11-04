@@ -63,8 +63,9 @@ class ProductionBoundary:
 
 
 def create_app() -> ASGIApp:
-    from radio_loadout.web.app import app
+    from radio_loadout.web.app import create_app as create_web_app
 
+    app = create_web_app(docs_enabled=False)
     if app.debug:
         raise ValueError("Production requires application debug mode to be disabled.")
     hosts = allowed_hosts(os.environ.get("RADIO_LOADOUT_ALLOWED_HOSTS", "localhost,127.0.0.1"))

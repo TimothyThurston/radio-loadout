@@ -16,7 +16,7 @@ from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-from radio_loadout.web.app import app
+from radio_loadout.web import app as web_app
 from radio_loadout.web.production import ProductionBoundary, allowed_hosts, create_app
 from radio_loadout.web.serve import server_options
 
@@ -43,7 +43,7 @@ def test_security_headers_preserve_assets_and_downloads(staging, path) -> None:
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["referrer-policy"] == "no-referrer"
-    assert "content-security-policy" not in response.headers  # Do not break existing Swagger CDN/JSON scripts.
+    assert "content-security-policy" not in response.headers  # Preserve the existing header policy.
     if path.endswith(".js"):
         assert "javascript" in response.headers["content-type"]
         assert response.content
@@ -69,7 +69,7 @@ def test_invalid_allowed_hosts_fail_startup(value) -> None:
 
 
 def test_debug_mode_cannot_enter_staging(monkeypatch) -> None:
-    monkeypatch.setattr(app, "debug", True)
+    monkeypatch.setattr(web_app, "create_app", lambda **kwargs: FastAPI(debug=True))
     with pytest.raises(ValueError, match="debug mode"):
         create_app()
 

@@ -1,0 +1,11 @@
+warning: in the working copy of 'docs/staging.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/package_smoke_probe.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/radio_loadout/web/production.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_staging.py', LF will be replaced by CRLF the next time Git touches it
+ docs/staging.md                            | 34 [32m+++++++++++++++++++[m[31m--[m
+ scripts/package_smoke_probe.py             | 20 [32m+++++++++++++[m
+ src/radio_loadout/web/app.py               | 47 [32m++++++++++++++++++++[m[31m----------[m
+ src/radio_loadout/web/production.py        |  3 [32m+[m[31m-[m
+ src/radio_loadout/web/templates/index.html |  6 [32m++[m[31m--[m
+ tests/test_staging.py                      |  6 [32m++[m[31m--[m
+ 6 files changed, 92 insertions(+), 24 deletions(-)
