@@ -43,6 +43,22 @@ OOM kills or configuration errors; connection retries are not evidence that the
 application started correctly. Collection/upload failures do not turn checks green,
 and cleanup still runs after diagnostics.
 
+The same job now collects final-image package and license evidence after smoke
+testing with `if: always()`, before diagnostics upload and cleanup. The collector
+uses the staging container's immutable image ID (or the build IID if startup
+never created the container), then probes separate equally restricted,
+network-disabled containers. It inventories base Python, `/opt/venv`, vendored
+pip/ensurepip components, Debian binary/source versions, existing notices and
+bounded native evidence. Buildx `--load` supplies selected build-image identifiers
+where available without publishing an image. Raw build metadata is kept outside
+the uploaded diagnostics directory and is not uploaded.
+
+See [final-image inventory collection](image-inventory.md) for commands, exact
+output scope, limits, partial-failure handling and review requirements. The
+seven-day artifact is diagnostic evidence, not permanent source access or a
+license-compliance determination. Actual image inspection remains pending until
+the updated CI job executes; Docker is unavailable locally.
+
 The multi-stage Dockerfile uses Python **3.13.15 slim Bookworm**, pinned to an
 official-image manifest digest. Python 3.13 remains security-maintained according
 to the [official support table](https://devguide.python.org/versions/). Build and

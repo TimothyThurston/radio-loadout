@@ -318,6 +318,26 @@ assets; review their actual exported bytes if distributing them publicly.
 
 ## Container OS and Python: unverified final-image inventory
 
+**2026-11-04 collection implementation update:** the existing Linux-amd64 container
+CI job now uses a focused [final-image inventory collector](image-inventory.md)
+after smoke testing, including failure paths, before artifact upload and cleanup.
+It binds collection to the staging container/build image ID, obtains package and
+notice evidence through both base and virtual-environment interpreters, includes
+pip/ensurepip vendored and bootstrap contents, and queries installed Debian
+binary/source versions. It retains existing notices and bounded native marker/
+ELF evidence, with selected resolved BuildKit image identifiers where available.
+Raw build metadata, environment variables and full Docker inspection are not uploaded.
+
+This implements reproducible collection, **not completed image inspection**.
+Docker remains unavailable locally; actual installed-image findings, missing
+notices and source-access requirements await the updated CI job's output and
+subsequent review. Collection errors retain partial evidence and fail visibly;
+missing notices and native inclusion remain qualified review items, not inferred
+compliance conclusions. The seven-day artifact is not a permanent source-access
+mechanism. CHIRP/provenance statements and all other licensing questions remain
+unchanged. The historical candidate-wheel findings above have not been replaced
+with claims about an uninspected final image.
+
 | Component family | What is established | Required image evidence |
 | --- | --- | --- |
 | CPython | Dockerfile specifies upstream Python 3.13.15 on Debian Bookworm; pinned source LICENSE inspected (PSF plus historical terms). | Installed `/usr/local` license files, Python's incorporated-component notices and exact build configuration. Check OpenSSL, SQLite, zlib, libffi, expat, compression libraries and other enabled components against actual linkage. |
@@ -333,6 +353,35 @@ digest's OS versions. Do not advertise the entire container as PolyForm licensed
 Preserving copyright files alone also does not fulfill every GPL/LGPL source duty.
 
 ## CHIRP format compatibility and provenance
+
+**2026-11-04 evidence update:** [CHIRP provenance record](chirp-provenance.md)
+reviews project commit `2052235004e2a7a801f814a560a98f331f72309f`, introduction/change
+patches, and date-selected historical CHIRP revisions predating the scoped work.
+It identifies exact 50-tone/104-code table matches, the same tuning-step set,
+CHIRP-specific defaults and shared tone-case structure. No particular copied
+expressive implementation/prose fragment was identified; this does not prove
+that none exists. Its bounded parsed-fixture comparison found no whole data-row
+match in the selected upstream datasets. The linked record now includes a
+dated **author-reported statement (2026-11-04)**, using Timothy Thurston's exact
+authorship wording. He reports direct authorship with AI assistance during
+planning/development, no personal copying/adaptation of CHIRP source or supplying
+it to an assistant, and no external sample files brought into development/testing.
+He recalls consulting RepeaterBook and other now-unremembered references to
+check repeater settings, tone values and tuning-step options; he reports that
+RepeaterBook records/tables were not copied into the repository. Original
+development chats and notes are reported unavailable.
+
+These are author recollections, not independently verified historical inputs.
+Exact contributions to individual components, sources for each table, fixture
+creation processes, development-time upstream revisions, assistant inputs and
+any applicable permissions remain unestablished. The statement does not establish
+clean-room development or alter the technical comparison findings. CHIRP
+provenance remains **unresolved**; only the production API-documentation finding
+above is marked addressed.
+
+The paragraphs below retain the earlier review's comparison evidence and its
+limits; the linked record supplies the more detailed historical source ledger,
+specific locations/comparisons, fixture evidence and questions for the author.
 
 Inspected exporter/importer, `chirp_csv_validation.py`, `dcs.py`, channel models,
 browser CTCSS/DCS arrays, CHIRP fixture CSV files/README and compatibility tests.
@@ -365,11 +414,12 @@ does not establish independent authorship**. No claim of a clean-room process
 is made. The code reading and functional comparisons here are limited, not a
 whole-history plagiarism analysis.
 
-Before redistribution, obtain an author/contributor provenance statement for
-code, literal tables and fixture rows: identify consulted CHIRP versions/files,
-what was transcribed/adapted, other radio-standard/manual sources, and any
-permissions. Compare any suspect expressive fragments against the actual
-historical upstream source. If GPL material was copied in a way that creates a
+The dated author statement supplies a general authorship/source-handling account,
+but does not reconstruct sources for individual code components, literal tables
+or fixture rows. Record any further component-specific recollection or surviving
+evidence and leave unavailable details explicitly unknown. Compare any identified
+expressive adaptation against the relevant historical source and assess applicable
+permissions. If GPL material was copied in a way that creates a
 covered derivative, retaining a credit alone may not resolve incompatibility
 with Strict's restrictions. Seek separate permission or another compatible
 technical resolution; this report neither applies GPL to all project code nor
@@ -379,8 +429,8 @@ recommends changing the project's chosen license. Preserve any third-party right
 
 | Priority | Finding/status | Smallest recommended follow-up |
 | --- | --- | --- |
-| P0 before container redistribution | Final image/OS/Python/bootstrap components uninspected; native bundle notices incomplete. | Build the existing Linux-amd64 image on a Docker-capable machine, retain image/child-manifest IDs, inventory packages/shared objects/notices, and supplement the actual binary notice bundle (especially libuv and feature-selected ICU/PyO3/Rust components). No dependency change is inherently necessary. |
-| P0 before project redistribution | CHIRP provenance is documented only partially; copying neither established nor excluded. | Add a precise provenance record based on author confirmation and historical source comparisons; resolve any actual copied material through an appropriate permission/technical arrangement. |
+| P0 before container redistribution | Final image/OS/Python/bootstrap components remain uninspected locally; [CI collection is implemented](image-inventory.md), but its actual-image evidence is pending. Historical native notice gaps remain open. | Execute the updated container CI job, inspect its identities/packages/notices/errors, establish native inclusion and applicable source access, then supplement any confirmed notice gaps. The temporary artifact alone is not clearance or permanent source delivery. |
+| P0 before project redistribution | [Historical comparisons and a dated author-reported statement are recorded](chirp-provenance.md). Component-level creation sources and any applicable permissions remain unresolved; no particular copied expressive fragment was identified, which does not exclude copying. | Record any further component-specific recollection or surviving evidence; original chats/notes are reported unavailable, so leave unrecoverable details unknown. Assess any actual adaptation and applicable permissions without assuming clearance from recollection or table/row comparisons. |
 | P1 production API-doc delivery — addressed 2026-11-04 | Production/staging docs and OAuth redirect now return 404, production pages hide their links/assets, and development retains docs on independent instances. | Verified locally by regression/browser checks and the installed-wheel smoke probe; raw OpenAPI JSON remains available. Development/dependency redistribution notice questions and the uninspected final image remain separate. |
 | P1 before conveying dependency environment | certifi notice/source correspondence partly verified, but recipient source mechanism/preferred bundle source unresolved. | Retain the exact certifi notices, document matching source access and check preferred-form inputs. Include pip's vendored copy if present. Do not demand disclosure of the entire app. |
 | P1 for any bundled release | Existing package smoke audits verify project notices, not third-party image notices. | After the above evidence is available, add a notice-preservation check for the actual delivered environment; separately test archives if dependencies are ever vendored. No CI changes were made in this review. |

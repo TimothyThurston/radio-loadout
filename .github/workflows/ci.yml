@@ -112,7 +112,13 @@ jobs:
         with:
           python-version: '3.13'
       - name: Build the local staging image
-        run: docker build --platform linux/amd64 --tag radio-loadout:staging-ci .
+        env:
+          BUILDX_METADATA_PROVENANCE: min
+        run: |
+          mkdir -p generated/container-build
+          docker buildx build --load --platform linux/amd64 --tag radio-loadout:staging-ci \
+            --iidfile generated/container-build/image-id \
+            --metadata-file generated/container-build/metadata.json .
       - name: Run with restricted privileges and temporary storage
         run: |
           docker run --detach --name radio-loadout-staging-ci --read-only \
@@ -124,6 +130,12 @@ jobs:
           docker exec radio-loadout-staging-ci python -c "import os,importlib.util; assert os.getuid() == 10001; assert importlib.util.find_spec('pytest') is None; assert importlib.util.find_spec('build') is None; assert not os.path.exists('/build')"
       - name: Smoke-test health, assets, CSV workflows and limits
         run: python scripts/staging_smoke.py --base-url http://127.0.0.1:8000
+      - name: Collect final image packages and existing license evidence
+        if: ${{ always() }}
+        run: |
+          python scripts/collect_image_inventory.py --container radio-loadout-staging-ci \
+            --image-id-file generated/container-build/image-id \
+            --build-metadata generated/container-build/metadata.json
       - name: Capture selected container state before cleanup
         if: ${{ always() }}
         run: |
