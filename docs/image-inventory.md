@@ -85,6 +85,7 @@ The seven-day `staging-container-diagnostics` artifact includes:
 | `licenses/notices-index.json` | Original notice paths (including archive-member origins), collecting interpreter, size, SHA-256 and stored file. Identical bytes are deduplicated while origins remain distinct. |
 | `licenses/notices/<sha256>.txt` or `.gz` | Exact existing notice bytes, including compressed Debian notices. No replacement notices are generated. |
 | `supplemental-notices-check.json` (beside `licenses/`) | Pass/failure for exact installed bundle bytes and the reviewed native artifact identities. This supplements collection; it does not assert complete license coverage. |
+| `certifi-wrappers-check.json` (beside `licenses/`) | Offline pass/failure comparing installed certifi wrapper hashes/sizes with pinned source-member hashes, plus the existing PEM/notice/version/bootstrap checks. Older inventories must be recollected. |
 
 The source commit is the checkout HEAD at collection, with a dirty flag; CI
 builds and collects in the same checkout. It is not inferred from the package
@@ -100,6 +101,24 @@ members. Vendor paths with no usable version metadata remain explicitly unknown;
 a vendor manifest is not proof that every declared component is loaded. certifi
 CA bundles, including vendored/bootstrap copies, are hashed without copying
 their certificate contents into the notice artifact.
+
+The wrapper-enabled probe also adds `python.certifi_wrapper_schema_version: 1`
+and `python.certifi_wrappers` (path/size/SHA-256 only). Collection is restricted
+to four direct files (`__init__.py`, `__main__.py`, `core.py`, `py.typed`) under
+the application and pip-vendored certifi packages, including ensurepip's bundled
+archive. Source contents are not retained or executed. Reads are bounded to
+64 KiB each; bytecode caches and unrelated package sources are excluded.
+Unexpected direct package files, links, duplicate archive members and oversized
+wrapper reads remain visible errors rather than being treated as verified.
+
+The new offline `scripts/verify_certifi_wrappers.py` CI step runs with `always()`
+after collection, before upload/cleanup. It checks both expected interpreters,
+image binding, exact wrapper locations and the source-member hashes already
+pinned in `scripts/certifi-source-manifest.json`, using pip's modified wrapper
+sources where appropriate. It checks 16 unique files; 20 observations reflect
+the shared ensurepip archive seen by both probes, not a fifth installed copy.
+This gate needs a fresh Linux CI execution; CI #12 contains no wrapper records
+and correctly fails the new gate. See [the follow-up](certifi-source-review.md#installed-wrapper-collection-and-gate--2026-11-05).
 
 The fixed `radio_loadout/third_party_notices/v1/manifest.json` and `README.md`
 are also retained along with the bundle's notice-named texts. No other arbitrary

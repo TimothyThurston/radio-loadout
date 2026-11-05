@@ -142,6 +142,12 @@ jobs:
           python scripts/verify_third_party_notices.py \
             --inventory-dir generated/container-diagnostics/licenses \
             --output generated/container-diagnostics/supplemental-notices-check.json
+      - name: Verify installed certifi wrapper source hashes
+        if: ${{ always() }}
+        run: |
+          python scripts/verify_certifi_wrappers.py \
+            --inventory-dir generated/container-diagnostics/licenses \
+            --output generated/container-diagnostics/certifi-wrappers-check.json
       - name: Capture selected container state before cleanup
         if: ${{ always() }}
         run: |

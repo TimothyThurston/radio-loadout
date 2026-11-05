@@ -28,6 +28,23 @@ source/notice bytes, and writes `receipt.json`. It does not extract, install,
 execute, publish or update certificate trust. The second command checks a retained
 copy without network access. These sources retain their upstream license notices.
 
+For diagnostics collected with the wrapper-enabled probe, independently check
+the installed Python wrappers and typing markers against the pinned source
+member hashes, without network access:
+
+```sh
+python scripts/verify_certifi_wrappers.py --inventory-dir PATH/TO/DIAGNOSTICS/licenses \
+  --output generated/certifi-wrappers-check.json
+```
+
+This requires both image interpreter probes and verifies 16 distinct files at
+four locations, including pip's namespace-modified sources. The repeated
+ensurepip observations refer to one archive location. It also retains the
+existing PEM/notice/version/bootstrap checks. Older inventories without wrapper
+records fail with a recollection requirement; do not substitute source-archive
+hashes as supposed installed observations. The new Linux CI gate must execute
+before actual-image wrapper correspondence can be claimed.
+
 **Remaining limitation:** both certifi releases' historical Mozilla input revision
 and generator response remain unidentified. Matching the shipped PEM does not
 alone establish complete preferred source for modification. No project source

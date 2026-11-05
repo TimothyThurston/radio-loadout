@@ -67,6 +67,15 @@ of that payload **passed in CI #11** at exact commit
 `ec248268cf25d031b1042f7e7c42b1d2f2bdc9da`; see the
 [run and artifact evidence](native-component-notices.md#ci-11-gate-verified--2026-11-05).
 Neither collection nor this byte gate completes source-access/compliance review.
+
+The subsequent wrapper-enabled collector and `always()` verifier add
+`certifi-wrappers-check.json` to those diagnostics. Only fixed certifi wrapper
+paths/sizes/hashes are collected, not source contents. The offline comparison
+uses existing pinned certifi/pip source members and preserves the same image,
+interpreter and container restrictions. See [the wrapper follow-up](certifi-source-review.md#installed-wrapper-collection-and-gate--2026-11-05).
+It requires new actual-image collection; an earlier green CI run does not prove
+these previously uncollected wrapper hashes. Source access and broader review
+remain separate.
 The [certifi recipient guide](certifi-source-access.md) identifies the two actual
 versions and source retrieval steps, with preferred-input and maintained-access
 limitations still open.

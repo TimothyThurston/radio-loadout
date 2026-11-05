@@ -40,6 +40,29 @@ MAX_NOTICE = 4 * 1024 * 1024
 MAX_NOTICES = 32 * 1024 * 1024
 MAX_BINARY = 64 * 1024 * 1024
 MAX_ENTRIES = 50000
+CERTIFI_WRAPPERS = {"__init__.py", "__main__.py", "core.py", "py.typed"}
+MAX_WRAPPER = 64 * 1024
+
+
+def certifi_wrapper_scope(name: str) -> bool:
+    """Only direct files in the application/pip certifi packages; never arbitrary source."""
+    return name.rsplit("/", 1)[0] in {"certifi", "pip/_vendor/certifi"}
+
+
+def wrapper_record(origin: str, data: bytes) -> dict:
+    return {"path": origin, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+
+
+def collect_certifi_wrapper(path: Path, root: Path, evidence):
+    if not confined(path, [root]) or path.is_symlink() or not path.is_file():
+        evidence.error(path, "certifi wrapper link/type rejected")
+        return None
+    with path.open("rb") as source:
+        data = source.read(MAX_WRAPPER + 1)
+    if len(data) > MAX_WRAPPER:
+        evidence.error(path, "certifi wrapper read limit; collection incomplete")
+        return None
+    return wrapper_record(str(path), data)
 
 
 def confined(path: Path, roots: list[Path]) -> bool:
@@ -164,9 +187,10 @@ def vendor_manifest(data: bytes, origin: str) -> dict:
 def archive_evidence(path: Path, evidence: Evidence) -> dict:
     result = {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
               "distributions": [], "vendor_manifests": [], "certificate_bundles": [],
-              "vendor_component_paths": []}
+              "vendor_component_paths": [], "certifi_wrappers": []}
     with zipfile.ZipFile(path) as archive:
         vendor_paths = set()
+        wrapper_names = set()
         for member in archive.infolist():
             parts = member.filename.split("/")
             if "_vendor" in parts and len(parts) > parts.index("_vendor") + 1:
@@ -181,12 +205,26 @@ def archive_evidence(path: Path, evidence: Evidence) -> dict:
             metadata = name == "METADATA" and ".dist-info/" in member.filename
             vendor = name == "vendor.txt" and "/_vendor/" in member.filename
             certificate = member.filename.endswith("certifi/cacert.pem")
-            if not (notice or metadata or vendor or certificate):
+            wrapper_scope = certifi_wrapper_scope(member.filename)
+            wrapper = wrapper_scope and name in CERTIFI_WRAPPERS
+            if wrapper_scope and name not in CERTIFI_WRAPPERS | {"LICENSE", "cacert.pem"}:
+                evidence.error(origin, "unexpected certifi package file; review wrapper scope")
+            if wrapper:
+                if (member.filename in wrapper_names or member.file_size > MAX_WRAPPER
+                        or (member.external_attr >> 16) & 0o170000 not in (0, 0o100000)):
+                    evidence.error(origin, "duplicate/oversized/linked certifi archive wrapper")
+                    continue
+                wrapper_names.add(member.filename)
+            if not (notice or metadata or vendor or certificate or wrapper):
                 continue
             if member.file_size > MAX_NOTICE:
                 evidence.error(origin, "archive member exceeds read limit")
                 continue
-            data = archive.read(member)
+            with archive.open(member) as source:
+                data = source.read((MAX_WRAPPER if wrapper else MAX_NOTICE) + 1)
+            if len(data) != member.file_size:
+                evidence.error(origin, "archive member size mismatch")
+                continue
             if notice:
                 evidence.notice(origin, data)
             if metadata:
@@ -196,6 +234,8 @@ def archive_evidence(path: Path, evidence: Evidence) -> dict:
             if certificate:
                 result["certificate_bundles"].append({"path": origin, "bytes": len(data),
                                                        "sha256": hashlib.sha256(data).hexdigest()})
+            if wrapper:
+                result["certifi_wrappers"].append(wrapper_record(origin, data))
         result["vendor_component_paths"] = sorted(vendor_paths)
     return result
 
@@ -217,14 +257,23 @@ def walk_files(root: Path, evidence: Evidence, *, skip_sites=False):
 
 def collect_python(roots: list[Path], stdlib: Path, evidence: Evidence) -> dict:
     result = {"distributions": [], "vendor_manifests": [], "bootstrap_wheels": [],
-              "native_binaries": [], "certificate_bundles": [], "vendor_roots": []}
+              "native_binaries": [], "certificate_bundles": [], "vendor_roots": [],
+              "certifi_wrapper_schema_version": 1, "certifi_wrappers": []}
     for root in sorted(set(roots + [stdlib])):
         for path in walk_files(root, evidence, skip_sites=(root == stdlib)):
+            wrapper_scope = certifi_wrapper_scope(path.relative_to(root).as_posix())
             if not confined(path, [root]):
-                if NOTICE_NAME.search(path.name):
+                if NOTICE_NAME.search(path.name) or wrapper_scope:
                     evidence.error(path, "symlink escapes Python collection root")
                 continue
             try:
+                if wrapper_scope and path.name in CERTIFI_WRAPPERS:
+                    record = collect_certifi_wrapper(path, root, evidence)
+                    if record is not None:
+                        result["certifi_wrappers"].append(record)
+                    continue
+                if wrapper_scope and path.name not in {"LICENSE", "cacert.pem"}:
+                    evidence.error(path, "unexpected certifi package file; review wrapper scope")
                 # Fixed package-data scope: retain the supplemental ledger/README as well as
                 # license-named texts so CI can compare every installed bundle byte.
                 bundle = root / "radio_loadout/third_party_notices/v1"
@@ -254,6 +303,7 @@ def collect_python(roots: list[Path], stdlib: Path, evidence: Evidence) -> dict:
                     archive = archive_evidence(path, evidence)
                     result["bootstrap_wheels"].append(archive)
                     result["certificate_bundles"].extend(archive["certificate_bundles"])
+                    result["certifi_wrappers"].extend(archive["certifi_wrappers"])
                 elif path.name == "cacert.pem" and path.parent.name == "certifi":
                     result["certificate_bundles"].append({"path": str(path), "bytes": path.stat().st_size,
                                                          "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})

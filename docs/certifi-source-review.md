@@ -6,6 +6,54 @@ available at review time. It is not a promise that a project source mirror has
 been published or that all preferred-source requirements are resolved.
 The shorter [recipient guide](certifi-source-access.md) provides retrieval steps.
 
+## Installed-wrapper collection and gate — 2026-11-05
+
+Follow-up prepared from `47464a9d120311fe89d6100aa72063a6279d83af`.
+[CI #12](https://github.com/TimothyThurston/radio-loadout/actions/runs/42109371643)
+passed at that commit. Its diagnostics ZIP SHA-256 is
+`3c39bb35f39782221f88321966427cdca62f946a9d6cc3226a6decd37b9e0f9e`.
+That inventory predates wrapper collection; the new gate correctly rejects it
+with an explicit recollection requirement. No wrapper hashes were inferred from
+the earlier certificate or whole-wheel hashes.
+
+The probe now records only paths, sizes and SHA-256 for `__init__.py`,
+`__main__.py`, `core.py` and `py.typed` in the application, base pip, venv pip
+and ensurepip archive locations below. It never imports or executes these files
+or uploads their contents. Reads are limited to 64 KiB per wrapper. Links,
+oversized reads, duplicate archive wrappers and unexpected direct package files
+produce collection errors; missing files fail the subsequent comparison.
+
+`scripts/verify_certifi_wrappers.py` derives expected hashes/sizes directly from
+the existing source manifest's selected members. Application expectations use
+the certifi 2026.10.23 source; all pip expectations use pip 26.2.1's modified
+source, not the original upstream namespace. No dependency or manifest hash is
+silently refreshed to make a changed installation pass.
+
+The offline gate requires complete, bound Linux-amd64/non-root image evidence
+from both interpreters and retains the existing certificate, notice, version-pin
+and bootstrap-wheel checks. It requires 16 unique files at four locations;
+20 observations include the same four ensurepip members seen by both probes.
+Duplicates within a probe, missing/extra paths, incorrect probe ownership,
+source/hash/size drift and conflicting nested bootstrap evidence fail visibly.
+An `always()` CI step writes `certifi-wrappers-check.json` before diagnostics
+upload and cleanup, including a failure receipt when checks cannot complete.
+
+Local validation for this follow-up used Linux / Python 3.12: Ruff passed,
+**728 Python tests passed** (40 new wrapper cases), **53 JavaScript tests** and
+**15 JavaScript syntax checks** passed. Pinned source downloads and offline
+archive/member checks passed, as did the earlier PEM/notice correspondence check
+against the checksum-verified CI #12 artifact. Wheel/source packaging and the
+isolated installed-wheel HTTP smoke passed. Docker is unavailable in this
+environment; no new image, browser run or remote CI run was executed here.
+
+**Actual-image verification of these newly collected wrapper hashes remains
+pending a fresh CI execution.** Local synthetic tests, upstream source checks
+and rejection of CI #12's older evidence do not substitute for that execution.
+Historical Mozilla inputs, maintained recipient access, native/OS reviews and
+CHIRP provenance remain unchanged and unresolved. This is source correspondence
+tooling, not a new legal conclusion. The original dated findings below describe
+the earlier, narrower inventory.
+
 Certifi's included notice identifies Mozilla-derived certificate material under
 [MPL 2.0](https://www.mozilla.org/en-US/MPL/2.0/). Those third-party rights remain
 separate from Radio Loadout's PolyForm Strict license. Keep the included notices;
