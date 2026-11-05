@@ -42,8 +42,11 @@ four locations, including pip's namespace-modified sources. The repeated
 ensurepip observations refer to one archive location. It also retains the
 existing PEM/notice/version/bootstrap checks. Older inventories without wrapper
 records fail with a recollection requirement; do not substitute source-archive
-hashes as supposed installed observations. The new Linux CI gate must execute
-before actual-image wrapper correspondence can be claimed.
+hashes as supposed installed observations. **CI #13 passed the actual-image
+wrapper gate** at commit `0b5261390accc2f6efd5d316f2b3b2e605aa051a`;
+the [evidence record](certifi-source-review.md#ci-13-installed-wrapper-gate-verified--2026-11-05)
+identifies the image, artifact checksums and successful replay. This result is
+specific to that image and does not replace checks on future distributions.
 
 **Remaining limitation:** both certifi releases' historical Mozilla input revision
 and generator response remain unidentified. Matching the shipped PEM does not

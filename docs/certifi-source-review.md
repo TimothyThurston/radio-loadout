@@ -6,6 +6,54 @@ available at review time. It is not a promise that a project source mirror has
 been published or that all preferred-source requirements are resolved.
 The shorter [recipient guide](certifi-source-access.md) provides retrieval steps.
 
+## CI #13 installed-wrapper gate verified — 2026-11-05
+
+Verified [CI run #13](https://github.com/TimothyThurston/radio-loadout/actions/runs/42112616503)
+at exact commit `0b5261390accc2f6efd5d316f2b3b2e605aa051a`.
+All seven jobs succeeded. The
+[Linux-amd64 staging job](https://github.com/TimothyThurston/radio-loadout/actions/runs/42112616503/job/127543815295)
+passed smoke, actual-image collection, supplemental-notice verification and
+**Verify installed certifi wrapper source hashes** before diagnostics upload
+and cleanup. The checkout for this documentation follow-up was initially clean
+at that exact commit; no application, collector or verifier code changed here.
+
+Downloaded artifact **13453982693**, `staging-container-diagnostics`. Its ZIP
+SHA-256 matches GitHub's reported digest. ZIP paths, duplicate entries and CRCs
+were checked; all 369 notice-origin hash/size records (167 distinct stored notice
+hashes) passed. Evidence identifiers:
+
+| Evidence | Identifier/result |
+| --- | --- |
+| Diagnostics ZIP SHA-256 | `f9c9cb03a025971f684cb867a70eca4b7a7a2ada26e2d6f99ab13c818df6f5b6` |
+| Actual image ID | `sha256:48877ffaa3cab97ebb3ef0f7ec93a2380962100387e7c8c29c2fc4058bc7006f` |
+| `licenses/inventory.json` SHA-256 | `26263f27d0950325ce765f9eeb0368ef628ec6504ac979f3c6869e3ea84276a2` |
+| `licenses/notices-index.json` SHA-256 | `f128e2f05d9152b875ab5a82131d169058798d15fc247a1132537417ca43d1f8` |
+| `certifi-wrappers-check.json` SHA-256 | `893d023e979aac5224fd056b267daaa1db1266832cb80151179194ef18e0cf69` |
+| Source manifest SHA-256 | `d6a4550a3bb7c7ffdcf4e6c740c7777bb16d4fa42725361255b43cb8186cb4e0` |
+| `supplemental-notices-check.json` SHA-256 | `6279ac8625fe0afe22c14684e7728ed4e980be67004da4f6b9cf0644bea5cb82` |
+| Collection | Complete, no top-level/probe errors; clean checkout; collected `2026-11-05T21:26:37.278453+00:00` |
+| Image binding / runtime | Build IID and staging-container image ID agree; Linux amd64; user `10001:10001`; both probes CPython 3.13.15 / UID 10001 |
+| Wrapper gate | **Passed**, 16 unique files at four locations, 20 observations |
+| Supplemental gate | **Passed**, all 15 bundle files and the reviewed native identities |
+
+Replayed both verifiers using the exact commit's files, and compared the replayed
+JSON results with the collected CI results: identical. The wrapper result maps
+each installed path, size and SHA-256 to its pinned source archive/member.
+The base probe contributes eight observations; the venv probe contributes twelve.
+Their shared four ensurepip members are one archive location, not another copy.
+Pip's modified `core.py` and `__main__.py` match the pip source, rather than being
+substituted with the original certifi namespace. Existing certificate, notice,
+version and bootstrap-wheel checks also passed.
+
+**Installed certifi wrapper correspondence is verified for this commit/image.**
+This closes the previously pending actual-image wrapper checkpoint, not the
+historical Mozilla input, maintained recipient-access, native/OS or CHIRP
+provenance findings. No entire-application equivalence or legal clearance is
+claimed. The artifact expires on 2026-11-12 and is temporary diagnostic evidence,
+not permanent recipient source access. No local Docker build or new remote CI
+execution was performed for this evidence review. Recheck future images when
+the sources, dependencies, wrappers or collection code change.
+
 ## Installed-wrapper collection and gate — 2026-11-05
 
 Follow-up prepared from `47464a9d120311fe89d6100aa72063a6279d83af`.
@@ -46,9 +94,11 @@ against the checksum-verified CI #12 artifact. Wheel/source packaging and the
 isolated installed-wheel HTTP smoke passed. Docker is unavailable in this
 environment; no new image, browser run or remote CI run was executed here.
 
-**Actual-image verification of these newly collected wrapper hashes remains
-pending a fresh CI execution.** Local synthetic tests, upstream source checks
-and rejection of CI #12's older evidence do not substitute for that execution.
+At preparation time, actual-image verification of these newly collected wrapper
+hashes awaited a fresh CI execution. **CI #13 subsequently passed that check**;
+the exact run/image, artifact checksums and replay results are recorded above.
+Local synthetic tests and rejection of CI #12's older evidence were not used as
+substitutes for the actual-image result.
 Historical Mozilla inputs, maintained recipient access, native/OS reviews and
 CHIRP provenance remain unchanged and unresolved. This is source correspondence
 tooling, not a new legal conclusion. The original dated findings below describe
@@ -98,8 +148,10 @@ These are upstream archives, not project-hosted mirrors:
 The pip source is relevant: its `core.py` changes resource references from
 `certifi` to `pip._vendor.certifi`, and `__main__.py` changes that import. Supplying
 only the original certifi archive would omit those pip modifications. Pip's
-wheel and source certifi files were compared byte for byte; the existing image
-collector checks installed PEM/notices, not every installed Python wrapper file.
+wheel and source certifi files were compared byte for byte. The original image
+collector checked only installed PEM/notices; the later CI #13 wrapper gate
+extends installed correspondence to the four specified source/typing files at
+each of the four locations, as recorded above.
 
 The retrieval tool also preserves full upstream certifi release-commit snapshots,
 including `Makefile` and `strip-non-ascii`, which the PyPI source archives omit:
@@ -139,8 +191,10 @@ python scripts/retrieve_certifi_sources.py --download-dir generated/certifi-sour
 ```
 
 This checks all four recorded PEM hashes, version evidence, license bytes and
-the bootstrap wheel identity. It does not establish all installed wrapper bytes
-or reconstruct historical certificate-generation inputs.
+the bootstrap wheel identity. That retrieval command does not itself check the
+wrapper records. For wrapper correspondence, run `scripts/verify_certifi_wrappers.py`
+as described in the recipient guide; CI #13's actual-image replay passed.
+Neither command reconstructs historical certificate-generation inputs.
 
 ## What remains unresolved before redistribution
 
@@ -179,7 +233,7 @@ bundle has been published by this work. **Seven-day CI artifacts and this local
 cache are not permanent recipient source access.** Broader reviews remain open;
 this document is not legal clearance or an additional project permission.
 
-## Checks executed — 2026-11-05
+## Original source-retrieval checks executed — 2026-11-05
 
 - Verified the GitHub run, exact commit, staging step conclusions and artifact
   digest; replayed all 15 supplemental-file/native-identity checks using exact

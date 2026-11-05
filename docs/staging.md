@@ -73,9 +73,13 @@ The subsequent wrapper-enabled collector and `always()` verifier add
 paths/sizes/hashes are collected, not source contents. The offline comparison
 uses existing pinned certifi/pip source members and preserves the same image,
 interpreter and container restrictions. See [the wrapper follow-up](certifi-source-review.md#installed-wrapper-collection-and-gate--2026-11-05).
-It requires new actual-image collection; an earlier green CI run does not prove
-these previously uncollected wrapper hashes. Source access and broader review
-remain separate.
+**CI #13 completed actual-image collection and passed this wrapper gate**, in
+addition to the supplemental-notice gate, at commit
+`0b5261390accc2f6efd5d316f2b3b2e605aa051a`. The
+[evidence record](certifi-source-review.md#ci-13-installed-wrapper-gate-verified--2026-11-05)
+includes artifact/image identifiers, checksums and successful independent replays.
+Earlier green CI runs were not evidence for previously uncollected wrappers.
+Source access and broader review remain separate; no deployment occurred.
 The [certifi recipient guide](certifi-source-access.md) identifies the two actual
 versions and source retrieval steps, with preferred-input and maintained-access
 limitations still open.

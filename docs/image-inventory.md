@@ -117,8 +117,13 @@ image binding, exact wrapper locations and the source-member hashes already
 pinned in `scripts/certifi-source-manifest.json`, using pip's modified wrapper
 sources where appropriate. It checks 16 unique files; 20 observations reflect
 the shared ensurepip archive seen by both probes, not a fifth installed copy.
-This gate needs a fresh Linux CI execution; CI #12 contains no wrapper records
-and correctly fails the new gate. See [the follow-up](certifi-source-review.md#installed-wrapper-collection-and-gate--2026-11-05).
+**CI #13 passed this actual-image gate** at commit
+`0b5261390accc2f6efd5d316f2b3b2e605aa051a`, with 16 unique files / 20
+observations. Both the wrapper and supplemental checks were independently
+replayed from its checksum-verified artifact. See the
+[exact evidence record](certifi-source-review.md#ci-13-installed-wrapper-gate-verified--2026-11-05).
+CI #12 contains no wrapper records and correctly fails the new gate; its older
+evidence was not substituted for the new collection. Broader review remains open.
 
 The fixed `radio_loadout/third_party_notices/v1/manifest.json` and `README.md`
 are also retained along with the bundle's notice-named texts. No other arbitrary

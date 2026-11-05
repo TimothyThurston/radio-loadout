@@ -54,6 +54,14 @@ recipient delivery remain unresolved. No local Docker build was performed.
 
 ## Actual-image evidence identifiers
 
+**Later certifi checkpoint:** [CI #13's evidence review](certifi-source-review.md#ci-13-installed-wrapper-gate-verified--2026-11-05)
+records successful actual-image wrapper verification at commit
+`0b5261390accc2f6efd5d316f2b3b2e605aa051a` and a successful supplemental-notice
+recheck on that image. It does not resolve the remaining native build-graph,
+OS/Python, historical Mozilla input or permanent recipient-access findings.
+The original image identifiers below remain historical and are not replaced
+with identifiers from another build.
+
 | Evidence | Observed identifier/result |
 | --- | --- |
 | Supplied ZIP SHA-256 | `5843bdb76cc1caf20fc0f9132369cc4e6e62bad55771bf362c496e180de076d4` — matches |

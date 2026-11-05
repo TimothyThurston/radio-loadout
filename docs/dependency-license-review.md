@@ -9,6 +9,27 @@ upstream inventory evidence remain historical. This is an evidence record and a
 release checklist,
 not completed legal clearance or an opinion that ownership has been established.
 
+## CI #13 installed certifi wrappers verified — 2026-11-05
+
+[CI #13](https://github.com/TimothyThurston/radio-loadout/actions/runs/42112616503)
+succeeded at commit `0b5261390accc2f6efd5d316f2b3b2e605aa051a`. Its Linux-amd64
+job collected and verified the previously uncollected certifi wrappers against
+the pinned sources, including pip's namespace modifications. The
+[certifi evidence record](certifi-source-review.md#ci-13-installed-wrapper-gate-verified--2026-11-05)
+identifies the exact image/artifact and result hashes. The ZIP digest matches
+GitHub's metadata; all 369 notice-origin hashes/sizes passed. Independent replays
+of the certifi wrapper and supplemental-notice verifiers matched CI's JSON results.
+
+**This closes installed-wrapper correspondence for that commit/image:** 16
+unique source/typing files at four locations, 20 observations because ensurepip
+is seen by both probes. The existing PEM/notice/version/bootstrap checks and
+15-file supplemental check also passed. Earlier limitations below that say
+wrappers were uncollected describe the original inventory, not CI #13.
+Historical Mozilla/service inputs, maintained recipient source access, full
+native/OS/Python coverage and CHIRP provenance remain unresolved. No code,
+dependencies, licenses, restrictions or approved authorship wording changed in
+this documentation-only review; no publication or deployment occurred.
+
 ## CI #11 and focused certifi follow-up — 2026-11-05
 
 Verified [CI run #11](https://github.com/TimothyThurston/radio-loadout/actions/runs/41917981685),
@@ -29,8 +50,9 @@ versions: application 2026.10.23, and 2026.6.17 in base pip, venv pip and
 ensurepip's pip 26.2.1 wheel. Installed PEM and license hashes match exact
 upstream source releases. Pip's namespace-modified wrappers are present in its
 matching source archive; the bootstrap wheel's corresponding files match it.
-Installed wrapper files were not hashed by the existing collector, so no complete
-installed-file equivalence is claimed. Both release Git snapshots and their
+Installed wrapper files were not hashed by that original collector. CI #13's
+later bounded check now verifies the specified wrappers, as recorded above;
+it does not establish arbitrary installed-file equivalence. Both release Git snapshots and their
 update helpers were inspected; historical Mozilla/service inputs remain unknown.
 
 A [recipient guide](certifi-source-access.md), pinned source manifest and
