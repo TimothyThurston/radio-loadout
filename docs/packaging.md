@@ -33,6 +33,12 @@ the wheel stores them under `.dist-info/licenses/`. Metadata declares
 context and installs the wheel with these notices into the runtime environment.
 Third-party licenses/notices remain separate and must be preserved.
 
+For the optional, local-only certifi source-evidence ZIP, see
+[source-bundle preparation](source-bundles.md). Its builder and tests are
+development/source-distribution files; downloaded archives and generated bundles
+are not added to the application wheel, runtime image or project source archive.
+This tooling does not publish release assets or complete source-access review.
+
 Package discovery is restricted to regular `radio_loadout` packages; implicit
 namespace discovery is disabled. Runtime package data uses explicit patterns in
 `pyproject.toml`, independently of the development files selected by `MANIFEST.in`.

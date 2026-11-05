@@ -639,6 +639,11 @@ travel with the wheel, source archive and runtime image as supporting distributi
 documentation. Their [evidence and coverage limits](docs/native-component-notices.md)
 are separate from the project's license; they do not complete third-party review.
 
+The [local certifi source-bundle tool](docs/source-bundles.md) prepares retained,
+checksummed source evidence for possible future release-attached delivery. It
+does not publish sources, establish permanent recipient access or close the
+remaining preferred-source/native/OS review findings.
+
 No ownership of users' channel data is claimed, and this source-code license is
 not imposed on their generated CSV/JSON configurations. Rights or restrictions
 in third-party source data continue to apply.

@@ -58,3 +58,9 @@ source delivery alongside releases or an appropriate stable access arrangement,
 including any further required inputs. Supply this guide and the selected access
 instructions with any future image distribution. This guide is not a completed compliance
 assessment or a grant of additional rights in Radio Loadout.
+
+A [local bundle-preparation tool](source-bundles.md) can now retain the five
+identified original source archives with an index, limitations and whole-ZIP
+checksum. Building/verifying that bundle is offline and refuses overwrite.
+This is preparation for possible release-attached delivery, not activation of
+a public access/retention arrangement or resolution of the limitations above.

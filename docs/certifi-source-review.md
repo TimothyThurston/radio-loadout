@@ -6,6 +6,18 @@ available at review time. It is not a promise that a project source mirror has
 been published or that all preferred-source requirements are resolved.
 The shorter [recipient guide](certifi-source-access.md) provides retrieval steps.
 
+## Local release-source bundle preparation — 2026-11-05
+
+The [source-bundle tooling](source-bundles.md) prepares an offline, independently
+checkable ZIP of the same five pinned original archives. It preserves original
+archive/notices bytes and includes a qualified README, canonical manifest and
+hash index; a separate SHA256SUMS identifies the entire ZIP. It neither selects
+new sources nor changes dependencies, wrapper verification or license terms.
+The bundle is deliberately named source **evidence**, not complete preferred
+source or completed legal clearance. Owner approval of maintained delivery,
+historical Mozilla inputs and wider reviews remain unresolved. No release or
+source mirror was published; this does not close the recipient-access finding.
+
 ## CI #13 installed-wrapper gate verified — 2026-11-05
 
 Verified [CI run #13](https://github.com/TimothyThurston/radio-loadout/actions/runs/42112616503)
