@@ -10,7 +10,12 @@ For the stronger artifact-based evidence, see the
 The supplied ZIP's collection succeeded; compliance review is incomplete.
 [Supplemental notice bundle 1](../src/radio_loadout/third_party_notices/v1/README.md)
 preserves selected libuv/ICU/PyO3/URL-path notices in project distributions and
-the container build. The next Linux CI run must verify its installed bytes.
+the container build. CI #11 passed its actual-image installed-byte gate at
+`ec248268cf25d031b1042f7e7c42b1d2f2bdc9da`; broader review remains incomplete.
+The [focused certifi follow-up](certifi-source-review.md) and
+[recipient guide](certifi-source-access.md) identify both actual versions and
+checked upstream sources, while preferred Mozilla inputs and maintained recipient
+access remain unresolved.
 
 | Direct dependency/tool | Recorded version | Reported license | Scope/source |
 | --- | --- | --- | --- |

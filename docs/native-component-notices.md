@@ -13,6 +13,45 @@ build or an independent reproduction of the CI execution. Docker is still
 unavailable locally. No CI run URL/signature was supplied; archive integrity is
 checked against the user's stated checksum, not a claim of independent attestation.
 
+## CI #11 gate verified — 2026-11-05
+
+The later [CI run #11](https://github.com/TimothyThurston/radio-loadout/actions/runs/41917981685),
+attempt 1, completed successfully on 2026-11-04 at the exact commit
+`ec248268cf25d031b1042f7e7c42b1d2f2bdc9da` (also the checkout inspected for
+this follow-up). GitHub's run/jobs API and the
+[staging job](https://github.com/TimothyThurston/radio-loadout/actions/runs/41917981685/job/126882638680)
+confirm successful smoke, inventory and supplemental-notice verification steps.
+The latter logged `Supplemental notice verification: passed.` at
+`2026-11-04T21:39:03.2130581Z`.
+
+Downloaded artifact **13365601915**, `staging-container-diagnostics`, and checked
+its ZIP SHA-256 against GitHub's reported digest:
+`a9bb0bddd45a8ccf3606f59f3bd38d7a00ce054c35fcc5e423a7de54589ab927`.
+It records:
+
+| Evidence | Identifier/result |
+| --- | --- |
+| Actual image | `sha256:9d6dff64087d059146f63083c91fdb596f0432c2b5b914eaccebc44713e79aae` |
+| Inventory SHA-256 | `9d4eaaafdc3af423f1235432bc385913bb8eb46e8a5977ca27938dedcaf387e5` |
+| Notice index SHA-256 | `f128e2f05d9152b875ab5a82131d169058798d15fc247a1132537417ca43d1f8` |
+| Verification result SHA-256 | `92d9383f7e480fcf19f08d6981a48d3431e6f23b8e67ee981f6cb1fce1baf16b` |
+| Installed bundle manifest SHA-256 | `fe8d514445528c1f9d3628274a8608b7bfaa580007cd21ca7fd669f71c52072e` |
+| Collection / byte gate | Complete, no collection errors; bundle 1 **passed**, 15 files |
+
+All 369 notice-origin records (167 distinct stored hashes) passed hash/size
+checks. Replayed the verifier against the exact commit's Git object bytes in a
+temporary exported bundle: **passed**, including the reviewed native identities.
+This uses the Linux commit bytes rather than Windows working-tree CRLF conversion
+for the bundle's Markdown/JSON. No verifier or runtime configuration was changed.
+
+**Actual-image supplemental notice delivery is now verified for this commit and
+image.** This supersedes the earlier pending-CI statements below, not the wider
+native/source-access review. The artifact expires on 2026-11-11 and is not an
+enduring source-access service. The focused
+[certifi follow-up](certifi-source-review.md) establishes two versions/four
+locations and identified source references; preferred Mozilla inputs and
+recipient delivery remain unresolved. No local Docker build was performed.
+
 ## Actual-image evidence identifiers
 
 | Evidence | Observed identifier/result |
@@ -184,10 +223,9 @@ host bind-mount substitute. The check also runs after smoke failures and before
 seven-day upload/cleanup; collection restrictions and runtime checks are retained.
 No tools or dependencies are installed in the final image.
 
-The earlier ZIP necessarily predates this new bundle. **The next Linux-amd64 CI
-execution must establish the new payload's actual-image presence.** Local
-synthetic-evidence tests and packaging checks cannot substitute for that gate.
-Artifacts are temporary diagnostics, not permanent covered-source access.
+The original ZIP predates this bundle. The subsequent **CI #11 actual-image gate
+passed**, as recorded above; synthetic tests alone were not used to close it.
+Artifacts remain temporary diagnostics, not permanent covered-source access.
 
 Local validation on 2026-11-04, Windows / Python 3.13.15:
 
@@ -212,8 +250,9 @@ installed. No GitHub CI execution was triggered from this session.
 
 ## Remaining actions and readiness
 
-1. Execute the updated existing CI job and inspect its notice-check result and
-   bound image identity. This verifies delivery of the prepared supplement only.
+1. **Delivery gate passed at CI #11's exact commit/image.** Recheck when notice
+   payloads, native identities or packaging change; this verifies the supplement
+   only, not the entire component inventory.
 2. Obtain build-specific Rust/native graph evidence or an upstream notice ledger
    for Pydantic and the other flagged Rust wheels (fastar, rignore, watchfiles).
    Assess remaining applicable texts rather than importing every lock entry as
@@ -223,7 +262,7 @@ installed. No GitHub CI execution was triggered from this session.
    direct/vendor/bootstrap versions. No recipient source arrangements were added.
 
 Hosting conclusions remain as in the dependency review; this supplement concerns
-conveyed native environments. Container redistribution remains on hold pending
-notice delivery verification and the other open reviews. CHIRP provenance is
+conveyed native environments. Container redistribution remains on hold for the
+other open reviews despite this delivery gate passing. CHIRP provenance is
 unchanged. This work grants no additional project permission and is not legal
 clearance.

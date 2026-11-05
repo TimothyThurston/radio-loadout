@@ -12,9 +12,11 @@ image user. This collects installed image evidence, not candidate-wheel metadata
 The checksum-verified supplied CI artifact now establishes successful collection
 from the image recorded in the [native-component evidence review](native-component-notices.md).
 Compliance review remains incomplete. Docker is unavailable locally; unit tests
-use synthetic files/Docker responses. The new supplemental bundle and actual-image
-byte-verification step require the **next Linux CI execution**; the earlier
-artifact predates them.
+use synthetic files/Docker responses. The later **CI #11 actual-image byte gate
+passed** at commit `ec248268cf25d031b1042f7e7c42b1d2f2bdc9da`; see the
+[verified run/artifact evidence](native-component-notices.md#ci-11-gate-verified--2026-11-05).
+This verifies the supplement, not broader compliance. The focused
+[certifi source follow-up](certifi-source-review.md) uses that inventory.
 
 ## Build and local collection on a Docker-capable machine
 
@@ -174,5 +176,5 @@ tests passed without symlinks. JavaScript syntax, 53 JavaScript tests, 20 Chromi
 desktop/narrow browser tests and the isolated wheel/source packaging smoke passed.
 The workflow parsed as YAML. These results validate local logic and regressions,
 not Docker/Buildx execution. The subsequently supplied ZIP establishes the older
-image collection; verification of the new supplemental payload remains pending
-the next CI run. See [the updated evidence and checks](native-component-notices.md).
+image collection. The subsequent CI #11 evidence establishes the supplemental
+payload's actual-image verification; see [the updated record](native-component-notices.md).

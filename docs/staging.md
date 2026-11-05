@@ -63,8 +63,13 @@ travels as package data through the wheel into `/opt/venv`. An additional
 `always()` step verifies its exact collected installed bytes and reviewed native
 identities before upload/cleanup, even after smoke failures. Its result is
 `supplemental-notices-check.json` in the same seven-day diagnostics. Verification
-of this new payload in a built image requires the next Linux CI execution.
-Collection success does not complete notice/source-access or compliance review.
+of that payload **passed in CI #11** at exact commit
+`ec248268cf25d031b1042f7e7c42b1d2f2bdc9da`; see the
+[run and artifact evidence](native-component-notices.md#ci-11-gate-verified--2026-11-05).
+Neither collection nor this byte gate completes source-access/compliance review.
+The [certifi recipient guide](certifi-source-access.md) identifies the two actual
+versions and source retrieval steps, with preferred-input and maintained-access
+limitations still open.
 
 The multi-stage Dockerfile uses Python **3.13.15 slim Bookworm**, pinned to an
 official-image manifest digest. Python 3.13 remains security-maintained according

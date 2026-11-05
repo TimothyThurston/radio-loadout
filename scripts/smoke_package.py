@@ -117,7 +117,8 @@ def audit_distributions(wheel: Path, sdist: Path, root: Path = ROOT) -> dict:
     # A usable source archive must also contain the test fixtures and smoke tooling.
     development_files = {"README.md", "pyproject.toml", "MANIFEST.in", "package.json",
                          "package-lock.json", "playwright.config.mjs", "Dockerfile", ".dockerignore",
-                         "LICENSE", "COPYRIGHT", "CONTRIBUTING.md", ".gitattributes"}
+                         "LICENSE", "COPYRIGHT", "CONTRIBUTING.md", ".gitattributes",
+                         "scripts/certifi-source-manifest.json"}
     for directory, extensions in (("tests", {".py", ".mjs", ".csv", ".json", ".md"}),
                                   ("docs", {".md"}), ("scripts", {".py", ".mjs"}),
                                   ("deploy", {".in", ".lock"})):

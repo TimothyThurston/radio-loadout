@@ -5,4 +5,5 @@ include Dockerfile .dockerignore
 recursive-include deploy *.in *.lock
 recursive-include docs *.md
 recursive-include scripts *.py *.mjs
+include scripts/certifi-source-manifest.json
 recursive-include tests *.py *.mjs *.csv *.json *.md .gitattributes

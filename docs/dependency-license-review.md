@@ -9,6 +9,40 @@ upstream inventory evidence remain historical. This is an evidence record and a
 release checklist,
 not completed legal clearance or an opinion that ownership has been established.
 
+## CI #11 and focused certifi follow-up — 2026-11-05
+
+Verified [CI run #11](https://github.com/TimothyThurston/radio-loadout/actions/runs/41917981685),
+attempt 1, at exact commit `ec248268cf25d031b1042f7e7c42b1d2f2bdc9da`,
+matching the clean checkout at the start of this follow-up. The run and its
+Linux-amd64 staging job succeeded, including supplemental notice verification.
+Downloaded artifact 13365601915; its SHA-256 matches GitHub's reported
+`a9bb0bddd45a8ccf3606f59f3bd38d7a00ce054c35fcc5e423a7de54589ab927`.
+The result records **passed**, 15 bundle files, image
+`sha256:9d6dff64087d059146f63083c91fdb596f0432c2b5b914eaccebc44713e79aae`.
+Replayed the check against the exact commit's Git object bytes and verified all
+369 stored notice-origin records. [Gate evidence](native-component-notices.md#ci-11-gate-verified--2026-11-05)
+records the inventory/result hashes. **This actual-image delivery gate is
+addressed for that commit/image; broader compliance review remains incomplete.**
+
+The [certifi source review](certifi-source-review.md) identifies exactly two
+versions: application 2026.10.23, and 2026.6.17 in base pip, venv pip and
+ensurepip's pip 26.2.1 wheel. Installed PEM and license hashes match exact
+upstream source releases. Pip's namespace-modified wrappers are present in its
+matching source archive; the bootstrap wheel's corresponding files match it.
+Installed wrapper files were not hashed by the existing collector, so no complete
+installed-file equivalence is claimed. Both release Git snapshots and their
+update helpers were inspected; historical Mozilla/service inputs remain unknown.
+
+A [recipient guide](certifi-source-access.md), pinned source manifest and
+standard-library retrieval/offline-check tool are prepared. They identify and
+retrieve original sources locally; they do not publish or establish enduring
+recipient access. The owner must still select source delivery alongside releases
+or a maintained stable access arrangement, and resolve any further preferred-form
+inputs before treating certifi source obligations as satisfied. No project license,
+dependency, container restriction, CI configuration or approved authorship
+statement changed. Native inclusion, OS/Python source access and other reviews
+remain open; this follow-up is not legal clearance.
+
 ## Actual-image evidence and native notice supplement — 2026-11-04
 
 The supplied `staging-container-diagnostics.zip` matches SHA-256
@@ -42,9 +76,10 @@ entry. The complete upstream feature/link graph remains unresolved.
 The bundle is package data in wheel/source archives and passes through the
 existing wheel-based container build. CI now collects its installed bytes and
 checks every bundle file plus the reviewed native identities, including after
-smoke failures and before cleanup. **Actual-image verification of this newly
-added bundle requires the next Linux CI execution**; the supplied ZIP predates
-it. Only the identified notice texts are supplemented. Other native coverage,
+smoke failures and before cleanup. That bundle initially awaited a new Linux
+execution; **CI #11 subsequently passed its actual-image check**, as recorded
+above. The earlier ZIP predates it. Only the identified notice texts are
+supplemented. Other native coverage,
 certifi direct/vendor/bootstrap preferred-form and source access, Debian/CPython
 obligations, CHIRP provenance and project permissions remain open. The approved
 authorship statement is unchanged. Temporary artifacts are not permanent source
@@ -128,7 +163,7 @@ image/OS review remain open.
 | Hosted channel builder (`/`, `/builder`) | Lower third-party distribution burden: the inspected templates use local project CSS/JS, and server dependencies are not sent with normal channel exports. No reviewed server license requires publishing the entire application merely to run it as a service. | Resolve the CHIRP provenance question for delivered JavaScript/data tables and project code. Production API-doc delivery was disabled in the 2026-11-04 follow-up. Confirm the actual deployment dependency set. |
 | Hosted API documentation | **Addressed in the 2026-11-04 production/staging code:** `/docs`, `/redoc`, and the OAuth redirect return 404; production links and identified browser-asset references are absent. Raw `/openapi.json` remains available. | Development docs remain enabled. The historical browser inventory below still applies to development and to any future decision to re-enable public docs; final container/OS and dependency-redistribution review remain separate. |
 | Downloadable project wheel/source archive, without dependencies bundled | The inspected archives contain project files and project notices, not dependency wheels, npm packages, or Python itself. Merely declaring dependencies is not redistribution of their contents. | Resolve CHIRP provenance before treating these artifacts as redistribution-ready. Recheck future artifacts. A wheelhouse, offline installer, or repackaged environment requires a separate dependency notice/source review. |
-| Distributed runtime container | **Hold redistribution pending corrective work.** The supplied actual-image inventory confirms server wheels, native code, Python, pip/bootstrap contents, and Debian components. | Verify the new supplemental notice bytes in the next built image, complete native/OS/Python coverage review, and establish applicable source access. Successful inventory collection is established; compliance is not. |
+| Distributed runtime container | **Hold redistribution pending corrective work.** Actual-image collection and supplemental notice delivery passed at CI #11's exact commit/image. | Complete native/OS/Python coverage and source-access review. Certifi source retrieval/references are prepared, but preferred-form inputs and enduring recipient access remain unresolved. |
 | Distributed build/test image or browser-test environment | Broader scope than the runtime image. Includes additional vendored licenses and downloaded browser components. | Review setuptools' LGPL/MPL material, npm bundle notices, Node, Chromium/FFmpeg and their exact binaries before sharing such an environment. These tools are not automatically part of the project wheel or runtime image. |
 
 These conclusions concern third-party licensing only. They neither authorize
@@ -259,13 +294,18 @@ the matching upstream data/generation inputs if required, before asserting MPL
 source obligations are fully satisfied. The upstream moving Mozilla `tip` URL
 in LICENSE does not alone identify a reproducible historical input.
 
-The repository has no recipient-facing certifi source-access arrangement.
-Record this as a **redistribution readiness gap**, not a finding that MPL requires
+The [2026-11-05 recipient guide](certifi-source-access.md) and reproducible
+retrieval/checking tool now provide exact upstream references for both actual
+versions and pip's modified wrapper source. No maintained recipient delivery or
+hosting arrangement has been selected or published, and historical preferred-form
+Mozilla inputs remain unresolved. Record this as a **redistribution readiness
+gap**, not a finding that MPL requires
 the whole application to be disclosed or that a separate online offer is always
 needed when complete preferred-form source is already supplied. certifi's own
 [documentation](https://certifiio.readthedocs.io/en/latest/) identifies the CA
 bundle as MPL licensed. Do not put it under PolyForm Strict or strip it during
-image slimming. pip may carry a second vendored certifi copy needing separate review.
+image slimming. The recorded pip/ensurepip copies are explicitly included in the
+focused source review, with their own version, notice and bootstrap evidence.
 
 ### Apache and already-supplied notices
 
@@ -474,11 +514,11 @@ recommends changing the project's chosen license. Preserve any third-party right
 
 | Priority | Finding/status | Smallest recommended follow-up |
 | --- | --- | --- |
-| P0 before container redistribution | Successful actual-image collection is established from the checksum-verified ZIP. The [scoped native notice supplement](native-component-notices.md) is prepared; its delivery and other native/source-access findings remain open. | Run the updated Linux CI job to verify installed supplemental bytes, then complete native build-graph/OS/Python review and recipient source arrangements. Temporary diagnostics alone are not clearance or permanent source delivery. |
+| P0 before container redistribution | Actual-image collection and the [scoped supplemental notice delivery gate](native-component-notices.md) passed in CI #11 at the identified commit/image. Other native/source-access findings remain open. | Complete native build-graph/OS/Python review and recipient source arrangements. The passed gate is limited to the supplement; temporary diagnostics are not clearance or permanent source delivery. |
 | P0 before project redistribution | [Historical comparisons and a dated author-reported statement are recorded](chirp-provenance.md). Component-level creation sources and any applicable permissions remain unresolved; no particular copied expressive fragment was identified, which does not exclude copying. | Record any further component-specific recollection or surviving evidence; original chats/notes are reported unavailable, so leave unrecoverable details unknown. Assess any actual adaptation and applicable permissions without assuming clearance from recollection or table/row comparisons. |
 | P1 production API-doc delivery — addressed 2026-11-04 | Production/staging docs and OAuth redirect now return 404, production pages hide their links/assets, and development retains docs on independent instances. | Verified locally by regression/browser checks and the installed-wheel smoke probe; raw OpenAPI JSON remains available. Development/dependency redistribution notice questions and the uninspected final image remain separate. |
-| P1 before conveying dependency environment | certifi notice/source correspondence partly verified, but recipient source mechanism/preferred bundle source unresolved. | Retain the exact certifi notices, document matching source access and check preferred-form inputs. Include pip's vendored copy if present. Do not demand disclosure of the entire app. |
-| P1 for any bundled release | Package audits now verify exact supplemental notice bytes; an always-run actual-image evidence check is implemented for the new bundle. | Inspect the next Linux CI result; this check covers the versioned supplement, not every third-party obligation. Separately test archives if dependencies are ever vendored. |
+| P1 before conveying dependency environment | Both actual certifi versions' PEM/notices match identified sources; pip's modified wrapper sources and a retrieval/offline-check tool are recorded. Historical preferred inputs and maintained recipient access remain unresolved. | Choose retained source delivery or stable access, include any further required inputs, and preserve MPL notices. See [recipient guidance](certifi-source-access.md); no entire-application source publication is inferred. |
+| P1 for any bundled release | Exact supplemental bytes passed the CI #11 actual-image check; project archive audits also preserve them. | Rerun on relevant payload/native/packaging changes. This check covers the versioned supplement, not every third-party obligation. Separately test archives if dependencies are ever vendored. |
 | P2 documentation | Existing direct inventory is metadata-based and incomplete: e.g. python-dotenv 1.2.4's actual notice is BSD-3; notify is CC0; setuptools has LGPL/MPL components. | Update the older inventory to point to the stronger artifact evidence when documentation changes beyond this report are authorized. |
 | P2 if shipping development artifacts | Test/browser/build bundles have extra components and licenses. | Preserve npm sidecars/NOTICE, inventory exported HTML reports and browser binaries, and review setuptools' covered material if the builder itself is distributed. |
 
