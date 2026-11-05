@@ -6,6 +6,27 @@ available at review time. It is not a promise that a project source mirror has
 been published or that all preferred-source requirements are resolved.
 The shorter [recipient guide](certifi-source-access.md) provides retrieval steps.
 
+## Delivery approach selected and Windows report recorded — 2026-11-05
+
+The owner selected [release-attached source bundles and the maintenance
+workflow](source-bundles.md#selected-delivery-and-maintenance-policy--2026-11-05).
+The policy retains per-release sources/checksums and calls for verified recipient
+access before distribution. It is a selected plan, not a published/operating
+source-access arrangement; activation and the remaining release-specific reviews
+are still pending. No arbitrary legal retention duration or clearance is claimed.
+
+The owner's [Windows verification report](source-bundles.md#reported-windows-verification--2026-11-05)
+records two real five-archive builds on Windows 11 / Python 3.13.15 at commit
+`ef0d94d34df51a2a84927a09c0c6732282d853e4`. Each reported ZIP is 2,409,640 bytes,
+SHA-256 `f6c7eaffaddaebb79fd3ee7fbe22471d49aacab84409207d5442e27f6d75accd`,
+matching the independently built Linux / Python 3.12 reference. Both checksum
+files and independent verification checks passed; original archives and clean
+Git state were reported unchanged. This is attributed user-reported evidence;
+the local JSON report/ZIPs were not independently inspected in this follow-up.
+Historical Mozilla inputs, full native/OS coverage, CHIRP provenance and the
+operational recipient-access finding remain open. No code or bundled notice
+bytes were changed, no release created, and no sources published here.
+
 ## Local release-source bundle preparation — 2026-11-05
 
 The [source-bundle tooling](source-bundles.md) prepares an offline, independently
@@ -14,9 +35,10 @@ archive/notices bytes and includes a qualified README, canonical manifest and
 hash index; a separate SHA256SUMS identifies the entire ZIP. It neither selects
 new sources nor changes dependencies, wrapper verification or license terms.
 The bundle is deliberately named source **evidence**, not complete preferred
-source or completed legal clearance. Owner approval of maintained delivery,
-historical Mozilla inputs and wider reviews remain unresolved. No release or
-source mirror was published; this does not close the recipient-access finding.
+source or completed legal clearance. At preparation time, owner selection of
+maintained delivery was pending; the subsequent choice is recorded above.
+Historical Mozilla inputs and wider reviews remain unresolved. No release or
+source mirror was published; this does not close operational recipient access.
 
 ## CI #13 installed-wrapper gate verified — 2026-11-05
 
@@ -235,10 +257,11 @@ require disclosure of the entire separate application. See the
 [license](https://www.mozilla.org/en-US/MPL/2.0/) and
 [Mozilla FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/).
 
-Before any future redistribution, the project owner must choose a maintained
-recipient-access arrangement: preserve and supply the reviewed sources alongside
-the distributed release, or maintain an identified stable mirror/delivery location
-and include accurate recipient instructions. Include any further preferred-form
+The project owner has selected release-attached source delivery, as recorded
+above. Before future redistribution, implement and maintain that selected
+arrangement with accurate recipient instructions and verified access; no public
+release/source attachment has been activated by this documentation. Include any
+further preferred-form
 inputs found necessary. The current upstream URLs are verified references, not
 an owner-backed retention commitment. No mirror, release attachment or source
 bundle has been published by this work. **Seven-day CI artifacts and this local

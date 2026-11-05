@@ -53,14 +53,20 @@ and generator response remain unidentified. Matching the shipped PEM does not
 alone establish complete preferred source for modification. No project source
 mirror or enduring recipient delivery arrangement has been published. Upstream
 links, local downloads and expiring CI diagnostics are not a project retention
-commitment. Before redistribution, the owner still needs to select and maintain
-source delivery alongside releases or an appropriate stable access arrangement,
-including any further required inputs. Supply this guide and the selected access
+commitment. The owner selected [release-attached source bundles and a maintenance
+workflow](source-bundles.md#selected-delivery-and-maintenance-policy--2026-11-05)
+on 2026-11-05. Before redistribution, that arrangement still needs activation,
+tested recipient access and any further required source inputs. Supply this
+guide and the selected access
 instructions with any future image distribution. This guide is not a completed compliance
 assessment or a grant of additional rights in Radio Loadout.
 
 A [local bundle-preparation tool](source-bundles.md) can now retain the five
 identified original source archives with an index, limitations and whole-ZIP
 checksum. Building/verifying that bundle is offline and refuses overwrite.
-This is preparation for possible release-attached delivery, not activation of
-a public access/retention arrangement or resolution of the limitations above.
+This prepares the selected release-attached approach; it does not activate a
+public access/retention arrangement or resolve the limitations above. The
+[reported Windows verification](source-bundles.md#reported-windows-verification--2026-11-05)
+matches the Linux reference ZIP bytes; that build evidence is not public source
+availability. No published release asset or maintained download URL is supplied
+by this guide yet.

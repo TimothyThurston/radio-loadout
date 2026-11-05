@@ -9,6 +9,26 @@ upstream inventory evidence remain historical. This is an evidence record and a
 release checklist,
 not completed legal clearance or an opinion that ownership has been established.
 
+## Release-attached source approach selected — 2026-11-05
+
+The owner selected [release-attached source bundles and a maintenance
+workflow](source-bundles.md#selected-delivery-and-maintenance-policy--2026-11-05),
+including preserved per-release source bytes/checksums and recipient retrieval
+checks before distribution. This closes the delivery-method choice, **not**
+source completeness or operational availability. No release assets, maintained
+recipient URLs, uploads or public retention service were activated. Historical
+Mozilla inputs, native/OS/Python coverage, CHIRP provenance and wider findings
+remain unresolved. Earlier statements that no method was selected describe
+the original review, not this later choice.
+
+The [Windows bundle report](source-bundles.md#reported-windows-verification--2026-11-05)
+is attributed to the owner: real builds at commit
+`ef0d94d34df51a2a84927a09c0c6732282d853e4`, Windows 11 / Python 3.13.15,
+match the independently built Linux reference hash/size. This supports the
+recorded runtime/input pair only; local Windows files were not independently
+inspected here. No code, dependency, license, notice or approved authorship
+wording was changed by this documentation follow-up.
+
 ## CI #13 installed certifi wrappers verified — 2026-11-05
 
 [CI #13](https://github.com/TimothyThurston/radio-loadout/actions/runs/42112616503)
@@ -58,8 +78,9 @@ update helpers were inspected; historical Mozilla/service inputs remain unknown.
 A [recipient guide](certifi-source-access.md), pinned source manifest and
 standard-library retrieval/offline-check tool are prepared. They identify and
 retrieve original sources locally; they do not publish or establish enduring
-recipient access. The owner must still select source delivery alongside releases
-or a maintained stable access arrangement, and resolve any further preferred-form
+recipient access. At that original follow-up, the owner still needed to select
+a source-delivery arrangement; the later release-attached choice is recorded
+above. Resolve any further preferred-form
 inputs before treating certifi source obligations as satisfied. No project license,
 dependency, container restriction, CI configuration or approved authorship
 statement changed. Native inclusion, OS/Python source access and other reviews
@@ -318,9 +339,9 @@ in LICENSE does not alone identify a reproducible historical input.
 
 The [2026-11-05 recipient guide](certifi-source-access.md) and reproducible
 retrieval/checking tool now provide exact upstream references for both actual
-versions and pip's modified wrapper source. No maintained recipient delivery or
-hosting arrangement has been selected or published, and historical preferred-form
-Mozilla inputs remain unresolved. Record this as a **redistribution readiness
+versions and pip's modified wrapper source. Release-attached source delivery has
+now been selected, but not activated or tested for public recipient retrieval.
+Historical preferred-form Mozilla inputs remain unresolved. Record this as a **redistribution readiness
 gap**, not a finding that MPL requires
 the whole application to be disclosed or that a separate online offer is always
 needed when complete preferred-form source is already supplied. certifi's own
@@ -539,7 +560,7 @@ recommends changing the project's chosen license. Preserve any third-party right
 | P0 before container redistribution | Actual-image collection and the [scoped supplemental notice delivery gate](native-component-notices.md) passed in CI #11 at the identified commit/image. Other native/source-access findings remain open. | Complete native build-graph/OS/Python review and recipient source arrangements. The passed gate is limited to the supplement; temporary diagnostics are not clearance or permanent source delivery. |
 | P0 before project redistribution | [Historical comparisons and a dated author-reported statement are recorded](chirp-provenance.md). Component-level creation sources and any applicable permissions remain unresolved; no particular copied expressive fragment was identified, which does not exclude copying. | Record any further component-specific recollection or surviving evidence; original chats/notes are reported unavailable, so leave unrecoverable details unknown. Assess any actual adaptation and applicable permissions without assuming clearance from recollection or table/row comparisons. |
 | P1 production API-doc delivery — addressed 2026-11-04 | Production/staging docs and OAuth redirect now return 404, production pages hide their links/assets, and development retains docs on independent instances. | Verified locally by regression/browser checks and the installed-wheel smoke probe; raw OpenAPI JSON remains available. Development/dependency redistribution notice questions and the uninspected final image remain separate. |
-| P1 before conveying dependency environment | Both actual certifi versions' PEM/notices match identified sources; pip's modified wrapper sources and a retrieval/offline-check tool are recorded. Historical preferred inputs and maintained recipient access remain unresolved. | Choose retained source delivery or stable access, include any further required inputs, and preserve MPL notices. See [recipient guidance](certifi-source-access.md); no entire-application source publication is inferred. |
+| P1 before conveying dependency environment | Both actual certifi versions' PEM/notices match identified sources; pip's modified wrapper sources and a retrieval/offline-check tool are recorded. Release-attached delivery is selected, but historical preferred inputs and operational recipient access remain unresolved. | Activate the selected release-attached arrangement only after release approval, verify recipient retrieval, include any further required inputs, and preserve MPL notices. See [recipient guidance](certifi-source-access.md); no entire-application source publication is inferred. |
 | P1 for any bundled release | Exact supplemental bytes passed the CI #11 actual-image check; project archive audits also preserve them. | Rerun on relevant payload/native/packaging changes. This check covers the versioned supplement, not every third-party obligation. Separately test archives if dependencies are ever vendored. |
 | P2 documentation | Existing direct inventory is metadata-based and incomplete: e.g. python-dotenv 1.2.4's actual notice is BSD-3; notify is CC0; setuptools has LGPL/MPL components. | Update the older inventory to point to the stronger artifact evidence when documentation changes beyond this report are authorized. |
 | P2 if shipping development artifacts | Test/browser/build bundles have extra components and licenses. | Preserve npm sidecars/NOTICE, inventory exported HTML reports and browser binaries, and review setuptools' covered material if the builder itself is distributed. |
