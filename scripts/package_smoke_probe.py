@@ -84,6 +84,7 @@ def verify_http(base: str, package: Path, *, installed_importer: bool = True) ->
             assert 'id="export-loadout"' in content.decode("utf-8")
             assert 'id="builder-settings"' in content.decode("utf-8")
             assert 'id="current-squelch"' in content.decode("utf-8")
+            assert 'id="preview-satellite"' in content.decode("utf-8")
         assert "View API" not in content.decode("utf-8")
         assert not any(reference in content.decode("utf-8") for reference in (
             "/docs", "/redoc", "cdn.jsdelivr.net", "fonts.googleapis.com",
@@ -107,6 +108,12 @@ def verify_http(base: str, package: Path, *, installed_importer: bool = True) ->
     assert guide["delivery"] == "manual-guidance-only" and guide["hardware_verified"] is False
     assert len(guide["settings"]) == 7 and all(s["manufacturer_default"] is None for s in guide["settings"])
     print(f"PASS: homepage, builder, settings guide/catalog, all {len(assets)} local JS/CSS assets and input limits.")
+    satellite_data, _ = request("/presets/satellites")
+    satellite = json.loads(satellite_data)["packs"][0]
+    assert satellite["operational_status"] == "unknown-not-live-checked"
+    assert len(satellite["channels"]) == 2
+    assert all(channel["receive_only"] and channel["transmit_frequency_hz"] is None for channel in satellite["channels"])
+    assert [channel["receive_frequency_hz"] for channel in satellite["channels"]] == [437800000, 145800000]
 
     for path in ("/docs", "/redoc", "/docs/oauth2-redirect"):
         try:

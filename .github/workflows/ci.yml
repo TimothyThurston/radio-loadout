@@ -66,6 +66,7 @@ jobs:
           node --check src/radio_loadout/web/static/settings-plan.js
           node --check src/radio_loadout/web/static/radio-settings.js
           node --check src/radio_loadout/web/static/loadout-format.js
+          node --check src/radio_loadout/web/static/satellite-presets.js
       - name: JavaScript tests
         run: node --test tests/js/*.mjs
 

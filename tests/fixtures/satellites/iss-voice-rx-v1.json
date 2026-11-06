@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "packs": [
+    {
+      "preset_id": "iss-voice-rx",
+      "revision": 1,
+      "title": "ISS voice monitoring — receive-only",
+      "frequency_sources_checked_on": "2026-11-06",
+      "operational_status": "unknown-not-live-checked",
+      "hardware_verified": false,
+      "sources": [
+        {
+          "title": "ARISS — Contact the ISS",
+          "url": "https://www.ariss.org/contact-the-iss.html",
+          "locator": "Selected voice and repeater receive-frequency entries"
+        },
+        {
+          "title": "AMSAT — Amateur Radio on the ISS",
+          "url": "https://www.amsat.org/amateur-radio-on-the-iss/",
+          "locator": "Selected crew-contact and FM repeater receive-frequency entries"
+        }
+      ],
+      "channels": [
+        {
+          "channel_id": "iss-repeater-rx",
+          "name": "ISS RPT RX",
+          "receive_frequency_hz": 437800000,
+          "purpose": "Nominal FM repeater downlink; listening does not imply a crew conversation.",
+          "comment": "RX only; ISS rpt nominal. Ref iss-voice-rx r1; ariss.org/contact-the-iss.html checked 2026-11-06; no live status",
+          "role": "earth-station-receive-downlink",
+          "mode": "FM",
+          "receive_only": true,
+          "transmit_frequency_hz": null,
+          "draft": {
+            "name": "ISS RPT RX",
+            "receive_frequency_mhz": "437.800000",
+            "transmit_frequency_mhz": "",
+            "receive_only": true,
+            "mode": "FM",
+            "tone_mode": "none",
+            "power_watts": "5.0",
+            "tuning_step_khz": "5",
+            "scan_behavior": "",
+            "comment": "RX only; ISS rpt nominal. Ref iss-voice-rx r1; ariss.org/contact-the-iss.html checked 2026-11-06; no live status"
+          }
+        },
+        {
+          "channel_id": "iss-crew-rx",
+          "name": "ISS CREW RX",
+          "receive_frequency_hz": 145800000,
+          "purpose": "Nominal FM crew/school-contact downlink; contacts are intermittent, not a continuous beacon.",
+          "comment": "RX only; ISS crew nominal. Ref iss-voice-rx r1; ariss.org/contact-the-iss.html checked 2026-11-06; no live status",
+          "role": "earth-station-receive-downlink",
+          "mode": "FM",
+          "receive_only": true,
+          "transmit_frequency_hz": null,
+          "draft": {
+            "name": "ISS CREW RX",
+            "receive_frequency_mhz": "145.800000",
+            "transmit_frequency_mhz": "",
+            "receive_only": true,
+            "mode": "FM",
+            "tone_mode": "none",
+            "power_watts": "5.0",
+            "tuning_step_khz": "5",
+            "scan_behavior": "",
+            "comment": "RX only; ISS crew nominal. Ref iss-voice-rx r1; ariss.org/contact-the-iss.html checked 2026-11-06; no live status"
+          }
+        }
+      ]
+    }
+  ],
+  "status_url": "https://www.ariss.org/current-status-of-iss-stations.html",
+  "limitations": [
+    "Source-check dates describe frequency-reference review, not verified RF activity or current station status.",
+    "Nominal frequencies only: Doppler shift may require manual receive tuning. No correction or pass prediction is provided.",
+    "Reception depends on a suitable pass, equipment, antenna, terrain and interference; silence does not prove a fault.",
+    "No uplinks, transmit plans, packet/SSTV decoding, orbit tracking or radio writes are included.",
+    "Mode FM is source-backed. Power 5 W (unused on RX-only channels), 5 kHz tuning step and normal scan are application defaults, not satellite-specific requirements.",
+    "Adding a preset does not verify physical-radio behavior. Confirm transmit is disabled in the destination software/radio before use.",
+    "Channels remain editable after addition; changing receive-only manually may enable transmitting. Preserve receive-only for this monitoring pack."
+  ]
+}

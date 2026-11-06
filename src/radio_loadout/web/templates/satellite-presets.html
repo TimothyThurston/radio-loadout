@@ -1,0 +1,31 @@
+<section id="satellite-panel" class="preset-panel satellite-panel" aria-labelledby="satellite-heading">
+    <h2 id="satellite-heading">Satellite listening presets</h2>
+    <p>Preview before adding. These channels are receive-only, not transmit plans or a radio image.
+        Check current operating status and a suitable pass independently.</p>
+    {% for pack in satellites.packs %}
+    <h3>{{ pack.title }}</h3>
+    <p>Pack {{ pack.preset_id }}, revision {{ pack.revision }}.
+        Frequency-source check: <time datetime="{{ pack.frequency_sources_checked_on }}">{{ pack.frequency_sources_checked_on }}</time>.
+        Activity: unknown — not checked live. This date is not an on-air verification.</p>
+    {% for channel in pack.channels %}
+    <label class="checkbox-field satellite-choice">
+        <input type="checkbox" data-satellite-channel="{{ channel.channel_id }}" checked>
+        <span>Include {{ channel.name }} — {{ "%.6f" | format(channel.receive_frequency_hz / 1000000) }} MHz FM;
+            Earth-station receive/downlink; TX disabled. {{ channel.purpose }}</span>
+    </label>
+    {% endfor %}
+    <p>Frequency references:</p>
+    <ul>{% for source in pack.sources %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }}</a> — {{ source.locator }}</li>{% endfor %}</ul>
+    <button id="preview-satellite" class="button button-secondary" type="button" disabled>Preview ISS receive-only pack</button>
+    {% endfor %}
+    <ul>{% for limitation in satellites.limitations %}<li>{{ limitation }}</li>{% endfor %}</ul>
+    <p><a href="{{ satellites.status_url }}" target="_blank" rel="noopener noreferrer">Check the ARISS status page</a>.
+        Reference links open in a new tab only when chosen; this app does not fetch live station status.</p>
+    <section id="satellite-preview" class="compatibility-panel" aria-labelledby="satellite-preview-heading" hidden>
+        <h3 id="satellite-preview-heading">Receive-only additions preview</h3>
+        <p id="satellite-summary" role="status" aria-live="polite"></p>
+        <ul id="satellite-issues"></ul>
+        <button id="add-satellite" class="button button-primary" type="button" disabled>Add reviewed receive-only channels</button>
+        <button id="cancel-satellite" class="button button-secondary" type="button">Cancel satellite preview</button>
+    </section>
+</section>

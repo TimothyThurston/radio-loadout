@@ -25,6 +25,17 @@
 .settings-guide[hidden] { display: none; }
 #builder-settings { min-width: 0; margin: 1.5rem 0; border: 1px solid var(--panel-border); border-radius: 1rem; padding: 1rem; }
 #builder-settings summary { cursor: pointer; padding-block: 1rem; }
+.satellite-panel { margin-block: 2rem; }
+.satellite-panel p, .satellite-panel li { line-height: 1.6; overflow-wrap: anywhere; }
+.satellite-panel a {
+    display: inline-block;
+    max-width: 100%;
+    padding-block: 0.2rem;
+    vertical-align: top;
+    text-decoration: underline;
+}
+.satellite-choice { align-items: flex-start; margin-block: 1rem; }
+.satellite-panel .button { max-width: 100%; white-space: normal; padding-block: 0.75rem; text-align: center; }
 .settings-guide .button, .settings-guide-link {
     max-width: 100%;
     white-space: normal;

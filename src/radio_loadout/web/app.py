@@ -41,6 +41,7 @@ from radio_loadout.models import (
 from radio_loadout.profile_compatibility import check_channel_compatibility, profile_context
 from radio_loadout.radio_profiles import RADIO_PROFILES, get_radio_profile
 from radio_loadout.radio_settings import settings_catalog
+from radio_loadout.satellite_presets import satellite_catalog
 
 WEB_DIRECTORY = Path(__file__).resolve().parent
 
@@ -429,6 +430,11 @@ def radio_profiles() -> dict:
     return {"schema_version": 1, "profiles": [profile.to_dict() for profile in RADIO_PROFILES]}
 
 
+@router.get("/presets/satellites")
+def satellite_monitoring_presets() -> dict:
+    return satellite_catalog()
+
+
 @router.get("/radio-profiles/{profile_id}/settings")
 def radio_settings_catalog(profile_id: str) -> dict:
     try:
@@ -603,7 +609,7 @@ def builder(request: Request) -> Response:
         request=request,
         name="builder.html",
         context={"input_limits": input_limits.public_limits(), "radio_profiles": RADIO_PROFILES,
-                 "catalog": settings_catalog(RADIO_PROFILES[0].profile_id)},
+                 "catalog": settings_catalog(RADIO_PROFILES[0].profile_id), "satellites": satellite_catalog()},
     )
 
 

@@ -512,13 +512,14 @@ Completed or substantially implemented:
 - Opt-in [full-loadout v2 save/restore](docs/loadout-format-v2.md) for channels, the exact profile revision and planned settings; v1 export/autosave remain channel-only and no device image or programming is implied
 - NOAA Weather preset
 - Amateur Calling preset
+- [ISS voice receive-only monitoring preset](docs/satellite-presets.md): source-dated nominal downlinks, preview, profile/count review and explicit addition; no live status, uplinks, pass tracking or Doppler automation
 - Automated tests
 
 Remaining Version 1 work:
 
 - Verify CHIRP CSV import/export in the real CHIRP application, including regression fixtures and radio-specific limitations
 - Implement ZIP-code/location repeater lookup with radius, band filters, selection into loadouts, and approved data-source access
-- Implement verified satellite frequency presets, including source attribution and last-checked information; add channel sets for Doppler where practical
+- Expand the initial ISS receive-only preset with separately reviewed satellite packs; transmit plans, digital/SSTV configurations and Doppler channel sets remain unimplemented and require their own source/operating review
 - Expand the documented pilot into hardware-verified model/firmware profiles; resolve unknown name/tone/power mappings and add applicable device settings without claiming untested support
 - Expand the initial separate **Radio Settings** guide to verified model/firmware behavior and additional documented settings, including display, dual watch and scan dependencies; no direct programming is implemented by the guide
 - Verify and expand **Recommended Settings** for each supported exact profile; the initial listening-first suggestion plan is editorial/manual guidance, not a hardware-tested everyday preset

@@ -100,6 +100,16 @@ export function setupBuilderHarness(importedChannels = [], hooks = {}) {
         "input-limits", "chirp-import-review", "chirp-import-summary", "chirp-import-messages",
         "confirm-chirp-import", "cancel-chirp-import", "channels-json", "chirp-csv-file", "import-chirp-csv", "backup-file", "import-backup", "export-backup",
     ].map((id) => [`#${id}`, new Element()]));
+    const satelliteChoices = [];
+    if (hooks.satellites) {
+        for (const id of ["preview-satellite", "add-satellite", "cancel-satellite", "satellite-preview", "satellite-summary", "satellite-issues", "satellite-catalog"]) elements[`#${id}`] = new Element();
+        elements["#satellite-catalog"].textContent = JSON.stringify(hooks.satellites);
+        elements["#add-satellite"].disabled = true;
+        for (const channel of hooks.satellites.packs[0].channels) {
+            const choice = new Element(); choice.checked = true; choice.dataset.satelliteChannel = channel.channel_id;
+            satelliteChoices.push(choice);
+        }
+    }
     elements["#input-limits"].textContent = JSON.stringify(inputLimits);
     elements["#channel-form"].action = "/downloads/chirp.csv";
     const fragment = () => Object.assign(new Element(), { fragment: true });
@@ -139,6 +149,7 @@ export function setupBuilderHarness(importedChannels = [], hooks = {}) {
         },
         document: {
             querySelector: (selector) => elements[selector] || null,
+            querySelectorAll: (selector) => selector === "[data-satellite-channel]" ? satelliteChoices : [],
             createDocumentFragment: fragment,
             body: new Element(),
             createElement(tag) {
@@ -149,6 +160,7 @@ export function setupBuilderHarness(importedChannels = [], hooks = {}) {
         },
     });
     runInContext(backupSource, context);
+    if (hooks.satellites) runInContext(readFileSync(new URL("../../../src/radio_loadout/web/static/satellite-presets.js", import.meta.url), "utf8"), context);
     if (hooks.catalog) {
         for (const name of ["settings-plan.js", "loadout-format.js"]) {
             runInContext(readFileSync(new URL(`../../../src/radio_loadout/web/static/${name}`, import.meta.url), "utf8"), context);
@@ -165,7 +177,7 @@ export function setupBuilderHarness(importedChannels = [], hooks = {}) {
     }
     runInContext(source, context);
     return {
-        elements, downloads, requests, saved, storage,
+        elements, downloads, requests, saved, storage, satelliteChoices,
         evaluate: (code) => runInContext(code, context),
         draft: () => JSON.parse(runInContext("JSON.stringify(getChannelCards().map(getCardDraft))", context)),
         field: (index, name) => elements["#channel-list"].children[index].fields.find((field) => field.dataset.field === name),

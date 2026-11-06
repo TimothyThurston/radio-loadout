@@ -30,6 +30,7 @@
 !src/radio_loadout/web/static/settings-plan.js
 !src/radio_loadout/web/static/radio-settings.js
 !src/radio_loadout/web/static/loadout-format.js
+!src/radio_loadout/web/static/satellite-presets.js
 !src/radio_loadout/web/static/styles.css
 !src/radio_loadout/web/static/input-limits.json
 !src/radio_loadout/web/templates/
@@ -37,3 +38,4 @@
 !src/radio_loadout/web/templates/builder.html
 !src/radio_loadout/web/templates/radio-settings.html
 !src/radio_loadout/web/templates/settings-editor.html
+!src/radio_loadout/web/templates/satellite-presets.html

@@ -21,6 +21,7 @@ REQUIRED_ASSETS = {
     "radio_loadout/web/static/backup-format.js",
     "radio_loadout/web/static/builder.js",
     "radio_loadout/web/static/loadout-format.js",
+    "radio_loadout/web/static/satellite-presets.js",
     "radio_loadout/web/static/settings-plan.js",
     "radio_loadout/web/static/radio-settings.js",
     "radio_loadout/web/static/styles.css",
@@ -29,6 +30,7 @@ REQUIRED_ASSETS = {
     "radio_loadout/web/templates/builder.html",
     "radio_loadout/web/templates/radio-settings.html",
     "radio_loadout/web/templates/settings-editor.html",
+    "radio_loadout/web/templates/satellite-presets.html",
 }
 FORBIDDEN_PARTS = {".git", ".venv", "node_modules", "__pycache__", ".pytest_cache",
                    ".ruff_cache", "test-results", "playwright-report", "build", "dist"}

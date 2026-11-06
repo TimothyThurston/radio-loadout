@@ -85,13 +85,18 @@ fixtures live under `tests/fixtures/backups` and `tests/e2e/fixtures`.
   reviews, preserve channel drafts, clear/reload, reject unknown profiles and
   keep controls disabled without JavaScript. Check axe, keyboard access, narrow
   layout and absence of automatic external requests. The complete suite now
-  lists 42 cases; additions must run on Windows/CI before acceptance when a
+  lists 50 cases; additions must run on Windows/CI before acceptance when a
   local browser installation is unavailable.
 - Download/restore a real [v2 full loadout](loadout-format-v2.md), preserving
   channels/profile/typed settings. Verify that v1 remains channel-only, cancelled
   and invalid restores preserve work, legacy clearing requires confirmation, and
   the embedded editor adds no CSV form fields. Run axe and narrow-layout checks
   with that editor expanded.
+- Preview/add the [ISS receive-only satellite pack](satellite-presets.md), checking
+  explicit confirmation, nominal-frequency roles, TX-disable CSV, v2 round trip,
+  duplicate skipping and preservation of profile/settings. Cancel an in-flight
+  review and inject a review-service failure without replacing channels or
+  autosave. Check keyboard activation, axe and narrow layouts.
 
 The custom-tone duplication regression exposed a real defect: assigning a select
 value to a fresh card discarded codes/tones absent from its conventional options.
@@ -103,7 +108,11 @@ Tests use accessible locators for interaction, existing `data-field` attributes
 only to inspect the complete saved field set, and observable-state assertions.
 There are no arbitrary sleeps, forced clicks or automatic retries. Unexpected
 page JavaScript exceptions and application-script console errors fail the test.
-Tests do not stub the application APIs, downloads, storage, or card functions.
+Normal happy-path journeys use real application APIs, downloads, storage and
+card functions. A satellite fault-path test deliberately holds a real review
+request to test cancellation, then injects HTTP 503 to test preservation/error
+feedback. It does not replace successful review/download tests or relax shared
+page-error checks.
 One isolated settings test deliberately aborts only the controller-script request
 to verify fail-closed UI behavior; it asserts that exact expected resource
 failure and no page exceptions, without changing the shared error-checking

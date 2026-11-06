@@ -15,7 +15,9 @@
     <script src="/static/settings-plan.js?v=2" defer></script>
     <script src="/static/loadout-format.js?v=1" defer></script>
     <script src="/static/radio-settings.js?v=3" defer></script>
-    <script src="/static/builder.js?v=10" defer></script>
+    <script id="satellite-catalog" type="application/json">{{ satellites | tojson }}</script>
+    <script src="/static/satellite-presets.js?v=1" defer></script>
+    <script src="/static/builder.js?v=11" defer></script>
 </head>
 
 <body>
@@ -89,6 +91,8 @@
                 </button>
             </section>
         </section>
+
+        {% include "satellite-presets.html" %}
 
         <section class="preset-panel" aria-labelledby="backup-heading">
             <h2 id="backup-heading">Radio Loadout backups</h2>

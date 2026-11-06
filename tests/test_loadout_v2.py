@@ -46,7 +46,7 @@ def test_builder_has_one_editor_with_safe_script_order_and_no_submitted_settings
     parsed.feed(response.text)
     assert len(parsed.ids) == len(set(parsed.ids))
     assert parsed.scripts == ["/static/backup-format.js", "/static/settings-plan.js", "/static/loadout-format.js",
-                              "/static/radio-settings.js", "/static/builder.js"]
+                              "/static/radio-settings.js", "/static/satellite-presets.js", "/static/builder.js"]
     fieldset = next(item for item in parsed.fieldsets if item.get("id") == "builder-settings")
     assert "hidden" in fieldset and "disabled" in fieldset
     assert len(parsed.settings_names) == 7 and set(parsed.settings_names) == {None}

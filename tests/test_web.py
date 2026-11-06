@@ -429,7 +429,7 @@ def test_builder_chirp_import_assets() -> None:
     script = script_response.text
     assert 'bindBuilderEvent(importChirpCsvButton, "click", importChirpCsv)' in script
     import_handler = script.split("async function importChirpCsv() {", 1)[1].split(
-        "async function submitChannelForm", 1,
+        "function renderChirpImportReport", 1,
     )[0]
     assert 'upload.append("file", file)' in import_handler
     assert 'window.fetch("/imports/chirp.csv"' in import_handler
@@ -477,7 +477,7 @@ def test_builder_backup_controls() -> None:
     assert response.status_code == 200
     assert 'id="export-backup" class="button button-secondary" type="button"' in response.text
     assert '<script src="/static/backup-format.js?v=1" defer></script>' in response.text
-    assert '<script src="/static/builder.js?v=10" defer></script>' in response.text
+    assert '<script src="/static/builder.js?v=11" defer></script>' in response.text
     assert response.text.index("/static/backup-format.js") < response.text.index("/static/builder.js")
     assert 'id="import-backup"' in response.text
     assert 'id="backup-file" type="file" accept=".json"' in response.text

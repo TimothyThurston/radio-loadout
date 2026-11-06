@@ -81,6 +81,14 @@ let pendingChirpImport = null;
 let chirpImportRequestId = 0;
 const reviewCompatibilityButton = document.querySelector("#review-compatibility");
 const radioProfileSelect = document.querySelector("#radio-profile");
+const previewSatelliteButton = document.querySelector("#preview-satellite");
+const addSatelliteButton = document.querySelector("#add-satellite");
+const cancelSatelliteButton = document.querySelector("#cancel-satellite");
+const satellitePreviewPanel = document.querySelector("#satellite-preview");
+const satelliteSummary = document.querySelector("#satellite-summary");
+const satelliteIssues = document.querySelector("#satellite-issues");
+let satelliteRequestId = 0;
+let pendingSatellite = null;
 const compatibilityPanel = document.querySelector("#compatibility-results");
 const compatibilitySummary = document.querySelector("#compatibility-summary");
 const compatibilityIssues = document.querySelector("#compatibility-issues");
@@ -1249,6 +1257,122 @@ function selectedRadioProfileId() {
     return radioProfileSelect?.value || "";
 }
 
+function invalidateSatellitePreview() {
+    satelliteRequestId += 1;
+    pendingSatellite = null;
+    if (addSatelliteButton) addSatelliteButton.disabled = true;
+    if (satellitePreviewPanel) satellitePreviewPanel.hidden = true;
+    if (previewSatelliteButton && globalThis.RadioSatellitePresets) previewSatelliteButton.disabled = false;
+}
+
+function cancelSatellitePreview() {
+    invalidateSatellitePreview();
+    showPresetStatus("Satellite preview cancelled. Existing channels, profile, settings and saved draft are unchanged.");
+    previewSatelliteButton?.focus?.();
+}
+
+function satelliteFingerprint() {
+    return JSON.stringify({ channels: getChannelCards().map(getCardDraft), profile: selectedRadioProfileId(),
+        settings: globalThis.RadioSettingsEditor?.snapshot() || {}, revision: compatibilityRequestId });
+}
+
+async function previewSatellitePreset() {
+    invalidateSatellitePreview();
+    clearFormMessage();
+    const requestId = satelliteRequestId;
+    try {
+        if (!satellitePreviewPanel || !satelliteSummary || !satelliteIssues || !addSatelliteButton) throw new Error("Satellite preview controls are unavailable.");
+        const catalog = JSON.parse(document.querySelector("#satellite-catalog").textContent);
+        const selectedIds = [...document.querySelectorAll("[data-satellite-channel]")]
+            .filter((field) => field.checked).map((field) => field.dataset.satelliteChannel);
+        const before = satelliteFingerprint();
+        const savedDraft = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+        const additionsPlan = RadioSatellitePresets.plan(catalog, "iss-voice-rx", selectedIds,
+            getChannelCards().map(getCardDraft), getInputLimits().channels);
+        const profileId = selectedRadioProfileId();
+        if (profileId) {
+            const profile = JSON.parse(document.querySelector("#settings-catalog").textContent).radio_profile;
+            if (profile.profile_id !== profileId) throw new Error("Selected profile is unavailable for satellite preview; no generic fallback.");
+            if (additionsPlan.resultingCount > profile.memory_capacity) throw new Error(`The documented profile capacity is ${profile.memory_capacity} memories. Nothing was added.`);
+        }
+        if (!additionsPlan.additions.length) {
+            satelliteIssues.replaceChildren(); satellitePreviewPanel.hidden = false;
+            satelliteSummary.textContent = "Matching receive-only FM channels are already present. Nothing will be added or overwritten.";
+            return;
+        }
+        previewSatelliteButton.disabled = true;
+        satelliteIssues.replaceChildren();
+        satelliteSummary.textContent = "Checking the proposed receive-only additions. Existing channels and saved work have not changed.";
+        satellitePreviewPanel.hidden = false;
+        const report = await requestCompatibilityReport(additionsPlan.reviewChannels);
+        if (requestId !== satelliteRequestId) return;
+        if (before !== satelliteFingerprint() || savedDraft !== window.localStorage.getItem(DRAFT_STORAGE_KEY)) {
+            throw new Error("The loadout or saved draft changed during preview. Preview again; nothing was added.");
+        }
+        satelliteIssues.replaceChildren();
+        for (const channel of additionsPlan.additions) {
+            const item = document.createElement("li");
+            item.textContent = `${channel.name}: ${channel.receive_frequency_mhz} MHz FM — Earth receive/downlink; TX disabled.`;
+            satelliteIssues.appendChild(item);
+        }
+        for (const issue of report.issues) {
+            const item = document.createElement("li");
+            item.textContent = `${issue.severity.toUpperCase()} — new channels only, ${issue.field}: ${issue.message}`;
+            satelliteIssues.appendChild(item);
+        }
+        satelliteSummary.textContent = `Preview: ${additionsPlan.additions.length} additions, ${additionsPlan.skipped.length} matching RX-only channels skipped; `
+            + `${additionsPlan.resultingCount} channels after addition. New channels only were reviewed; review the full loadout before export. `
+            + (profileId ? "Documented-profile review is not hardware verification. " : "Generic CSV review does not verify any radio. ")
+            + "Nominal reference frequencies, not live activity or Doppler correction. Existing edited channels and settings are preserved.";
+        satellitePreviewPanel.hidden = false;
+        addSatelliteButton.disabled = !report.compatible;
+        if (report.compatible) pendingSatellite = Object.freeze({ before, additionsPlan, requestId, savedDraft });
+    } catch (error) {
+        if (requestId === satelliteRequestId) {
+            invalidateSatellitePreview();
+            showFormMessage(error instanceof Error ? error.message : "Could not preview satellite channels. Nothing was added.", "error");
+        }
+    } finally {
+        if (previewSatelliteButton && requestId === satelliteRequestId) previewSatelliteButton.disabled = false;
+    }
+}
+
+function addReviewedSatelliteChannels() {
+    const reviewed = pendingSatellite;
+    const previousCards = [...channelList.children];
+    let previousSaved;
+    try {
+        if (!reviewed || reviewed.requestId !== satelliteRequestId || reviewed.before !== satelliteFingerprint()) {
+            throw new Error("The loadout, profile or settings changed. Preview satellite channels again before adding.");
+        }
+        previousSaved = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (previousSaved !== reviewed.savedDraft) throw new Error("The saved draft changed after preview. Review again; nothing was added.");
+        const fragment = document.createDocumentFragment();
+        for (const draft of reviewed.additionsPlan.additions) {
+            const card = createChannelCard(fragment);
+            applyDraftToCard(card, draft); initializeChannelCard(card);
+        }
+        if (reviewed.additionsPlan.replacePristine) channelList.replaceChildren(fragment);
+        else channelList.appendChild(fragment);
+        updateChannelNumbers();
+        saveDraft(true);
+        invalidateSatellitePreview();
+        showPresetStatus(`Added ${reviewed.additionsPlan.additions.length} ISS receive-only monitoring channels. Review the full loadout before export; verify destination TX disable.`);
+        previewSatelliteButton?.focus?.();
+    } catch (error) {
+        const currentCards = [...channelList.children];
+        if (currentCards.length !== previousCards.length || currentCards.some((card, index) => card !== previousCards[index])) {
+            channelList.replaceChildren(...previousCards); updateChannelNumbers();
+        }
+        if (previousSaved !== undefined && window.localStorage.getItem(DRAFT_STORAGE_KEY) !== previousSaved) {
+            if (previousSaved === null) window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+            else window.localStorage.setItem(DRAFT_STORAGE_KEY, previousSaved);
+        }
+        invalidateSatellitePreview();
+        showFormMessage(error instanceof Error ? error.message : "Satellite addition failed; previous draft retained.", "error");
+    }
+}
+
 function resetRadioProfile() {
     if (radioProfileSelect) radioProfileSelect.value = "";
     activeRadioProfileId = "";
@@ -1280,6 +1404,7 @@ function changeRadioProfile() {
 }
 
 function invalidateCompatibilityReport() {
+    invalidateSatellitePreview();
     compatibilityRequestId += 1;
     compatibilityReport = null;
     if (generateCsvButton) {
@@ -1461,6 +1586,12 @@ function bindBuilderEvent(element, eventName, handler) {
 // Register export independently so a missing optional control cannot disable it.
 bindBuilderEvent(radioProfileSelect, "change", changeRadioProfile);
 bindBuilderEvent(exportLoadoutButton, "click", exportFullLoadout);
+bindBuilderEvent(previewSatelliteButton, "click", previewSatellitePreset);
+bindBuilderEvent(addSatelliteButton, "click", addReviewedSatelliteChannels);
+bindBuilderEvent(cancelSatelliteButton, "click", cancelSatellitePreview);
+for (const choice of document.querySelectorAll?.("[data-satellite-channel]") || []) {
+    bindBuilderEvent(choice, "change", invalidateSatellitePreview);
+}
 bindBuilderEvent(exportBackupButton, "click", exportBackup);
 bindBuilderEvent(importBackupButton, "click", importBackup);
 bindBuilderEvent(importChirpCsvButton, "click", importChirpCsv);
@@ -1615,6 +1746,7 @@ try {
         loadoutValidator();
         exportLoadoutButton.disabled = false;
     }
+    if (previewSatelliteButton && globalThis.RadioSatellitePresets) previewSatelliteButton.disabled = false;
 } catch (error) {
     console.error("Builder initialization failed:", error);
     showFormMessage("The builder could not initialize. Please reload the page.", "error");
