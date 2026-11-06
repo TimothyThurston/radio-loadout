@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Review documented radio settings and build a manual setup plan.">
+    <title>Radio Settings Guide | Radio Loadout</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    {% if catalog %}
+    <script id="settings-catalog" type="application/json">{{ catalog | tojson }}</script>
+    <script src="/static/settings-plan.js?v=1" defer></script>
+    <script src="/static/radio-settings.js?v=2" defer></script>
+    {% endif %}
+</head>
+<body>
+    <header class="site-header settings-guide-header">
+        <a class="brand" href="/"><span class="brand-mark">RL</span><span>Radio Loadout</span></a>
+        <a class="button button-secondary" href="/builder">Channel Builder</a>
+    </header>
+    <main class="settings-guide">
+        <h1>Radio settings guide.</h1>
+        <p>Build a manual configuration plan. Nothing here reads or changes a radio, channel memories, or CSV exports.</p>
+        <form class="preset-panel" action="/radio-settings" method="get">
+            <label class="form-field" for="settings-profile">Documented model / firmware
+                <select id="settings-profile" name="profile_id" required>
+                    <option value="">Choose an exact documented pilot</option>
+                    {% for profile in radio_profiles %}
+                    <option value="{{ profile.profile_id }}" {% if profile_id == profile.profile_id %}selected{% endif %}>{{ profile.model }} — {{ profile.firmware_scope.split(';')[0] }} documented pilot</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <p>Loading a guide starts an empty session plan; it discards any previous settings plan on this page.</p>
+            <button class="button button-secondary" type="submit">Load settings guide</button>
+        </form>
+        {% if catalog %}
+        <section class="preset-panel" aria-labelledby="settings-scope">
+            <h2 id="settings-scope">{{ catalog.radio_profile.model }} — documented pilot only</h2>
+            <p>{{ catalog.radio_profile.firmware_scope }}</p>
+            <ul>{% for limitation in catalog.limitations %}<li>{{ limitation }}</li>{% endfor %}</ul>
+            <p>Do not reset or update firmware to match this guide. Check the radio's own settings before making any manual change.</p>
+            <p><a class="settings-source" href="{{ catalog.radio_profile.sources[0].url }}" rel="noreferrer">Manufacturer manual</a>
+                — reviewed {{ catalog.radio_profile.sources[0].reviewed_on }}. No external content loads automatically.</p>
+        </section>
+        <p id="settings-js-required">JavaScript is required for plan editing and preview. The guidance below remains readable; no preset has been applied.</p>
+        <p id="settings-error" role="alert" hidden></p>
+        <p id="settings-status" role="status" aria-live="polite">Plan empty. Radio state and manufacturer defaults are unknown.</p>
+        <h2>{{ catalog.recommendation_label }}</h2>
+        <p>These are Radio Loadout suggestions, not manufacturer defaults or a universal safe preset.
+            Change proposed values or deselect individual suggestions, then preview before adding them to this page's plan.</p>
+        <div class="settings-list">
+            {% for setting in catalog.settings %}
+            <section class="channel-card" data-setting="{{ setting.setting_id }}" aria-labelledby="setting-title-{{ setting.setting_id }}">
+                <h3 id="setting-title-{{ setting.setting_id }}">{{ setting.label }}</h3>
+                <p>{{ setting.explanation }}</p>
+                <p>Manual location: {{ setting.menu_locator }}; {{ setting.source_locator }}.</p>
+                <p>Manufacturer default: <strong>Unknown</strong>. {{ setting.default_evidence }}</p>
+                <p><strong>Radio Loadout rationale:</strong> {{ setting.recommendation.rationale }}</p>
+                <p><strong>Scenario:</strong> {{ setting.recommendation.scenarios }}</p>
+                <p><strong>Tradeoffs:</strong> {{ setting.recommendation.tradeoffs }}</p>
+                {% if not setting.options_exhaustive %}<p>Reviewed option subset; other hardware values may exist.</p>{% endif %}
+                <div class="form-grid">
+                    <label class="form-field" for="current-{{ setting.setting_id }}">Your plan: {{ setting.label }}
+                        <select id="current-{{ setting.setting_id }}" data-current disabled>
+                            <option value="">Unset — not read from radio</option>
+                            {% for option in setting.options %}<option value='{{ option.value | tojson }}'>{{ option.label }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label class="form-field" for="proposed-{{ setting.setting_id }}">Proposed: {{ setting.label }}
+                        <select id="proposed-{{ setting.setting_id }}" data-proposed disabled>
+                            {% for option in setting.options %}<option value='{{ option.value | tojson }}' {% if option.value is sameas setting.recommendation.value or option.value == setting.recommendation.value %}selected{% endif %}>{{ option.label }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label class="checkbox-field"><input type="checkbox" data-include checked disabled> Include {{ setting.label }} in preview</label>
+                </div>
+                <p data-origin>Plan origin: unset (not a manufacturer default).</p>
+            </section>
+            {% endfor %}
+        </div>
+        <div class="builder-actions">
+            <button id="preview-settings" class="button button-secondary" type="button" disabled>Preview selected suggestions</button>
+            <button id="clear-settings" class="button button-secondary" type="button" disabled>Clear settings plan</button>
+        </div>
+        <section id="settings-preview" class="preset-panel" aria-labelledby="settings-preview-heading" hidden>
+            <h2 id="settings-preview-heading">Preview changes to this page's plan</h2>
+            <p>Before values below are plan entries, not readings from a radio. Edited proposals are marked user-customized.</p>
+            <ul id="settings-diff"></ul>
+            <button id="apply-settings" class="button button-primary" type="button" disabled>Add reviewed changes to plan</button>
+            <button id="cancel-settings" class="button button-secondary" type="button">Cancel preview</button>
+        </section>
+        <p>Copy any needed notes before leaving: this plan is not saved, downloaded, or included in version-1 channel backups.</p>
+        {% else %}
+        <p>No radio is selected. No generic radio-wide settings or default values are assumed.</p>
+        {% endif %}
+    </main>
+</body>
+</html>

@@ -40,6 +40,7 @@ from radio_loadout.models import (
 )
 from radio_loadout.profile_compatibility import check_channel_compatibility, profile_context
 from radio_loadout.radio_profiles import RADIO_PROFILES, get_radio_profile
+from radio_loadout.radio_settings import settings_catalog
 
 WEB_DIRECTORY = Path(__file__).resolve().parent
 
@@ -426,6 +427,25 @@ def review_chirp_compatibility(request: Request, channels_json: Annotated[str, D
 @router.get("/radio-profiles")
 def radio_profiles() -> dict:
     return {"schema_version": 1, "profiles": [profile.to_dict() for profile in RADIO_PROFILES]}
+
+
+@router.get("/radio-profiles/{profile_id}/settings")
+def radio_settings_catalog(profile_id: str) -> dict:
+    try:
+        return settings_catalog(profile_id)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail="No settings guide for this exact profile.") from error
+
+
+@router.get("/radio-settings")
+def radio_settings(request: Request, profile_id: str = "") -> Response:
+    catalog = None
+    if profile_id:
+        catalog = radio_settings_catalog(profile_id)
+    return templates.TemplateResponse(
+        request=request, name="radio-settings.html",
+        context={"catalog": catalog, "radio_profiles": RADIO_PROFILES, "profile_id": profile_id},
+    )
 
 
 def _channel_to_form_data(channel: Channel) -> ChannelFormData:

@@ -80,6 +80,13 @@ fixtures live under `tests/fixtures/backups` and `tests/e2e/fixtures`.
   controls and live error/compatibility feedback.
 - Run full-page axe scans on the empty builder, advanced settings, rendered error
   feedback and loss-review states, with no excluded rules or ignored violations.
+- Review the separate [radio settings guide](radio-settings.md): start unset,
+  customize/deselect proposals, preview before adding changes, cancel/invalidate
+  reviews, preserve channel drafts, clear/reload, reject unknown profiles and
+  keep controls disabled without JavaScript. Check axe, keyboard access, narrow
+  layout and absence of automatic external requests. The complete suite now
+  lists 34 cases; additions must run on Windows/CI before acceptance when a
+  local browser installation is unavailable.
 
 The custom-tone duplication regression exposed a real defect: assigning a select
 value to a fresh card discarded codes/tones absent from its conventional options.
@@ -92,6 +99,10 @@ only to inspect the complete saved field set, and observable-state assertions.
 There are no arbitrary sleeps, forced clicks or automatic retries. Unexpected
 page JavaScript exceptions and application-script console errors fail the test.
 Tests do not stub the application APIs, downloads, storage, or card functions.
+One isolated settings test deliberately aborts only the controller-script request
+to verify fail-closed UI behavior; it asserts that exact expected resource
+failure and no page exceptions, without changing the shared error-checking
+fixture for normal journeys.
 
 ## Diagnostics and CI
 

@@ -501,6 +501,7 @@ Completed or substantially implemented:
 - Portable JSON backup and restore
 - CHIRP compatibility report with channel-level warnings and errors
 - Optional [manufacturer-documented BF-F8HP PRO V0.53 pilot review](docs/radio-profiles.md), with versioned capability metadata and explicit unknowns; not hardware/programming verification
+- Separate [radio settings guide and recommendation-plan foundation](docs/radio-settings.md) for that documented pilot, with seven settings, selective preview and custom-value provenance; session-only/manual guidance, not programming or factory defaults
 - NOAA Weather preset
 - Amateur Calling preset
 - Automated tests
@@ -511,9 +512,9 @@ Remaining Version 1 work:
 - Implement ZIP-code/location repeater lookup with radius, band filters, selection into loadouts, and approved data-source access
 - Implement verified satellite frequency presets, including source attribution and last-checked information; add channel sets for Doppler where practical
 - Expand the documented pilot into hardware-verified model/firmware profiles; resolve unknown name/tone/power mappings and add applicable device settings without claiming untested support
-- Add a **Radio Settings** tab for selected models: squelch, backlight and display options, battery saver, VOX, dual watch, scan behavior, timeout, beeps, and other settings only where supported by each radio
-- Add a **Recommended Settings** beginner-friendly preset for each verified radio model/firmware profile: populate a conservative, documented everyday-use baseline without changing channel memories or transmitting frequencies
-- Show a clear preview/diff before applying a recommended preset; explain every proposed setting in plain language, highlight trade-offs and any unsupported fields, and allow individual changes to be deselected or adjusted
+- Expand the initial separate **Radio Settings** guide to verified model/firmware behavior and additional documented settings, including display, dual watch and scan dependencies; no direct programming is implemented by the guide
+- Verify and expand **Recommended Settings** for each supported exact profile; the initial listening-first suggestion plan is editorial/manual guidance, not a hardware-tested everyday preset
+- Preserve selective preview/diff, explanations, tradeoffs and individual adjustments as settings support expands; distinguish planned values from device readback and unknown manufacturer defaults
 - Make recommended settings editable and reversible: save the current configuration first, provide a reset-to-previous-settings path, and require separate user confirmation before writing to a connected radio
 - Keep per-radio preset data versioned and tested alongside driver/firmware profiles; mark unverified combinations unsupported rather than guessing settings or modifying calibration/service/password regions
 - Save and restore model-specific settings with full radio image backups, not just channel CSV or generic loadout JSON

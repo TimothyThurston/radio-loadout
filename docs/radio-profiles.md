@@ -22,6 +22,11 @@ programming unsupported and live control unsupported, with hardware verification
 and firmware detection false. Do not interpret profile selection as a device
 identity check. There are no aliases for BF-F8HP (non-Pro), UV-5R or other firmware.
 
+The separate [radio settings guide](radio-settings.md) now provides documented
+options and a session-only recommendation plan for this pilot. It does not add
+global settings to CSV, backup v1 or device programming support; current radio
+state and manufacturer defaults remain unknown.
+
 `profile_compatibility.py` layers known profile constraints over the existing
 generic checker and preserves generic report/CSV behavior when no profile is
 selected. `compatible` still means no blocking errors in the checked scope; an

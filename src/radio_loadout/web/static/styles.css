@@ -13,6 +13,23 @@
     --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
 
+.settings-guide { padding-bottom: 4rem; }
+.settings-guide .settings-list { display: grid; gap: 1.5rem; }
+.settings-guide .preset-panel { margin-block: 1.5rem; }
+.settings-guide .form-field, .settings-guide select { min-width: 0; max-width: 100%; }
+.settings-guide li, .settings-guide p { line-height: 1.6; overflow-wrap: anywhere; }
+.settings-guide a.settings-source { text-decoration: underline; }
+.settings-guide :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+.settings-guide button:disabled { opacity: 0.65; cursor: not-allowed; }
+.settings-guide-header { flex-wrap: wrap; gap: 1rem; }
+.settings-guide .button, .settings-guide-link {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+    padding-block: 0.75rem;
+}
+
 * {
     box-sizing: border-box;
 }

@@ -73,7 +73,8 @@ def verify_http(base: str, package: Path, *, installed_importer: bool = True) ->
             return response.read(), response.headers
 
     assets = set()
-    for route in ("/", "/builder"):
+    profile_id = "baofeng-bf-f8hp-pro-v053-us"
+    for route in ("/", "/builder", "/radio-settings", f"/radio-settings?profile_id={profile_id}"):
         content, headers = request(route)
         assert headers.get_content_type() == "text/html"
         parser = AssetReferences()
@@ -97,7 +98,11 @@ def verify_http(base: str, package: Path, *, installed_importer: bool = True) ->
     limits, _ = request("/static/input-limits.json")
     assert limits == (package / "web/static/input-limits.json").read_bytes()
     assert json.loads(limits)["channels"] >= 100
-    print(f"PASS: homepage, builder, all {len(assets)} referenced local JS/CSS assets and input limits.")
+    settings, _ = request(f"/radio-profiles/{profile_id}/settings")
+    guide = json.loads(settings)
+    assert guide["delivery"] == "manual-guidance-only" and guide["hardware_verified"] is False
+    assert len(guide["settings"]) == 7 and all(s["manufacturer_default"] is None for s in guide["settings"])
+    print(f"PASS: homepage, builder, settings guide/catalog, all {len(assets)} local JS/CSS assets and input limits.")
 
     for path in ("/docs", "/redoc", "/docs/oauth2-redirect"):
         try:
