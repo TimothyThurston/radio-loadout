@@ -77,6 +77,7 @@ const cancelChirpImportButton = document.querySelector("#cancel-chirp-import");
 let pendingChirpImport = null;
 let chirpImportRequestId = 0;
 const reviewCompatibilityButton = document.querySelector("#review-compatibility");
+const radioProfileSelect = document.querySelector("#radio-profile");
 const compatibilityPanel = document.querySelector("#compatibility-results");
 const compatibilitySummary = document.querySelector("#compatibility-summary");
 const compatibilityIssues = document.querySelector("#compatibility-issues");
@@ -773,6 +774,7 @@ function clearDraft() {
     }
 
     channelList.replaceChildren();
+    resetRadioProfile();
     addChannel(false);
     showDraftStatus("Draft cleared.");
 }
@@ -972,6 +974,7 @@ function applyImportedChannels(channels) {
     try {
         replaceChannelCards(channels);
         saveDraft(true);
+        resetRadioProfile();
     } catch (error) {
         const currentCards = [...channelList.children];
         if (currentCards.length !== previousCards.length || currentCards.some((card, index) => card !== previousCards[index])) {
@@ -1171,6 +1174,15 @@ function cancelChirpImport() {
     showFormMessage("Import cancelled. Existing channels and saved draft are unchanged.", "success");
 }
 
+function selectedRadioProfileId() {
+    return radioProfileSelect?.value || "";
+}
+
+function resetRadioProfile() {
+    if (radioProfileSelect) radioProfileSelect.value = "";
+    invalidateCompatibilityReport();
+}
+
 function invalidateCompatibilityReport() {
     compatibilityRequestId += 1;
     compatibilityReport = null;
@@ -1199,7 +1211,11 @@ function renderCompatibilityReport(report) {
     compatibilityPanel.dataset.state = errors.length ? "error" : warnings.length ? "warning" : "compatible";
     compatibilitySummary.textContent = errors.length
         ? `Fix ${errors.length} compatibility error(s) before generating CHIRP CSV.`
-        : `All ${report.channel_count} channels are compatible with CHIRP Generic CSV.`
+        : report.radio_profile
+            ? `No documented-profile blocking errors for ${report.channel_count} channels: ${report.radio_profile.model}, `
+                + `${report.radio_profile.firmware_scope}. This pilot is not hardware verified.`
+                + (warnings.length ? ` Review ${warnings.length} warning(s); export is allowed.` : "")
+            : `All ${report.channel_count} channels are compatible with CHIRP Generic CSV.`
             + (warnings.length ? ` Review ${warnings.length} warning(s); export is allowed.` : "");
     compatibilityIssues.replaceChildren();
     report.issues.forEach((issue) => {
@@ -1213,11 +1229,13 @@ function renderCompatibilityReport(report) {
 }
 
 async function requestCompatibilityReport(channels) {
+    const profileId = selectedRadioProfileId();
     checkChannelCount(channels.length);
     const channelsJson = JSON.stringify(channels);
     checkFileBytes(new Blob([channelsJson]).size, getInputLimits().channels_json_bytes, "channels_json");
     const data = new FormData();
     data.append("channels_json", channelsJson);
+    if (profileId) data.append("radio_profile_id", profileId);
     const response = await window.fetch("/validation/chirp.csv", {
         method: "POST",
         body: data,
@@ -1230,11 +1248,21 @@ async function requestCompatibilityReport(channels) {
         typeof report?.compatible !== "boolean"
         || !Array.isArray(report.issues)
         || !Number.isInteger(report.channel_count)
+        || report.channel_count !== channels.length
         || report.issues.some((issue) => (
             !issue || !["info", "warning", "error"].includes(issue.severity)
             || typeof issue.message !== "string" || typeof issue.field !== "string"
         ))
         || report.compatible === report.issues.some((issue) => issue.severity === "error")
+        || (profileId
+            ? report.radio_profile?.profile_id !== profileId
+                || report.radio_profile.schema_version !== 1
+                || !Number.isInteger(report.radio_profile.revision)
+                || report.radio_profile.revision < 1
+                || typeof report.radio_profile.model !== "string"
+                || typeof report.radio_profile.firmware_scope !== "string"
+                || report.radio_profile.hardware_verified !== false
+            : report.radio_profile !== undefined)
     ) {
         throw new Error("The compatibility service returned an invalid report. Please try again.");
     }
@@ -1280,6 +1308,7 @@ async function submitChannelForm(event) {
     try {
         const report = await reviewCompatibility(channels);
         if (!report || !report.compatible) return;
+        const reviewedRequestId = compatibilityRequestId;
 
         const response = await window.fetch(
             form.action,
@@ -1297,6 +1326,9 @@ async function submitChannelForm(event) {
         }
 
         const csvBlob = await response.blob();
+        if (reviewedRequestId !== compatibilityRequestId) {
+            throw new Error("The channels or radio review target changed. Review again before downloading.");
+        }
 
         downloadBlob(
             csvBlob,
@@ -1331,6 +1363,7 @@ function bindBuilderEvent(element, eventName, handler) {
 }
 
 // Register export independently so a missing optional control cannot disable it.
+bindBuilderEvent(radioProfileSelect, "change", invalidateCompatibilityReport);
 bindBuilderEvent(exportBackupButton, "click", exportBackup);
 bindBuilderEvent(importBackupButton, "click", importBackup);
 bindBuilderEvent(importChirpCsvButton, "click", importChirpCsv);
@@ -1474,6 +1507,7 @@ bindBuilderEvent(
 );
 
 try {
+    resetRadioProfile();
     if (!channelList || !channelTemplate || !form) {
         throw new Error("Required builder elements are missing.");
     }

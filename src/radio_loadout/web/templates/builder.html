@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="/static/styles.css">
     <script id="input-limits" type="application/json">{{ input_limits | tojson }}</script>
     <script src="/static/backup-format.js?v=1" defer></script>
-    <script src="/static/builder.js?v=8" defer></script>
+    <script src="/static/builder.js?v=9" defer></script>
 </head>
 
 <body>
@@ -88,7 +88,7 @@
 
         <section class="preset-panel" aria-labelledby="backup-heading">
             <h2 id="backup-heading">Radio Loadout backups</h2>
-            <p>Save every builder setting to JSON. Importing a backup replaces the current channels.</p>
+            <p>Save channel settings to JSON. Importing a backup replaces the current channels. Radio review selection is not saved.</p>
             <div class="preset-actions">
                 <button id="export-backup" class="button button-secondary" type="button">
                     Export Backup
@@ -105,6 +105,22 @@
 
         <form id="channel-form" class="builder-form" action="/downloads/chirp.csv" method="post">
             <input id="channels-json" name="channels_json" type="hidden">
+
+            <section class="preset-panel" aria-labelledby="radio-profile-heading">
+                <h2 id="radio-profile-heading">Optional radio-specific review</h2>
+                <label class="form-field" for="radio-profile">
+                    <span>Review target</span>
+                    <select id="radio-profile" name="radio_profile_id" aria-describedby="radio-profile-note">
+                        <option value="">Generic CHIRP CSV — no radio selected</option>
+                        {% for profile in radio_profiles %}
+                        <option value="{{ profile.profile_id }}">{{ profile.model }} — {{ profile.firmware_scope.split(';')[0] }} documented pilot</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <p id="radio-profile-note">Document-based review only; your model, hardware and firmware are not detected or verified.
+                    No connection or radio writes. This selection is session-only and resets after reload, successful import or clearing the draft.
+                    Version-1 backups contain channels, not a device profile or radio image.</p>
+            </section>
 
             <div id="form-message" class="form-message" role="alert" aria-live="assertive" aria-atomic="true" hidden>
             </div>

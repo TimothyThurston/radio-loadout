@@ -128,8 +128,11 @@ def verify_http(base: str, package: Path, *, installed_importer: bool = True) ->
          "scan_behavior": "S", "comment": "Synthetic receive-only test"},
     ]
 
-    def post_channels(route, values):
-        content, headers = request(route, urlencode({"channels_json": json.dumps(values)}).encode("utf-8"),
+    def post_channels(route, values, profile_id=None):
+        data = {"channels_json": json.dumps(values)}
+        if profile_id is not None:
+            data["radio_profile_id"] = profile_id
+        content, headers = request(route, urlencode(data).encode("utf-8"),
                                    "application/x-www-form-urlencoded")
         return content, headers
 
@@ -148,6 +151,24 @@ def verify_http(base: str, package: Path, *, installed_importer: bool = True) ->
     assert [row["Frequency"] for row in rows] == ["146.940000", "121.500000"]
     assert rows[0]["RxDtcsCode"] == "777" and rows[0]["DtcsPolarity"] == "NR"
     assert rows[1]["Duplex"] == "off"
+    catalog, _ = request("/radio-profiles")
+    pilot = json.loads(catalog)["profiles"][0]
+    assert pilot["hardware_verified"] is False
+    assert pilot["support"]["programming"] == "unsupported"
+    selected_review, _ = post_channels("/validation/chirp.csv", channels, pilot["profile_id"])
+    selected = json.loads(selected_review)
+    assert selected["compatible"] and selected["radio_profile"]["profile_id"] == pilot["profile_id"]
+    assert any(issue["severity"] == "warning" for issue in selected["issues"])
+    selected_csv, _ = post_channels("/downloads/chirp.csv", channels, pilot["profile_id"])
+    assert selected_csv == exported
+    try:
+        post_channels("/downloads/chirp.csv", [{**channels[0], "power_watts": 25.0}], pilot["profile_id"])
+    except HTTPError as response:
+        assert response.code == 422
+        response.close()
+    else:
+        raise AssertionError("Installed profile-specific download guard was bypassed")
+    print("PASS: installed radio-profile catalog, documented review, CSV parity and server-side blocking.")
     boundary = "radio-loadout-synthetic-package-boundary"
     upload = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="synthetic.csv"\r\n'
               'Content-Type: text/csv\r\n\r\n').encode() + b"\xef\xbb\xbf" + exported + f"\r\n--{boundary}--\r\n".encode()

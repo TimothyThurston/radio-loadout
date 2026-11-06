@@ -31,7 +31,7 @@ function setup(responder) {
     const selectors = [
         "#channel-form", "#channel-list", "#review-compatibility", "#generate-csv",
         "#compatibility-results", "#compatibility-summary", "#compatibility-issues",
-        "#form-message", "#draft-status", "#channels-json",
+        "#form-message", "#draft-status", "#channels-json", "#radio-profile",
     ];
     const elements = Object.fromEntries(selectors.map((name) => [name, new Element()]));
     elements["#compatibility-results"].hidden = true;
@@ -47,7 +47,10 @@ function setup(responder) {
         FormData: class extends FormData {
             constructor(form) {
                 super();
-                if (form) this.append("channels_json", elements["#channels-json"].value);
+                if (form) {
+                    this.append("channels_json", elements["#channels-json"].value);
+                    this.append("radio_profile_id", elements["#radio-profile"].value || "");
+                }
             }
         },
         Blob, channels,
@@ -84,6 +87,10 @@ function setup(responder) {
         elements, requests, downloads, channels,
         review: () => runInContext("reviewCompatibility()", context),
         submit: () => runInContext("submitChannelForm({preventDefault() {}})", context),
+        selectProfile(value) {
+            elements["#radio-profile"].value = value;
+            elements["#radio-profile"].listeners.get("change")();
+        },
         edit() {
             channels[0].name = "EDITED";
             elements["#channel-list"].listeners.get("input")({ target: { closest: () => ({}) } });
@@ -176,4 +183,85 @@ test("an inconsistent report cannot authorize export", async () => {
     assert.match(state.elements["#form-message"].textContent, /invalid report/);
     assert.equal(state.requests.length, 1);
     assert.deepEqual(state.downloads, []);
+});
+
+const pilotId = "baofeng-bf-f8hp-pro-v053-us";
+const pilotReport = {
+    ...warningReport,
+    radio_profile: { schema_version: 1, revision: 1, profile_id: pilotId, model: "BF-F8HP PRO",
+        firmware_scope: "V0.53", hardware_verified: false },
+};
+const csvResponse = () => ({ ok: true, headers: { get: () => null }, blob: async () => new Blob(["csv"]) });
+
+test("selected pilot is bound to review and download without changing channel JSON", async () => {
+    const state = setup((url) => url === "/validation/chirp.csv" ? response(pilotReport) : csvResponse());
+    state.selectProfile(pilotId);
+    await state.submit();
+    assert.equal(state.requests.length, 2);
+    for (const request of state.requests) {
+        assert.equal(request.options.body.get("radio_profile_id"), pilotId);
+        assert.deepEqual(JSON.parse(request.options.body.get("channels_json")), state.channels);
+    }
+    assert.match(state.elements["#compatibility-summary"].textContent, /not hardware verified/);
+    assert.deepEqual(state.downloads, ["radio_loadout_custom.csv"]);
+});
+
+test("missing, wrong, or hardware-verified profile responses cannot authorize pilot export", async () => {
+    for (const report of [successReport,
+        { ...pilotReport, radio_profile: { ...pilotReport.radio_profile, profile_id: "other" } },
+        { ...pilotReport, radio_profile: { ...pilotReport.radio_profile, hardware_verified: true } },
+        { ...pilotReport, radio_profile: { ...pilotReport.radio_profile, schema_version: 2 } }]) {
+        const state = setup(() => response(report));
+        state.selectProfile(pilotId);
+        await state.submit();
+        assert.equal(state.requests.length, 1);
+        assert.deepEqual(state.downloads, []);
+        assert.match(state.elements["#form-message"].textContent, /invalid report/);
+    }
+});
+
+test("changing profile immediately invalidates an existing report", async () => {
+    const state = setup(() => response(pilotReport));
+    state.selectProfile(pilotId);
+    await state.review();
+    state.selectProfile("");
+    assert.equal(state.elements["#compatibility-results"].dataset.state, "outdated");
+    assert.equal(state.elements["#generate-csv"].disabled, false);
+});
+
+test("profile change during review discards the old target response", async () => {
+    let complete;
+    const state = setup(() => new Promise((resolve) => { complete = resolve; }));
+    state.selectProfile(pilotId);
+    const submission = state.submit();
+    state.selectProfile("");
+    complete(response(pilotReport));
+    await submission;
+    assert.equal(state.requests.length, 1);
+    assert.deepEqual(state.downloads, []);
+});
+
+test("profile change during CSV fetch suppresses the stale download", async () => {
+    let complete;
+    const state = setup((url) => url === "/validation/chirp.csv"
+        ? response(pilotReport) : new Promise((resolve) => { complete = resolve; }));
+    state.selectProfile(pilotId);
+    const submission = state.submit();
+    await new Promise(setImmediate);
+    assert.equal(state.requests.length, 2);
+    state.selectProfile("");
+    complete(csvResponse());
+    await submission;
+    assert.deepEqual(state.downloads, []);
+    assert.match(state.elements["#form-message"].textContent, /changed/);
+});
+
+test("untrusted profile labels remain literal text and a generic request rejects a pilot response", async () => {
+    const state = setup(() => response({ ...pilotReport, radio_profile: {
+        ...pilotReport.radio_profile, model: "<script>unsafe</script>" } }));
+    state.selectProfile(pilotId);
+    await state.review();
+    assert.match(state.elements["#compatibility-summary"].textContent, /<script>unsafe<\/script>/);
+    state.selectProfile("");
+    assert.equal(await state.review(), null);
 });

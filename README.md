@@ -500,6 +500,7 @@ Completed or substantially implemented:
 - CHIRP CSV import
 - Portable JSON backup and restore
 - CHIRP compatibility report with channel-level warnings and errors
+- Optional [manufacturer-documented BF-F8HP PRO V0.53 pilot review](docs/radio-profiles.md), with versioned capability metadata and explicit unknowns; not hardware/programming verification
 - NOAA Weather preset
 - Amateur Calling preset
 - Automated tests
@@ -509,7 +510,7 @@ Remaining Version 1 work:
 - Verify CHIRP CSV import/export in the real CHIRP application, including regression fixtures and radio-specific limitations
 - Implement ZIP-code/location repeater lookup with radius, band filters, selection into loadouts, and approved data-source access
 - Implement verified satellite frequency presets, including source attribution and last-checked information; add channel sets for Doppler where practical
-- Implement initial radio-specific compatibility profiles (exact model/firmware, supported modes, memory/name limits, and device settings)
+- Expand the documented pilot into hardware-verified model/firmware profiles; resolve unknown name/tone/power mappings and add applicable device settings without claiming untested support
 - Add a **Radio Settings** tab for selected models: squelch, backlight and display options, battery saver, VOX, dual watch, scan behavior, timeout, beeps, and other settings only where supported by each radio
 - Add a **Recommended Settings** beginner-friendly preset for each verified radio model/firmware profile: populate a conservative, documented everyday-use baseline without changing channel memories or transmitting frequencies
 - Show a clear preview/diff before applying a recommended preset; explain every proposed setting in plain language, highlight trade-offs and any unsupported fields, and allow individual changes to be deselected or adjusted

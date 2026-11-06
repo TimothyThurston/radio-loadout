@@ -477,7 +477,7 @@ def test_builder_backup_controls() -> None:
     assert response.status_code == 200
     assert 'id="export-backup" class="button button-secondary" type="button"' in response.text
     assert '<script src="/static/backup-format.js?v=1" defer></script>' in response.text
-    assert '<script src="/static/builder.js?v=8" defer></script>' in response.text
+    assert '<script src="/static/builder.js?v=9" defer></script>' in response.text
     assert response.text.index("/static/backup-format.js") < response.text.index("/static/builder.js")
     assert 'id="import-backup"' in response.text
     assert 'id="backup-file" type="file" accept=".json"' in response.text

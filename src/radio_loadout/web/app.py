@@ -23,7 +23,6 @@ from radio_loadout import input_limits
 from radio_loadout.compatibility import (
     CompatibilityIssue,
     CompatibilityReport,
-    check_chirp_compatibility,
     validation_report,
 )
 from radio_loadout.dcs import parse_dcs_code
@@ -39,6 +38,8 @@ from radio_loadout.models import (
     ToneMode,
     TonePolarity,
 )
+from radio_loadout.profile_compatibility import check_channel_compatibility, profile_context
+from radio_loadout.radio_profiles import RADIO_PROFILES, get_radio_profile
 
 WEB_DIRECTORY = Path(__file__).resolve().parent
 
@@ -47,7 +48,9 @@ DcsPolarity = Literal["N", "R"]
 CHANNELS_JSON_OPENAPI = {
     "requestBody": {"required": True, "content": {
         content_type: {"schema": {"type": "object", "required": ["channels_json"],
-                                 "properties": {"channels_json": {"type": "string"}}}}
+                                 "properties": {"channels_json": {"type": "string"},
+                                                "radio_profile_id": {"type": "string", "maxLength": 80}},
+                                 "additionalProperties": False}}
         for content_type in ("application/x-www-form-urlencoded", "multipart/form-data")
     }},
 }
@@ -380,8 +383,18 @@ async def _submitted_channels_form(request: Request) -> str:
         # Percent encoding can occupy three bytes per decoded UTF-8 byte.
         part_limit = input_limits.LIMITS.channels_json_bytes * (3 if urlencoded else 1)
         async with request.form(
-            max_files=0, max_fields=1, max_part_size=part_limit,
+            max_files=0, max_fields=2, max_part_size=part_limit,
         ) as form:
+            if set(form.keys()) - {"channels_json", "radio_profile_id"} or len(form.getlist("channels_json")) != 1:
+                raise HTTPException(status_code=422, detail="Submit one channels_json field and at most one radio_profile_id.")
+            profiles = form.getlist("radio_profile_id")
+            profile_id = profiles[0] if profiles else ""
+            if len(profiles) > 1 or not isinstance(profile_id, str) or len(profile_id) > 80:
+                raise HTTPException(status_code=422, detail="radio_profile_id must be one string of at most 80 characters.")
+            try:
+                request.state.radio_profile = get_radio_profile(profile_id)
+            except ValueError as error:
+                raise HTTPException(status_code=422, detail=str(error)) from error
             value = form.get("channels_json")
             if not isinstance(value, str):
                 raise HTTPException(status_code=422, detail="channels_json must be a string form field.")
@@ -394,7 +407,8 @@ async def _submitted_channels_form(request: Request) -> str:
 
 
 @router.post("/validation/chirp.csv", openapi_extra=CHANNELS_JSON_OPENAPI)
-def review_chirp_compatibility(channels_json: Annotated[str, Depends(_submitted_channels_form)]) -> dict:
+def review_chirp_compatibility(request: Request, channels_json: Annotated[str, Depends(_submitted_channels_form)]) -> dict:
+    profile = request.state.radio_profile
     try:
         form_channels = CHANNEL_FORM_LIST.validate_json(channels_json)
     except ValidationError as error:
@@ -402,11 +416,16 @@ def review_chirp_compatibility(channels_json: Annotated[str, Depends(_submitted_
             submitted = json.loads(channels_json)
         except (ValueError, TypeError):
             submitted = None
-        return validation_report(error.errors(include_url=False), submitted).to_dict()
+        return profile_context(validation_report(error.errors(include_url=False), submitted), profile).to_dict()
     channels, issues = _construct_channels(form_channels)
     if issues:
-        return CompatibilityReport(len(form_channels), tuple(issues)).to_dict()
-    return check_chirp_compatibility(channels).to_dict()
+        return profile_context(CompatibilityReport(len(form_channels), tuple(issues)), profile).to_dict()
+    return check_channel_compatibility(channels, profile).to_dict()
+
+
+@router.get("/radio-profiles")
+def radio_profiles() -> dict:
+    return {"schema_version": 1, "profiles": [profile.to_dict() for profile in RADIO_PROFILES]}
 
 
 def _channel_to_form_data(channel: Channel) -> ChannelFormData:
@@ -563,12 +582,13 @@ def builder(request: Request) -> Response:
     return templates.TemplateResponse(
         request=request,
         name="builder.html",
-        context={"input_limits": input_limits.public_limits()},
+        context={"input_limits": input_limits.public_limits(), "radio_profiles": RADIO_PROFILES},
     )
 
 
 @router.post("/downloads/chirp.csv", openapi_extra=CHANNELS_JSON_OPENAPI)
 def download_custom_chirp(
+    request: Request,
     channels_json: Annotated[str, Depends(_submitted_channels_form)],
 ) -> Response:
     try:
@@ -589,7 +609,7 @@ def download_custom_chirp(
 
     channels, issues = _construct_channels(form_channels)
     report = CompatibilityReport(len(form_channels), tuple(issues)) if issues else (
-        check_chirp_compatibility(channels)
+        check_channel_compatibility(channels, request.state.radio_profile)
     )
     if not report.compatible:
         detail = " ".join(

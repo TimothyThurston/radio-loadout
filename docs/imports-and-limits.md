@@ -117,7 +117,13 @@ malformed multipart forms may be rejected by the framework with 400. Review
 still returns a structured compatibility report for ordinary invalid channel data.
 
 Review and export accept the same `channels_json` form field in either multipart
-or URL-encoded requests. Their per-request field parser is configured to the
+or URL-encoded requests. They also accept an optional `radio_profile_id` string
+(80 characters maximum) for [documented radio review](radio-profiles.md). Only
+those two singular fields are allowed; multipart parsing permits at most two
+fields and zero files, with duplicate/unexpected fields rejected. The profile
+ID has no place in version-1 channel backups and unknown IDs never fall back
+silently. Successful imports reset the session-only selector to Generic.
+Their per-request field parser is configured to the
 application limit, allowing up to three encoded bytes per decoded UTF-8 byte for
 URL encoding. The decoded UTF-8 byte limit is checked afterward. OpenAPI retains
 the form-field request schema. No process-global CSV settings are changed.

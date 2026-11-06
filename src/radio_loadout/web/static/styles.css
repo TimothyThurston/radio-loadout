@@ -721,6 +721,13 @@ textarea:focus {
     font-weight: 600;
 }
 
+.builder-form > .preset-panel,
+.builder-form > .preset-panel .form-field,
+#radio-profile {
+    min-width: 0;
+    max-width: 100%;
+}
+
 .form-field input,
 .form-field select {
     width: 100%;

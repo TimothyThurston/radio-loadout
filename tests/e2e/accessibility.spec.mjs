@@ -93,6 +93,8 @@ test("keyboard tab order, visible focus, named controls and live feedback work",
     await expect(feedback).toHaveAttribute("aria-live", "assertive");
     await expect(importBackup).toBeFocused();
     await page.keyboard.press("Tab");
+    await expectKeyboardFocus(page.getByRole("combobox", { name: "Review target", exact: true }));
+    await page.keyboard.press("Tab");
     await expectKeyboardFocus(page.getByRole("button", { name: "Duplicate channel", exact: true }));
     await page.keyboard.press("Tab");
     const name = page.getByRole("textbox", { name: "Channel name", exact: true });
