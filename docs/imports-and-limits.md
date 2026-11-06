@@ -122,7 +122,10 @@ or URL-encoded requests. They also accept an optional `radio_profile_id` string
 those two singular fields are allowed; multipart parsing permits at most two
 fields and zero files, with duplicate/unexpected fields rejected. The profile
 ID has no place in version-1 channel backups and unknown IDs never fall back
-silently. Successful imports reset the session-only selector to Generic.
+silently. Successful CSV/v1 imports reset the session-only selector to Generic;
+opt-in [v2 full-loadout restore](loadout-format-v2.md) restores its exact known
+profile/settings after full validation and confirmation. V1 and v2 retain the
+same backup-byte and channel limits; neither creates a device programming payload.
 Their per-request field parser is configured to the
 application limit, allowing up to three encoded bytes per decoded UTF-8 byte for
 URL encoding. The decoded UTF-8 byte limit is checked afterward. OpenAPI retains

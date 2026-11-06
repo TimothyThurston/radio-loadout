@@ -20,10 +20,15 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_ASSETS = {
     "radio_loadout/web/static/backup-format.js",
     "radio_loadout/web/static/builder.js",
+    "radio_loadout/web/static/loadout-format.js",
+    "radio_loadout/web/static/settings-plan.js",
+    "radio_loadout/web/static/radio-settings.js",
     "radio_loadout/web/static/styles.css",
     "radio_loadout/web/static/input-limits.json",
     "radio_loadout/web/templates/index.html",
     "radio_loadout/web/templates/builder.html",
+    "radio_loadout/web/templates/radio-settings.html",
+    "radio_loadout/web/templates/settings-editor.html",
 }
 FORBIDDEN_PARTS = {".git", ".venv", "node_modules", "__pycache__", ".pytest_cache",
                    ".ruff_cache", "test-results", "playwright-report", "build", "dist"}

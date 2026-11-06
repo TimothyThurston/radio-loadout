@@ -602,7 +602,8 @@ def builder(request: Request) -> Response:
     return templates.TemplateResponse(
         request=request,
         name="builder.html",
-        context={"input_limits": input_limits.public_limits(), "radio_profiles": RADIO_PROFILES},
+        context={"input_limits": input_limits.public_limits(), "radio_profiles": RADIO_PROFILES,
+                 "catalog": settings_catalog(RADIO_PROFILES[0].profile_id)},
     )
 
 

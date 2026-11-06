@@ -157,7 +157,7 @@ function setupUI(catalog = fixture()) {
     } };
     runInNewContext(source, context);
     runInNewContext(readFileSync(new URL("../../src/radio_loadout/web/static/radio-settings.js", import.meta.url), "utf8"), context);
-    return { elements, cards, click: (id) => elements[`#${id}`].fire("click"),
+    return { elements, cards, editor: context.RadioSettingsEditor, click: (id) => elements[`#${id}`].fire("click"),
         field: (id, name) => cards.find((card) => card.dataset.setting === id).fields[`[data-${name}]`],
     };
 }
@@ -223,4 +223,22 @@ test("controller renders malicious source labels literally and fails closed on b
     assert.equal(bad.field("squelch", "current").disabled, true);
     assert.equal(bad.elements["#settings-error"].hidden, false);
     assert.equal(bad.elements["#settings-js-required"].hidden, false);
+});
+
+test("editor snapshot/restore preserves typed entries and refuses a partly invalid replacement", () => {
+    const ui = setupUI();
+    ui.editor.restore({ squelch: { value: 0, origin: "user-customized" },
+        vox: { value: false, origin: "radio-loadout-recommendation", recommendation_revision: 1 } });
+    assert.equal(ui.field("squelch", "current").value, "0");
+    assert.equal(ui.field("vox", "current").value, "false");
+    assert.match(ui.field("vox", "origin").textContent, /radio-loadout-recommendation/);
+    const before = JSON.stringify(ui.editor.snapshot());
+    const copy = ui.editor.snapshot(); copy.squelch.value = 3;
+    assert.equal(JSON.stringify(ui.editor.snapshot()), before);
+    ui.click("preview-settings");
+    assert.equal(ui.elements["#settings-preview"].hidden, false);
+    assert.throws(() => ui.editor.restore({ squelch: { value: 3, origin: "user-customized" },
+        vox: { value: "false", origin: "user-customized" } }));
+    assert.equal(JSON.stringify(ui.editor.snapshot()), before);
+    assert.equal(ui.elements["#settings-preview"].hidden, false);
 });

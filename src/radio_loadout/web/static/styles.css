@@ -22,6 +22,9 @@
 .settings-guide :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
 .settings-guide button:disabled { opacity: 0.65; cursor: not-allowed; }
 .settings-guide-header { flex-wrap: wrap; gap: 1rem; }
+.settings-guide[hidden] { display: none; }
+#builder-settings { min-width: 0; margin: 1.5rem 0; border: 1px solid var(--panel-border); border-radius: 1rem; padding: 1rem; }
+#builder-settings summary { cursor: pointer; padding-block: 1rem; }
 .settings-guide .button, .settings-guide-link {
     max-width: 100%;
     white-space: normal;

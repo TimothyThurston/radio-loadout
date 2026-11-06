@@ -1,0 +1,5 @@
+{
+  "format": "radio-loadout", "version": 2,
+  "channels": [{"name": "TEST", "receive_frequency_mhz": "146.52"}],
+  "radio_profile": {"profile_id": "unknown-radio", "revision": 1}, "settings_plan": null
+}

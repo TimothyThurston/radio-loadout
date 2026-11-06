@@ -80,6 +80,10 @@ def verify_http(base: str, package: Path, *, installed_importer: bool = True) ->
         parser = AssetReferences()
         parser.feed(content.decode("utf-8"))
         assert "Radio Loadout" in content.decode("utf-8")
+        if route == "/builder":
+            assert 'id="export-loadout"' in content.decode("utf-8")
+            assert 'id="builder-settings"' in content.decode("utf-8")
+            assert 'id="current-squelch"' in content.decode("utf-8")
         assert "View API" not in content.decode("utf-8")
         assert not any(reference in content.decode("utf-8") for reference in (
             "/docs", "/redoc", "cdn.jsdelivr.net", "fonts.googleapis.com",

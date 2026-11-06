@@ -1,0 +1,21 @@
+{
+  "format": "radio-loadout",
+  "version": 2,
+  "channels": [
+    {"name": "", "receive_frequency_mhz": "", "transmit_frequency_mhz": "145.500000", "receive_only": true,
+     "tone_mode": "cross", "transmit_tone_mode": "dcs", "transmit_dcs_code": "777", "transmit_dcs_polarity": "R",
+     "receive_tone_mode": "dcs", "receive_dcs_code": "000", "receive_dcs_polarity": "N", "comment": "Unfinished draft; not export-ready"},
+    {"name": "SECOND", "receive_frequency_mhz": "146.520000", "tone_frequency_hz": "50.04", "dcs_code": "001"}
+  ],
+  "radio_profile": {"profile_id": "baofeng-bf-f8hp-pro-v053-us", "revision": 1},
+  "settings_plan": {
+    "catalog_revision": 1,
+    "recommendation_id": "listening-first-handheld-v1",
+    "entries": {
+      "squelch": {"value": 3, "origin": "user-customized"},
+      "vox": {"value": false, "origin": "radio-loadout-recommendation", "recommendation_revision": 1},
+      "backlight_seconds": {"value": "always_on", "origin": "user-customized"},
+      "timeout_seconds": {"value": 0, "origin": "user-customized"}
+    }
+  }
+}

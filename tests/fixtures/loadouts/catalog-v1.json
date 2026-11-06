@@ -1,0 +1,443 @@
+{
+  "schema_version": 1,
+  "catalog_revision": 1,
+  "radio_profile": {
+    "profile_id": "baofeng-bf-f8hp-pro-v053-us",
+    "revision": 1,
+    "manufacturer": "BaoFeng / BTECH",
+    "model": "BF-F8HP PRO",
+    "firmware_scope": "V0.53; manual print version V3.1 (V53 Firmware)",
+    "region_scope": "US manufacturer documentation; not a transmit-authorization check",
+    "memory_capacity": 1000,
+    "receive_bands": [
+      {
+        "lower_hz": 108000000,
+        "upper_hz": 137000000,
+        "modes": [
+          "AM"
+        ],
+        "max_power_watts": null
+      },
+      {
+        "lower_hz": 137000000,
+        "upper_hz": 174000000,
+        "modes": [
+          "FM",
+          "NFM"
+        ],
+        "max_power_watts": null
+      },
+      {
+        "lower_hz": 219000000,
+        "upper_hz": 260000000,
+        "modes": [
+          "FM",
+          "NFM"
+        ],
+        "max_power_watts": null
+      },
+      {
+        "lower_hz": 350000000,
+        "upper_hz": 390000000,
+        "modes": [
+          "FM",
+          "NFM"
+        ],
+        "max_power_watts": null
+      },
+      {
+        "lower_hz": 400000000,
+        "upper_hz": 520000000,
+        "modes": [
+          "FM",
+          "NFM"
+        ],
+        "max_power_watts": null
+      }
+    ],
+    "transmit_bands": [
+      {
+        "lower_hz": 144000000,
+        "upper_hz": 148000000,
+        "modes": [
+          "FM",
+          "NFM"
+        ],
+        "max_power_watts": 10
+      },
+      {
+        "lower_hz": 219000000,
+        "upper_hz": 225000000,
+        "modes": [
+          "FM",
+          "NFM"
+        ],
+        "max_power_watts": 5
+      },
+      {
+        "lower_hz": 420000000,
+        "upper_hz": 450000000,
+        "modes": [
+          "FM",
+          "NFM"
+        ],
+        "max_power_watts": 10
+      }
+    ],
+    "sources": [
+      {
+        "url": "https://baofengtech.com/wp-content/uploads/2026/01/BTECHmanual_BF-F8HPPRO_2026.pdf",
+        "title": "BF-F8HP PRO instruction manual, print V3.1 (V53 Firmware)",
+        "locator": "pp. 9, 45-46, 49, 64-66, 78; band endpoints and programming behavior remain qualified",
+        "reviewed_on": "2026-11-06",
+        "sha256": "1114e1e55c6e6bc71dddcac1421333d199660377115ca2cc5ffb96e75d100b47"
+      },
+      {
+        "url": "https://baofengtech.com/product/bf-f8hp-pro/",
+        "title": "BTECH product specifications",
+        "locator": "Technical specifications: power ceilings only, not exact selectable watt mappings",
+        "reviewed_on": "2026-11-06",
+        "sha256": null
+      }
+    ],
+    "zone_count": 10,
+    "channels_per_zone": 100,
+    "name_max_length": null,
+    "name_characters": null,
+    "power_options_watts": null,
+    "documented_tuning_steps_khz": [
+      2.5,
+      5,
+      6.25,
+      10,
+      12.5,
+      20,
+      25,
+      50
+    ],
+    "tuning_steps_exhaustive": false,
+    "uncertain_receive_boundaries_hz": [
+      137000000
+    ],
+    "conditional_transmit_ranges_hz": [
+      [
+        219000000,
+        221999999
+      ]
+    ],
+    "airband_step_unverified": true,
+    "tone_modes": [
+      "None",
+      "CTCSS",
+      "DCS"
+    ],
+    "ctcss_values_hz": null,
+    "dcs_codes": null,
+    "schema_version": 1,
+    "evidence_status": "manufacturer-documented-pilot",
+    "hardware_verified": false,
+    "firmware_detected": false,
+    "support": {
+      "configuration": "documented-review-only",
+      "programming": "unsupported",
+      "live_control": "unsupported"
+    },
+    "unknowns": [
+      "hardware revision and installed firmware",
+      "complete memory-programming behavior",
+      "frequency raster",
+      "tone/cross-mode acceptance",
+      "priority scan mapping",
+      "zone/free-slot mapping",
+      "radio-wide settings"
+    ]
+  },
+  "recommendation_id": "listening-first-handheld-v1",
+  "recommendation_label": "Listening-first handheld starting plan",
+  "recommendation_author": "Radio Loadout",
+  "hardware_verified": false,
+  "delivery": "manual-guidance-only",
+  "settings": [
+    {
+      "setting_id": "squelch",
+      "label": "Squelch",
+      "explanation": "Sets how readily the receiver opens for a signal.",
+      "menu_locator": "Radio Setting > Squelch (2)",
+      "source_locator": "printed p. 50",
+      "options": [
+        {
+          "value": 0,
+          "label": "Off / open"
+        },
+        {
+          "value": 1,
+          "label": "Level 1"
+        },
+        {
+          "value": 2,
+          "label": "Level 2"
+        },
+        {
+          "value": 3,
+          "label": "Level 3"
+        },
+        {
+          "value": 4,
+          "label": "Level 4"
+        },
+        {
+          "value": 5,
+          "label": "Level 5"
+        },
+        {
+          "value": 6,
+          "label": "Level 6"
+        },
+        {
+          "value": 7,
+          "label": "Level 7"
+        },
+        {
+          "value": 8,
+          "label": "Level 8"
+        }
+      ],
+      "recommendation": {
+        "value": 2,
+        "rationale": "Start low and raise only enough to quiet local noise.",
+        "scenarios": "Initial local voice listening; adjust at your location.",
+        "tradeoffs": "Too high can hide weak signals; too low can produce noise.",
+        "revision": 1
+      },
+      "options_exhaustive": true,
+      "manufacturer_default": null,
+      "default_evidence": "Not established from the reviewed manual; not read from your radio."
+    },
+    {
+      "setting_id": "power_save",
+      "label": "Power save",
+      "explanation": "Cycles receiver activity to reduce battery use.",
+      "menu_locator": "Radio Setting > Power Save (3)",
+      "source_locator": "printed p. 50",
+      "options": [
+        {
+          "value": false,
+          "label": "Off"
+        },
+        {
+          "value": true,
+          "label": "On"
+        }
+      ],
+      "recommendation": {
+        "value": false,
+        "rationale": "Favor hearing the beginning of incoming calls.",
+        "scenarios": "Listening-first setup with adequate battery power.",
+        "tradeoffs": "Shorter battery runtime; enable when endurance matters more.",
+        "revision": 1
+      },
+      "options_exhaustive": true,
+      "manufacturer_default": null,
+      "default_evidence": "Not established from the reviewed manual; not read from your radio."
+    },
+    {
+      "setting_id": "vox",
+      "label": "VOX",
+      "explanation": "Allows sound to trigger transmission without pressing PTT.",
+      "menu_locator": "Radio Setting > VOX Switch (4)",
+      "source_locator": "printed pp. 50-51",
+      "options": [
+        {
+          "value": false,
+          "label": "Off"
+        },
+        {
+          "value": true,
+          "label": "On"
+        }
+      ],
+      "recommendation": {
+        "value": false,
+        "rationale": "Keep transmit activation deliberate while learning.",
+        "scenarios": "Handheld push-to-talk operation.",
+        "tradeoffs": "Hands-free VOX users need separate sensitivity/accessory testing; off is not a transmit lock.",
+        "revision": 1
+      },
+      "options_exhaustive": true,
+      "manufacturer_default": null,
+      "default_evidence": "Not established from the reviewed manual; not read from your radio."
+    },
+    {
+      "setting_id": "timeout_seconds",
+      "label": "Transmit time-out timer",
+      "explanation": "Limits a continuous PTT transmission.",
+      "menu_locator": "Radio Setting > TOT (7)",
+      "source_locator": "printed p. 51",
+      "options": [
+        {
+          "value": 0,
+          "label": "Off"
+        },
+        {
+          "value": 15,
+          "label": "15 seconds"
+        },
+        {
+          "value": 30,
+          "label": "30 seconds"
+        },
+        {
+          "value": 45,
+          "label": "45 seconds"
+        },
+        {
+          "value": 60,
+          "label": "60 seconds"
+        },
+        {
+          "value": 75,
+          "label": "75 seconds"
+        },
+        {
+          "value": 90,
+          "label": "90 seconds"
+        },
+        {
+          "value": 105,
+          "label": "105 seconds"
+        },
+        {
+          "value": 120,
+          "label": "120 seconds"
+        },
+        {
+          "value": 135,
+          "label": "135 seconds"
+        },
+        {
+          "value": 150,
+          "label": "150 seconds"
+        },
+        {
+          "value": 165,
+          "label": "165 seconds"
+        },
+        {
+          "value": 180,
+          "label": "180 seconds"
+        }
+      ],
+      "recommendation": {
+        "value": 60,
+        "rationale": "Use a finite starting limit rather than unlimited PTT time.",
+        "scenarios": "Short conversational transmissions and initial practice.",
+        "tradeoffs": "Can cut off a long transmission; coordinate with net/repeater procedures. Not a substitute for safe operation.",
+        "revision": 1
+      },
+      "options_exhaustive": true,
+      "manufacturer_default": null,
+      "default_evidence": "Not established from the reviewed manual; not read from your radio."
+    },
+    {
+      "setting_id": "roger_tone",
+      "label": "Roger tone",
+      "explanation": "Adds an over-the-air indication when a transmission ends.",
+      "menu_locator": "Radio Setting > Roger Tone (10)",
+      "source_locator": "printed p. 52",
+      "options": [
+        {
+          "value": false,
+          "label": "Off"
+        },
+        {
+          "value": true,
+          "label": "On"
+        }
+      ],
+      "recommendation": {
+        "value": false,
+        "rationale": "Avoid adding an unnecessary transmitted tone.",
+        "scenarios": "Ordinary amateur voice conversations.",
+        "tradeoffs": "No end-of-transmission tone; follow local operating preferences.",
+        "revision": 1
+      },
+      "options_exhaustive": true,
+      "manufacturer_default": null,
+      "default_evidence": "Not established from the reviewed manual; not read from your radio."
+    },
+    {
+      "setting_id": "key_beep",
+      "label": "Key beep",
+      "explanation": "Provides audible feedback when using the keys.",
+      "menu_locator": "Radio Setting > Key Beep (11)",
+      "source_locator": "printed p. 53",
+      "options": [
+        {
+          "value": false,
+          "label": "Off"
+        },
+        {
+          "value": true,
+          "label": "On"
+        }
+      ],
+      "recommendation": {
+        "value": true,
+        "rationale": "Provide confirmation while becoming familiar with the controls.",
+        "scenarios": "Guided setup; operators who benefit from audible feedback.",
+        "tradeoffs": "Can disturb quiet environments; turn off if unwanted. Not a full accessibility solution.",
+        "revision": 1
+      },
+      "options_exhaustive": true,
+      "manufacturer_default": null,
+      "default_evidence": "Not established from the reviewed manual; not read from your radio."
+    },
+    {
+      "setting_id": "backlight_seconds",
+      "label": "Backlight timeout",
+      "explanation": "Controls how long the display stays lit after use.",
+      "menu_locator": "Radio Setting > Backlight (12)",
+      "source_locator": "printed p. 53",
+      "options": [
+        {
+          "value": "always_on",
+          "label": "Always on"
+        },
+        {
+          "value": 5,
+          "label": "5 seconds"
+        },
+        {
+          "value": 20,
+          "label": "20 seconds"
+        },
+        {
+          "value": 30,
+          "label": "30 seconds"
+        },
+        {
+          "value": 60,
+          "label": "60 seconds"
+        }
+      ],
+      "recommendation": {
+        "value": 20,
+        "rationale": "Allow time to read the display without leaving it permanently lit.",
+        "scenarios": "Everyday handheld setup with occasional screen checks.",
+        "tradeoffs": "Longer lighting uses more battery. Choose longer for readability if needed.",
+        "revision": 1
+      },
+      "options_exhaustive": false,
+      "manufacturer_default": null,
+      "default_evidence": "Not established from the reviewed manual; not read from your radio."
+    }
+  ],
+  "limitations": [
+    "Confirm the exact model and firmware manually; this page cannot detect either.",
+    "Values describe a plan, not current radio state, factory defaults or successful programming.",
+    "No device connection, radio writes, CPS format or radio-wide CHIRP CSV export is implemented.",
+    "Session-only: leaving or reloading discards this plan. Channel drafts and backup v1 exclude it.",
+    "Backlight options are a reviewed subset, not an exhaustive hardware claim.",
+    "Scan, dual watch, VOX gain/delay, global power and other dependent settings are not modeled here."
+  ]
+}

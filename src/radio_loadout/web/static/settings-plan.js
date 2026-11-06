@@ -47,6 +47,28 @@
         };
         return Object.freeze({
             empty: () => freeze(0, {}),
+            restore(entries) {
+                if (!entries || typeof entries !== "object" || Array.isArray(entries)) throw new Error("Settings entries must be an object.");
+                const restored = {};
+                for (const [id, entry] of Object.entries(entries)) {
+                    const setting = definition(id);
+                    if (!entry || typeof entry !== "object" || Array.isArray(entry)
+                        || !Object.hasOwn(entry, "value") || !Object.hasOwn(entry, "origin")) {
+                        throw new Error("Settings entries require a value and origin.");
+                    }
+                    checkedValue(id, entry.value);
+                    const recommended = entry.origin === "radio-loadout-recommendation";
+                    if ((!recommended && entry.origin !== "user-customized")
+                        || Object.keys(entry).some((key) => !["value", "origin", ...(recommended ? ["recommendation_revision"] : [])].includes(key))
+                        || (recommended && (entry.recommendation_revision !== setting.recommendation.revision
+                            || entry.value !== setting.recommendation.value))) {
+                        throw new Error("Unsupported settings origin or recommendation revision/value. Nothing was restored.");
+                    }
+                    restored[id] = Object.freeze({ value: entry.value, origin: entry.origin,
+                        ...(recommended ? { recommendation_revision: entry.recommendation_revision } : {}) });
+                }
+                return freeze(0, restored);
+            },
             label(id, value) {
                 if (value === undefined) return "Unset (radio state unknown)";
                 checkedValue(id, value);

@@ -67,6 +67,9 @@ const generateCsvButton = document.querySelector("#generate-csv");
 const chirpCsvFileInput = document.querySelector("#chirp-csv-file");
 const importChirpCsvButton = document.querySelector("#import-chirp-csv");
 const exportBackupButton = document.querySelector("#export-backup");
+const exportLoadoutButton = document.querySelector("#export-loadout");
+const builderSettings = document.querySelector("#builder-settings");
+let activeRadioProfileId = "";
 const importBackupButton = document.querySelector("#import-backup");
 const backupFileInput = document.querySelector("#backup-file");
 const chirpImportPanel = document.querySelector("#chirp-import-review");
@@ -754,7 +757,7 @@ function addAmateurCallingPreset() {
 
 function clearDraft() {
     const shouldClear = window.confirm(
-        "Clear every channel in the current draft?"
+        "Clear every channel, the selected profile and the settings plan in this draft?"
     );
 
     if (!shouldClear) {
@@ -968,24 +971,64 @@ function checkFileBytes(size, maximum, label) {
     if (size > maximum) throw new Error(`${label} exceeds the ${maximum}-byte limit.`);
 }
 
-function applyImportedChannels(channels) {
+function applyImportedChannels(channels, profileId = "", entries = {}) {
     const previousCards = [...channelList.children];
     const previousSaved = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+    const previousProfile = selectedRadioProfileId();
+    const previousSettings = globalThis.RadioSettingsEditor?.snapshot() || {};
     try {
         replaceChannelCards(channels);
+        if (radioProfileSelect) {
+            radioProfileSelect.value = profileId;
+            if (selectedRadioProfileId() !== profileId) throw new Error("Profile is unavailable in this builder. Nothing was restored.");
+        } else if (profileId) throw new Error("Radio profile controls are unavailable.");
+        if (globalThis.RadioSettingsEditor) globalThis.RadioSettingsEditor.restore(entries);
+        else if (Object.keys(entries).length || profileId) throw new Error("Settings editor is unavailable. Nothing was restored.");
+        activeRadioProfileId = profileId;
+        syncSettingsVisibility();
         saveDraft(true);
-        resetRadioProfile();
     } catch (error) {
         const currentCards = [...channelList.children];
         if (currentCards.length !== previousCards.length || currentCards.some((card, index) => card !== previousCards[index])) {
             channelList.replaceChildren(...previousCards);
             updateChannelNumbers();
         }
+        if (radioProfileSelect) radioProfileSelect.value = previousProfile;
+        activeRadioProfileId = previousProfile;
+        globalThis.RadioSettingsEditor?.restore(previousSettings);
+        syncSettingsVisibility();
         if (window.localStorage.getItem(DRAFT_STORAGE_KEY) !== previousSaved) {
             if (previousSaved === null) window.localStorage.removeItem(DRAFT_STORAGE_KEY);
             else window.localStorage.setItem(DRAFT_STORAGE_KEY, previousSaved);
         }
         throw error;
+    }
+}
+
+function loadoutValidator() {
+    const catalog = JSON.parse(document.querySelector("#settings-catalog").textContent);
+    return RadioLoadoutDocument.createValidator([catalog], getInputLimits());
+}
+
+function exportFullLoadout() {
+    try {
+        clearFormMessage();
+        if (!globalThis.RadioSettingsEditor) throw new Error("Settings editor is unavailable; full-loadout export is disabled.");
+        const catalog = JSON.parse(document.querySelector("#settings-catalog").textContent);
+        const id = selectedRadioProfileId();
+        const entries = globalThis.RadioSettingsEditor.snapshot();
+        if (!id && Object.keys(entries).length) throw new Error("Choose the matching profile or explicitly clear the settings plan before exporting; settings were not discarded.");
+        const documentData = loadoutValidator().validate({ format: "radio-loadout", version: 2,
+            channels: getChannelCards().map(getCardDraft),
+            radio_profile: id ? { profile_id: id, revision: catalog.radio_profile.revision } : null,
+            settings_plan: id ? { catalog_revision: catalog.catalog_revision, recommendation_id: catalog.recommendation_id,
+                entries } : null });
+        const blob = new Blob([JSON.stringify(documentData, null, 2)], { type: "application/json;charset=utf-8" });
+        checkFileBytes(blob.size, getInputLimits().backup_bytes, "Full-loadout JSON");
+        downloadBlob(blob, "radio_loadout_full_v2.json");
+        showFormMessage("Full-loadout download requested. Profile/settings are saved only in the downloaded v2 file, not autosave or a radio image.", "success");
+    } catch (error) {
+        showFormMessage(error instanceof Error ? error.message : "Could not export the full loadout.", "error");
     }
 }
 
@@ -1028,16 +1071,35 @@ async function importBackup() {
     importBackupButton.disabled = true;
     backupFileInput.disabled = true;
     importBackupButton.textContent = "Restoring...";
+    const originalRevision = compatibilityRequestId;
+    const originalProfile = selectedRadioProfileId();
+    const originalSettings = JSON.stringify(globalThis.RadioSettingsEditor?.snapshot() || {});
 
     try {
+        const originalSaved = window.localStorage.getItem(DRAFT_STORAGE_KEY);
         checkFileBytes(file.size, getInputLimits().backup_bytes, "JSON backup");
         const text = await file.text();
         checkFileBytes(new Blob([text]).size, getInputLimits().backup_bytes, "JSON backup");
         const backup = JSON.parse(text.replace(/^\uFEFF/, ""));
-        const channels = validateBackup(backup);
-        applyImportedChannels(channels);
+        const restored = backup?.version === 2 ? loadoutValidator().validate(backup)
+            : { version: 1, channels: validateBackup(backup), radio_profile: null, settings_plan: null };
+        if (originalRevision !== compatibilityRequestId || originalProfile !== selectedRadioProfileId()
+            || originalSettings !== JSON.stringify(globalThis.RadioSettingsEditor?.snapshot() || {})
+            || originalSaved !== window.localStorage.getItem(DRAFT_STORAGE_KEY)) {
+            throw new Error("The builder or saved draft changed while reading this file. Review your work and import again.");
+        }
+        const hasSettings = Object.keys(globalThis.RadioSettingsEditor?.snapshot() || {}).length > 0;
+        if ((restored.version === 2 || hasSettings) && !window.confirm(restored.version === 2
+            ? `Replace current channels, profile and settings plan with this reviewed v2 loadout (${restored.channels.length} channels, ${Object.keys(restored.settings_plan?.entries || {}).length} planned settings)? This does not program a radio.`
+            : "This version-1 backup has channels only. Restoring it clears the current profile and settings plan. Continue?")) {
+            showFormMessage("Backup import cancelled. Existing channels, profile, settings and saved draft are unchanged.", "success");
+            return;
+        }
+        applyImportedChannels(restored.channels, restored.radio_profile?.profile_id || "", restored.settings_plan?.entries || {});
         backupFileInput.value = "";
-        showFormMessage(`Restored ${channels.length} channels from backup.`, "success");
+        showFormMessage(`Restored ${restored.channels.length} channels from backup.`
+            + (restored.version === 2 ? " Version-2 profile/settings plan restored locally; they are not autosaved or hardware verified."
+                : " Version 1 contains no profile/settings; those were cleared."), "success");
     } catch (error) {
         const message = error instanceof SyntaxError
             ? "The backup is not valid JSON."
@@ -1109,6 +1171,7 @@ async function importChirpCsv() {
             showFormMessage("Review the import information loss, then confirm replacement or cancel.", "error");
             return;
         }
+        if (!confirmSettingsResetForCsv()) return;
         applyImportedChannels(result.channels);
         chirpCsvFileInput.value = "";
         showFormMessage(
@@ -1156,6 +1219,7 @@ function confirmChirpImport() {
     if (!pendingChirpImport) return;
     const channels = pendingChirpImport;
     try {
+        if (!confirmSettingsResetForCsv()) return;
         applyImportedChannels(channels);
         pendingChirpImport = null;
         confirmChirpImportButton.hidden = true;
@@ -1165,6 +1229,13 @@ function confirmChirpImport() {
     } catch (error) {
         showFormMessage(error instanceof Error ? error.message : "Could not apply the reviewed import.", "error");
     }
+}
+
+function confirmSettingsResetForCsv() {
+    if (!Object.keys(globalThis.RadioSettingsEditor?.snapshot() || {}).length) return true;
+    if (window.confirm("CHIRP CSV contains channels only. Importing clears this profile/settings plan. Export Full Loadout (v2) first if needed. Continue?")) return true;
+    showFormMessage("CSV replacement cancelled. Existing channels, profile, settings and saved draft are unchanged.", "success");
+    return false;
 }
 
 function cancelChirpImport() {
@@ -1180,6 +1251,31 @@ function selectedRadioProfileId() {
 
 function resetRadioProfile() {
     if (radioProfileSelect) radioProfileSelect.value = "";
+    activeRadioProfileId = "";
+    globalThis.RadioSettingsEditor?.restore({});
+    syncSettingsVisibility();
+    invalidateCompatibilityReport();
+}
+
+function syncSettingsVisibility() {
+    if (!builderSettings) return;
+    const enabled = Boolean(globalThis.RadioSettingsEditor && selectedRadioProfileId()
+        && selectedRadioProfileId() === builderSettings.dataset.profileId);
+    builderSettings.hidden = !enabled;
+    builderSettings.disabled = !enabled;
+}
+
+function changeRadioProfile() {
+    if (activeRadioProfileId !== selectedRadioProfileId()
+        && Object.keys(globalThis.RadioSettingsEditor?.snapshot() || {}).length) {
+        if (!window.confirm("Changing the review profile clears this settings plan. Export Full Loadout (v2) first if you need to keep it. Continue?")) {
+            radioProfileSelect.value = activeRadioProfileId;
+            return;
+        }
+        globalThis.RadioSettingsEditor.restore({});
+    }
+    activeRadioProfileId = selectedRadioProfileId();
+    syncSettingsVisibility();
     invalidateCompatibilityReport();
 }
 
@@ -1363,7 +1459,8 @@ function bindBuilderEvent(element, eventName, handler) {
 }
 
 // Register export independently so a missing optional control cannot disable it.
-bindBuilderEvent(radioProfileSelect, "change", invalidateCompatibilityReport);
+bindBuilderEvent(radioProfileSelect, "change", changeRadioProfile);
+bindBuilderEvent(exportLoadoutButton, "click", exportFullLoadout);
 bindBuilderEvent(exportBackupButton, "click", exportBackup);
 bindBuilderEvent(importBackupButton, "click", importBackup);
 bindBuilderEvent(importChirpCsvButton, "click", importChirpCsv);
@@ -1513,6 +1610,10 @@ try {
     }
     if (!restoreDraft()) {
         addChannel(false);
+    }
+    if (exportLoadoutButton && globalThis.RadioSettingsEditor) {
+        loadoutValidator();
+        exportLoadoutButton.disabled = false;
     }
 } catch (error) {
     console.error("Builder initialization failed:", error);

@@ -477,7 +477,7 @@ def test_builder_backup_controls() -> None:
     assert response.status_code == 200
     assert 'id="export-backup" class="button button-secondary" type="button"' in response.text
     assert '<script src="/static/backup-format.js?v=1" defer></script>' in response.text
-    assert '<script src="/static/builder.js?v=9" defer></script>' in response.text
+    assert '<script src="/static/builder.js?v=10" defer></script>' in response.text
     assert response.text.index("/static/backup-format.js") < response.text.index("/static/builder.js")
     assert 'id="import-backup"' in response.text
     assert 'id="backup-file" type="file" accept=".json"' in response.text
@@ -552,8 +552,9 @@ def test_builder_backup_validation_and_restore_assets() -> None:
     assert "await file.text()" in restore
     assert "JSON.parse" in restore
     assert restore.index("validateBackup(backup)") < restore.index(
-        "applyImportedChannels(channels)"
+        "applyImportedChannels(restored.channels"
     )
+    assert restore.index("loadoutValidator().validate(backup)") < restore.index("applyImportedChannels(restored.channels")
     assert "window.fetch" not in restore
     assert "import_chirp_csv" not in restore
     assert "getResponseErrorMessage" not in restore

@@ -116,6 +116,13 @@ CSV export readiness: unfinished settings can be restored and corrected using
 **Review Compatibility**. See the [backup format contract](docs/backup-format.md)
 for field types, defaults, allowed values, normalization, and fixture coverage.
 
+**Export Full Loadout (v2)** additionally saves the exact selected profile and
+settings-plan values with their recorded origins. Use the embedded settings
+editor below the builder; the standalone guide remains independent.
+**Import Backup** validates v2 fully and asks before replacing all three parts.
+V1 remains channel-only, and profile/settings are **not autosaved**: download v2
+before leaving. See the [version-2 contract](docs/loadout-format-v2.md).
+
 ### CHIRP CSV import review
 
 CSV imports show defaults and expected normalization separately from information
@@ -502,6 +509,7 @@ Completed or substantially implemented:
 - CHIRP compatibility report with channel-level warnings and errors
 - Optional [manufacturer-documented BF-F8HP PRO V0.53 pilot review](docs/radio-profiles.md), with versioned capability metadata and explicit unknowns; not hardware/programming verification
 - Separate [radio settings guide and recommendation-plan foundation](docs/radio-settings.md) for that documented pilot, with seven settings, selective preview and custom-value provenance; session-only/manual guidance, not programming or factory defaults
+- Opt-in [full-loadout v2 save/restore](docs/loadout-format-v2.md) for channels, the exact profile revision and planned settings; v1 export/autosave remain channel-only and no device image or programming is implied
 - NOAA Weather preset
 - Amateur Calling preset
 - Automated tests

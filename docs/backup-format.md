@@ -1,5 +1,10 @@
 # Radio Loadout JSON backup format
 
+This page fixes the original **version-1 channel-only contract**, which remains
+unchanged. The builder also supports opt-in [full-loadout version 2](loadout-format-v2.md)
+for an exact selected profile and settings plan. V2 has a separate validator and
+export button; do not append its fields to a v1 file.
+
 Backups are UTF-8 JSON documents downloaded as `radio_loadout_backup.json`:
 
 ```json

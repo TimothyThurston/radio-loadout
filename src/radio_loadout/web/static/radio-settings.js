@@ -1,4 +1,4 @@
-/* Guidance-only UI. This intentionally has no channel, backup or localStorage integration. */
+/* Guidance-only editor. Builder may snapshot/restore entries; no storage or device operations here. */
 (() => {
     "use strict";
     const error = document.querySelector("#settings-error");
@@ -98,6 +98,16 @@
         // An ordinary paragraph also survives blocked/missing scripts and browser
         // automation that disables execution without changing noscript parsing.
         document.querySelector("#settings-js-required").hidden = true;
+        globalThis.RadioSettingsEditor = Object.freeze({
+            snapshot: () => structuredClone(plan.entries),
+            restore(entries) {
+                const next = planner.restore(entries); // Validate everything before changing the current plan.
+                invalidate();
+                plan = next;
+                renderPlan();
+                status.textContent = "Settings plan restored locally. No radio was read or changed; values are not autosaved.";
+            },
+        });
     } catch (cause) {
         controls.forEach((control) => { control.disabled = true; });
         previewButton.disabled = true;

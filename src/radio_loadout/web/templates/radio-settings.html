@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="/static/styles.css">
     {% if catalog %}
     <script id="settings-catalog" type="application/json">{{ catalog | tojson }}</script>
-    <script src="/static/settings-plan.js?v=1" defer></script>
-    <script src="/static/radio-settings.js?v=2" defer></script>
+    <script src="/static/settings-plan.js?v=2" defer></script>
+    <script src="/static/radio-settings.js?v=3" defer></script>
     {% endif %}
 </head>
 <body>
@@ -41,53 +41,9 @@
             <p><a class="settings-source" href="{{ catalog.radio_profile.sources[0].url }}" rel="noreferrer">Manufacturer manual</a>
                 — reviewed {{ catalog.radio_profile.sources[0].reviewed_on }}. No external content loads automatically.</p>
         </section>
-        <p id="settings-js-required">JavaScript is required for plan editing and preview. The guidance below remains readable; no preset has been applied.</p>
-        <p id="settings-error" role="alert" hidden></p>
-        <p id="settings-status" role="status" aria-live="polite">Plan empty. Radio state and manufacturer defaults are unknown.</p>
-        <h2>{{ catalog.recommendation_label }}</h2>
-        <p>These are Radio Loadout suggestions, not manufacturer defaults or a universal safe preset.
-            Change proposed values or deselect individual suggestions, then preview before adding them to this page's plan.</p>
-        <div class="settings-list">
-            {% for setting in catalog.settings %}
-            <section class="channel-card" data-setting="{{ setting.setting_id }}" aria-labelledby="setting-title-{{ setting.setting_id }}">
-                <h3 id="setting-title-{{ setting.setting_id }}">{{ setting.label }}</h3>
-                <p>{{ setting.explanation }}</p>
-                <p>Manual location: {{ setting.menu_locator }}; {{ setting.source_locator }}.</p>
-                <p>Manufacturer default: <strong>Unknown</strong>. {{ setting.default_evidence }}</p>
-                <p><strong>Radio Loadout rationale:</strong> {{ setting.recommendation.rationale }}</p>
-                <p><strong>Scenario:</strong> {{ setting.recommendation.scenarios }}</p>
-                <p><strong>Tradeoffs:</strong> {{ setting.recommendation.tradeoffs }}</p>
-                {% if not setting.options_exhaustive %}<p>Reviewed option subset; other hardware values may exist.</p>{% endif %}
-                <div class="form-grid">
-                    <label class="form-field" for="current-{{ setting.setting_id }}">Your plan: {{ setting.label }}
-                        <select id="current-{{ setting.setting_id }}" data-current disabled>
-                            <option value="">Unset — not read from radio</option>
-                            {% for option in setting.options %}<option value='{{ option.value | tojson }}'>{{ option.label }}</option>{% endfor %}
-                        </select>
-                    </label>
-                    <label class="form-field" for="proposed-{{ setting.setting_id }}">Proposed: {{ setting.label }}
-                        <select id="proposed-{{ setting.setting_id }}" data-proposed disabled>
-                            {% for option in setting.options %}<option value='{{ option.value | tojson }}' {% if option.value is sameas setting.recommendation.value or option.value == setting.recommendation.value %}selected{% endif %}>{{ option.label }}</option>{% endfor %}
-                        </select>
-                    </label>
-                    <label class="checkbox-field"><input type="checkbox" data-include checked disabled> Include {{ setting.label }} in preview</label>
-                </div>
-                <p data-origin>Plan origin: unset (not a manufacturer default).</p>
-            </section>
-            {% endfor %}
-        </div>
-        <div class="builder-actions">
-            <button id="preview-settings" class="button button-secondary" type="button" disabled>Preview selected suggestions</button>
-            <button id="clear-settings" class="button button-secondary" type="button" disabled>Clear settings plan</button>
-        </div>
-        <section id="settings-preview" class="preset-panel" aria-labelledby="settings-preview-heading" hidden>
-            <h2 id="settings-preview-heading">Preview changes to this page's plan</h2>
-            <p>Before values below are plan entries, not readings from a radio. Edited proposals are marked user-customized.</p>
-            <ul id="settings-diff"></ul>
-            <button id="apply-settings" class="button button-primary" type="button" disabled>Add reviewed changes to plan</button>
-            <button id="cancel-settings" class="button button-secondary" type="button">Cancel preview</button>
-        </section>
-        <p>Copy any needed notes before leaving: this plan is not saved, downloaded, or included in version-1 channel backups.</p>
+        {% include "settings-editor.html" %}
+        <p>This standalone guide is session-only. For version-2 full-loadout save/restore,
+            use the <a href="/builder">builder's settings editor</a>. Plans are not shared between these pages.</p>
         {% else %}
         <p>No radio is selected. No generic radio-wide settings or default values are assumed.</p>
         {% endif %}

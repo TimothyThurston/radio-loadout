@@ -80,6 +80,7 @@ test("keyboard tab order, visible focus, named controls and live feedback work",
         page.getByLabel("CHIRP CSV file", { exact: true }),
         page.getByRole("button", { name: "Import CHIRP CSV", exact: true }),
         page.getByRole("button", { name: "Export Backup", exact: true }),
+        page.getByRole("button", { name: "Export Full Loadout (v2)", exact: true }),
         page.getByLabel("Radio Loadout JSON backup", { exact: true }),
         importBackup,
     ];

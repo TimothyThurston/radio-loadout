@@ -1,0 +1,7 @@
+{
+  "format": "radio-loadout",
+  "version": 2,
+  "channels": [{"name": "", "receive_frequency_mhz": ""}],
+  "radio_profile": null,
+  "settings_plan": null
+}

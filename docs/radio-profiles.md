@@ -84,15 +84,18 @@ Reviewed on 2026-11-06:
 ## Builder state and backups
 
 The optional selector is session-only and defaults/resets to Generic on page
-initialization, successful CSV/JSON import, or successful draft clearing.
+initialization, successful CSV/v1 import, or successful draft clearing. Opt-in
+[v2 full-loadout restore](loadout-format-v2.md) restores its exact known profile
+and settings plan after confirmation; changing away from a nonempty plan asks
+before clearing it. Profile/settings are still not autosaved.
 Failed imports preserve the selection as well as existing channel/storage data.
 Switching the target invalidates review and any in-flight authorization. A target
 or channel edit during CSV retrieval suppresses that stale download.
 
 Version-1 backups and local drafts remain **channel-only**, with unchanged schema
 and validation. No profile ID is silently appended to that fixed format. A
-portable profile selection needs a deliberate future backup-schema revision;
-choose the target again after restore. Original CSV exports remain generic and
+portable profile selection now uses a separate opt-in v2 envelope. Choose the
+target again after a v1 restore. Original CSV exports remain generic and
 contain no embedded model, firmware, zones or radio-wide settings.
 
 ## Verification boundaries

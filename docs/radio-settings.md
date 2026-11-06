@@ -68,11 +68,13 @@ than assumed to be fully modeled.
 6. Cancelling preserves the plan; clearing only empties this page's plan, not a
    radio. Reloading, leaving or loading another guide discards the session plan.
 
-No settings persistence or settings-file import/export is implemented. There is
-no localStorage access, network write or channel integration in the settings
-scripts. Version-1 channel backups/drafts remain unchanged and exclude this
-plan. Copy needed notes before leaving. Portability requires a deliberate future
-versioned loadout format, not an undocumented extension of backup v1.
+The standalone guide remains session-only and independent. The same editor is
+now embedded in the builder for opt-in [full-loadout v2 downloads/restoration](loadout-format-v2.md).
+This saves channels, exact profile and typed plan entries together, with full
+validation/confirmation before replacement. The editor itself still performs no
+storage/network/device writes; the builder owns file handling and channel draft
+storage. Version-1 backups/autosave remain unchanged and channel-only. Profile
+and settings values are not autosaved: download v2 before leaving.
 
 ## Implementation contracts
 
@@ -103,7 +105,8 @@ small simulated controller DOM, including cancellation, invalidation, safe text
 rendering and failed edits. Installed-wheel smoke checks include the guide,
 catalog and every referenced local asset.
 
-Five settings Playwright journeys run in both desktop and narrow projects (34 total
+Five standalone settings Playwright journeys run in both viewport projects, plus
+four full-loadout/embedded-editor journeys (42 total
 suite cases), covering editing/preview, cancellation, channel-draft isolation,
 reload/clear, accessibility, narrow layout, local-only loading and no-JavaScript
 behavior, plus a deliberately blocked controller resource in an isolated context.

@@ -17,7 +17,9 @@ class Element {
         this.dataset = {};
         this.style = {};
         this.listeners = new Map();
-        this.classList = { add() {}, remove() {} };
+        const classes = new Set();
+        this.classList = { add: (...names) => names.forEach((name) => classes.add(name)),
+            remove: (...names) => names.forEach((name) => classes.delete(name)), contains: (name) => classes.has(name) };
         this.value = "";
         this.textContent = "";
     }
@@ -110,7 +112,7 @@ export function setupBuilderHarness(importedChannels = [], hooks = {}) {
     const requests = [];
     const storage = { getItem: (key) => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value), removeItem: (key) => saved.delete(key) };
     const context = createContext({
-        Blob, FormData: class extends FormData {
+        Blob, structuredClone, FormData: class extends FormData {
             constructor(form) {
                 super();
                 if (form) this.append("channels_json", elements["#channels-json"].value);
@@ -118,6 +120,7 @@ export function setupBuilderHarness(importedChannels = [], hooks = {}) {
         },
         console: { warn() {}, error() {} },
         window: {
+            confirm: (message) => hooks.confirm ? hooks.confirm(message) : true,
             clearTimeout() {}, setTimeout() { return 1; },
             localStorage: storage,
             fetch: async (url, options) => {
@@ -146,6 +149,20 @@ export function setupBuilderHarness(importedChannels = [], hooks = {}) {
         },
     });
     runInContext(backupSource, context);
+    if (hooks.catalog) {
+        for (const name of ["settings-plan.js", "loadout-format.js"]) {
+            runInContext(readFileSync(new URL(`../../../src/radio_loadout/web/static/${name}`, import.meta.url), "utf8"), context);
+        }
+        for (const id of ["radio-profile", "builder-settings", "export-loadout", "settings-catalog"]) elements[`#${id}`] = new Element();
+        elements["#settings-catalog"].textContent = JSON.stringify(hooks.catalog);
+        elements["#builder-settings"].dataset.profileId = hooks.catalog.radio_profile.profile_id;
+        const planner = context.RadioSettingsPlan.createPlanner(hooks.catalog);
+        let plan = planner.empty();
+        context.RadioSettingsEditor = {
+            snapshot: () => structuredClone(plan.entries),
+            restore: (entries) => { if (hooks.restoreSettings) hooks.restoreSettings(entries); plan = planner.restore(entries); },
+        };
+    }
     runInContext(source, context);
     return {
         elements, downloads, requests, saved, storage,

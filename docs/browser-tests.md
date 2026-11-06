@@ -85,8 +85,13 @@ fixtures live under `tests/fixtures/backups` and `tests/e2e/fixtures`.
   reviews, preserve channel drafts, clear/reload, reject unknown profiles and
   keep controls disabled without JavaScript. Check axe, keyboard access, narrow
   layout and absence of automatic external requests. The complete suite now
-  lists 34 cases; additions must run on Windows/CI before acceptance when a
+  lists 42 cases; additions must run on Windows/CI before acceptance when a
   local browser installation is unavailable.
+- Download/restore a real [v2 full loadout](loadout-format-v2.md), preserving
+  channels/profile/typed settings. Verify that v1 remains channel-only, cancelled
+  and invalid restores preserve work, legacy clearing requires confirmation, and
+  the embedded editor adds no CSV form fields. Run axe and narrow-layout checks
+  with that editor expanded.
 
 The custom-tone duplication regression exposed a real defect: assigning a select
 value to a fresh card discarded codes/tones absent from its conventional options.
