@@ -192,6 +192,11 @@ The exporter supports:
 
 Unsupported DMR channels are explicitly rejected instead of producing a file that only appears valid.
 
+See the [CHIRP verification record](docs/chirp-verification.md) for the scope of
+the reported Windows round trip and the remaining application-level checks.
+Automated CSV tests do not establish which fields a particular CHIRP build or
+radio driver will preserve.
+
 ### Compatibility review
 
 Select **Review Compatibility** to check the current loadout against the CHIRP
@@ -517,7 +522,7 @@ Completed or substantially implemented:
 
 Remaining Version 1 work:
 
-- Verify CHIRP CSV import/export in the real CHIRP application, including regression fixtures and radio-specific limitations
+- Complete the [Windows CHIRP Generic CSV matrix](docs/chirp-verification.md) and document any build-specific limitations
 - Implement ZIP-code/location repeater lookup with radius, band filters, selection into loadouts, and approved data-source access
 - Expand the initial ISS receive-only preset with separately reviewed satellite packs; transmit plans, digital/SSTV configurations and Doppler channel sets remain unimplemented and require their own source/operating review
 - Expand the documented pilot into hardware-verified model/firmware profiles; resolve unknown name/tone/power mappings and add applicable device settings without claiming untested support

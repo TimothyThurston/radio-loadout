@@ -238,6 +238,13 @@ def _parse_tones(
             except ValueError as error:
                 raise ValueError(f"{field}: {error}") from error
 
+    for field in ("DtcsCode", "RxDtcsCode"):
+        if _row_value(row, field):
+            try:
+                parse_dcs_code(_row_value(row, field))
+            except ValueError as error:
+                raise ValueError(f"{field}: {error}") from error
+
     tone_mode = _row_value(row, "Tone").casefold()
     transmit_polarity, receive_polarity = (
         _parse_dcs_polarities(
