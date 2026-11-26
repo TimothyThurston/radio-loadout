@@ -142,3 +142,35 @@ test("an inconsistent generic editor state cannot silently omit settings on expo
     assert.match(state.elements["#form-message"].textContent, /settings were not discarded/);
     assert.equal(settings(state).vox.value, true);
 });
+
+test("autosave and download feedback distinguish channel-only storage from a full-loadout request", async () => {
+    const state = setup(); await restore(state, fixture("complete-v2.json"));
+    const before = snapshot(state);
+    assert.match(state.elements["#draft-status"].textContent, /channels only/);
+    assert.match(state.elements["#draft-status"].textContent, /profile and settings plan are not autosaved/);
+    state.evaluate("exportBackup()");
+    assert.match(state.elements["#form-message"].textContent, /Backup download requested/);
+    assert.match(state.elements["#form-message"].textContent, /Channel-only v1/);
+    assert.match(state.elements["#form-message"].textContent, /profile and settings plan are excluded/);
+    state.evaluate("exportFullLoadout()");
+    assert.match(state.elements["#form-message"].textContent, /download requested/);
+    assert.match(state.elements["#form-message"].textContent, /Check your browser's downloads/);
+    assert.equal(snapshot(state), before); // A download request changes neither the plan nor autosave.
+    state.evaluate("window.localStorage.setItem = () => { throw new Error('Quota exceeded'); }; saveDraft()");
+    assert.match(state.elements["#draft-status"].textContent, /could not be saved/);
+    assert.match(state.elements["#draft-status"].textContent, /channels only/);
+});
+
+test("clear draft cancels without touching a nonempty plan and clears it only after confirmation", async () => {
+    let accept = true;
+    const state = setup({ confirm: () => accept }); await restore(state, fixture("complete-v2.json"));
+    const before = snapshot(state);
+    accept = false; state.evaluate("clearDraft()");
+    assert.equal(snapshot(state), before);
+    accept = true; state.evaluate("clearDraft()");
+    assert.deepEqual(settings(state), {});
+    assert.equal(profile(state), "");
+    assert.equal(state.saved.size, 0);
+    assert.equal(state.draft().length, 1);
+    assert.equal(state.draft()[0].name, "");
+});

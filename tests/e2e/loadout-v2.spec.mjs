@@ -83,3 +83,64 @@ test("embedded settings stay accessible and inside narrow viewports without addi
     }
     expect(await page.locator("#channel-form").evaluate((form) => [...new FormData(form).keys()])).toEqual(["channels_json", "radio_profile_id"]);
 });
+
+test("channel-only autosave and v1 guidance keep the unsaved-plan reminder visible after v2 download", async ({ page }, testInfo) => {
+    await configureTwoChannels(page);
+    await page.getByRole("textbox", { name: "Channel name", exact: true }).first().fill("SYNTH SAVE");
+    await expect(page.locator("#draft-status")).toContainText("Autosave saves channels only");
+    await expect(page.locator("#draft-status")).toContainText("radio profile and settings plan are not autosaved");
+    await plan(page);
+    const draft = await savedDraft(page);
+    const reminder = page.locator("#settings-save-note");
+    await page.locator("#builder-settings-details summary").click(); // Reminder stays outside the collapsed editor.
+    await expect(reminder).toBeVisible();
+    await expect(reminder).toContainText("Settings are not autosaved, nor is the selected radio profile");
+    await expect(reminder).toContainText("Export Full Loadout (v2)");
+    await expect(page.getByText("Export Backup keeps the original channel-only version 1.", { exact: false })).toBeVisible();
+    const old = await downloadedText(page, page.getByRole("button", { name: "Export Backup", exact: true }), testInfo, "radio_loadout_backup.json");
+    expect(Object.keys(JSON.parse(old.text)).sort()).toEqual(["channels", "format", "version"]);
+    await expect(page.getByRole("alert")).toContainText("Channel-only v1");
+    await expect(page.getByRole("alert")).toContainText("profile and settings plan are excluded");
+    const full = await downloadedText(page, page.getByRole("button", { name: "Export Full Loadout (v2)", exact: true }), testInfo, "radio_loadout_full_v2.json");
+    await expect(page.getByRole("alert")).toContainText("download requested");
+    await expect(page.getByRole("alert")).toContainText("Check your browser's downloads");
+    await expect(reminder).toBeVisible(); // Requesting a download does not prove the owner retained it.
+    await expect(target(page)).toHaveValue(profileId);
+    expect(JSON.parse(full.text).settings_plan.entries.vox.value).toBe(true);
+    expect(await savedDraft(page)).toBe(draft);
+    await page.reload();
+    await expect(target(page)).toHaveValue("");
+    await expect(page.locator("#builder-settings")).toBeHidden();
+    await importFile(page, full.text);
+    await expect(reminder).toBeVisible();
+    await page.locator("#builder-settings-details summary").click();
+    await expect(current(page, "VOX")).toHaveValue("true");
+});
+
+test("clearing a settings plan preserves work on cancel and needs confirmation to discard it", async ({ page }) => {
+    const channels = await configureTwoChannels(page); await plan(page);
+    const draft = await savedDraft(page);
+    await page.getByRole("button", { name: "Preview selected suggestions", exact: true }).click();
+    const diff = await page.locator("#settings-diff").textContent();
+    const clear = page.getByRole("button", { name: "Clear settings plan", exact: true });
+    const dismissed = page.waitForEvent("dialog");
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await clear.click();
+    expect((await dismissed).message()).toContain("Clear all values in this settings plan?");
+    await expect(current(page, "Squelch")).toHaveValue("3");
+    await expect(current(page, "VOX")).toHaveValue("true");
+    await expect(page.locator("#settings-preview")).toBeVisible();
+    await expect(page.locator("#apply-settings")).toBeEnabled();
+    expect(await page.locator("#settings-diff").textContent()).toBe(diff);
+    expect(await snapshot(page)).toEqual(channels); expect(await savedDraft(page)).toBe(draft);
+    page.once("dialog", (dialog) => dialog.accept());
+    await clear.click();
+    await expect(current(page, "Squelch")).toHaveValue("");
+    await expect(current(page, "VOX")).toHaveValue("");
+    await expect(current(page, "Backlight timeout")).toHaveValue("");
+    await expect(page.locator("#settings-preview")).toBeHidden();
+    await expect(page.locator("#apply-settings")).toBeDisabled();
+    await expect(page.locator("#settings-status")).toContainText("No factory reset or radio change");
+    await expect(target(page)).toHaveValue(profileId);
+    expect(await snapshot(page)).toEqual(channels); expect(await savedDraft(page)).toBe(draft);
+});

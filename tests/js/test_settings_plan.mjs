@@ -128,7 +128,7 @@ test("untrusted labels are data and guidance code has no device/storage/network 
 });
 
 // Deliberately small simulated DOM: this checks controller state, not browser layout/accessibility.
-function setupUI(catalog = fixture()) {
+function setupUI(catalog = fixture(), confirm = () => true) {
     class Element {
         constructor() { this.value = ""; this.checked = true; this.disabled = true; this.hidden = true; this.textContent = ""; this.children = []; this.listeners = {}; }
         set innerHTML(_) { throw new Error("HTML rendering is forbidden"); }
@@ -150,7 +150,7 @@ function setupUI(catalog = fixture()) {
             querySelectorAll: () => [fields["[data-proposed]"], fields["[data-include]"]],
         };
     });
-    const context = { structuredClone, document: {
+    const context = { structuredClone, window: { confirm }, document: {
         querySelector: (selector) => elements[selector],
         querySelectorAll: (selector) => selector === "[data-setting]" ? cards : cards.flatMap((card) => Object.entries(card.fields).filter(([key]) => key !== "[data-origin]").map(([, value]) => value)),
         createElement: () => new Element(),
@@ -211,6 +211,37 @@ test("controller rejects invalid values without erasing the plan, clears locally
     assert.equal(current.value, "");
     assert.match(ui.elements["#settings-status"].textContent, /No factory reset/);
     assert.equal(setupUI().field("squelch", "current").value, "");
+});
+
+test("clearing a nonempty plan requires confirmation and cancellation preserves its pending preview", () => {
+    let accept = false;
+    const prompts = [];
+    const ui = setupUI(fixture(), (message) => { prompts.push(message); return accept; });
+    ui.click("clear-settings");
+    assert.equal(prompts.length, 0); // Empty plans need no discard confirmation.
+    ui.editor.restore({ squelch: { value: 0, origin: "user-customized" },
+        vox: { value: false, origin: "user-customized" } });
+    ui.click("preview-settings");
+    const before = JSON.stringify(ui.editor.snapshot());
+    const changes = ui.elements["#settings-diff"].children;
+    const status = ui.elements["#settings-status"].textContent;
+    ui.click("clear-settings");
+    assert.equal(prompts.length, 1);
+    assert.match(prompts[0], /Clear.*settings plan/);
+    assert.equal(JSON.stringify(ui.editor.snapshot()), before);
+    assert.equal(ui.field("squelch", "current").value, "0");
+    assert.equal(ui.field("vox", "current").value, "false");
+    assert.equal(ui.elements["#settings-preview"].hidden, false);
+    assert.equal(ui.elements["#apply-settings"].disabled, false);
+    assert.equal(ui.elements["#settings-diff"].children, changes);
+    assert.equal(ui.elements["#settings-status"].textContent, status);
+    accept = true;
+    ui.click("clear-settings");
+    assert.equal(prompts.length, 2);
+    assert.deepEqual(Object.keys(ui.editor.snapshot()), []);
+    assert.equal(ui.elements["#settings-preview"].hidden, true);
+    assert.equal(ui.elements["#apply-settings"].disabled, true);
+    assert.equal(ui.field("vox", "current").value, "");
 });
 
 test("controller renders malicious source labels literally and fails closed on bad catalog", () => {

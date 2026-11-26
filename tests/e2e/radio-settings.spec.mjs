@@ -52,6 +52,7 @@ test("cancel, edited proposals and edited plan invalidate review; clear and relo
     await expect(page.locator("#settings-diff")).toContainText("Squelch: Level 1 [user-customized] → Level 3");
     await apply(page).click();
     await expect(current(page, "Squelch")).toHaveValue("3");
+    page.once("dialog", (dialog) => dialog.accept());
     await page.getByRole("button", { name: "Clear settings plan", exact: true }).click();
     await expect(current(page, "Squelch")).toHaveValue("");
     await expect(page.getByRole("status")).toContainText("No factory reset");

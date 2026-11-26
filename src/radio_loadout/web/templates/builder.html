@@ -176,7 +176,9 @@
         <fieldset id="builder-settings" class="settings-guide" data-profile-id="{{ catalog.radio_profile.profile_id }}" hidden disabled>
             <legend>Settings plan for the selected documented pilot</legend>
             <p>These are manual guidance values, not device readback or programming. Never update firmware to match a profile.</p>
-            <p>Settings are not autosaved. Use Export Full Loadout (v2) before leaving; CSV and version-1 backups omit them.
+            <p id="settings-save-note">Settings are not autosaved, nor is the selected radio profile.
+                Use <strong>Export Full Loadout (v2)</strong> to request a file containing channels, profile and planned settings,
+                then check your browser's downloads and keep the file. CSV and channel-only version-1 backups omit the profile and settings plan.
                 The separate guide does not share this plan.</p>
             <details id="builder-settings-details">
                 <summary>Edit settings plan (manual guidance only)</summary>

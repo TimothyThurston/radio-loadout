@@ -127,7 +127,7 @@ function showDraftStatus(message) {
         return;
     }
     window.clearTimeout(statusClearTimer);
-    draftStatus.textContent = message;
+    draftStatus.textContent = `${message} Autosave saves channels only; the selected radio profile and settings plan are not autosaved.`;
 
     statusClearTimer = window.setTimeout(() => {
         draftStatus.textContent = "";
@@ -1034,7 +1034,7 @@ function exportFullLoadout() {
         const blob = new Blob([JSON.stringify(documentData, null, 2)], { type: "application/json;charset=utf-8" });
         checkFileBytes(blob.size, getInputLimits().backup_bytes, "Full-loadout JSON");
         downloadBlob(blob, "radio_loadout_full_v2.json");
-        showFormMessage("Full-loadout download requested. Profile/settings are saved only in the downloaded v2 file, not autosave or a radio image.", "success");
+        showFormMessage("Full-loadout (v2) download requested. Check your browser's downloads and keep the file: it includes channels, profile and settings plan. Autosave still saves channels only. No radio was changed.", "success");
     } catch (error) {
         showFormMessage(error instanceof Error ? error.message : "Could not export the full loadout.", "error");
     }
@@ -1058,7 +1058,7 @@ function exportBackup() {
         checkFileBytes(blob.size, getInputLimits().backup_bytes, "JSON backup");
         downloadBlob(blob, "radio_loadout_backup.json");
         showFormMessage(
-            "Backup download requested. Check your browser's downloads for radio_loadout_backup.json.",
+            "Backup download requested. Channel-only v1: the radio profile and settings plan are excluded. Check your browser's downloads for radio_loadout_backup.json.",
             "success"
         );
     } catch (error) {

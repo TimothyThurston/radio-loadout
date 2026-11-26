@@ -87,6 +87,8 @@
             status.textContent = "Preview cancelled. Your session plan is unchanged.";
         });
         clearButton.addEventListener("click", () => {
+            if (Object.keys(plan.entries).length
+                && !window.confirm("Clear all values in this settings plan? Cancel to keep your plan and pending preview. No radio will be changed.")) return;
             invalidate();
             plan = planner.empty();
             renderPlan();
