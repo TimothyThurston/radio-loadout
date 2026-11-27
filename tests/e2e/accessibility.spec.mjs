@@ -26,39 +26,45 @@ test("axe checks the empty builder, advanced channels, errors and import review"
     await scan(page, testInfo, "loss-review");
 });
 
-test("visible controls fit the viewport and remain reachable without clipping", async ({ page }) => {
+async function checkGeometry(page, width) {
     await restoreBackup(page);
-    const widths = [page.viewportSize().width];
-    if (widths[0] === 375) widths.push(320);
-    for (const width of widths) {
-        await page.setViewportSize({ width, height: page.viewportSize().height });
-        await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-        const controls = page.locator("button, input:not([type=hidden]), select, a");
-        for (const control of await controls.all()) {
-            if (!(await control.isVisible())) continue;
-            await control.scrollIntoViewIfNeeded();
-            const geometry = await control.evaluate((element) => {
-                const rect = element.getBoundingClientRect();
-                const center = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
-                return {
-                    label: element.labels?.[0]?.textContent.trim() || element.getAttribute("aria-label") || element.textContent.trim(),
-                    left: rect.left, right: rect.right, width: rect.width, height: rect.height,
-                    viewport: window.innerWidth, reachable: center === element || element.contains(center),
-                    clientWidth: element.clientWidth, scrollWidth: element.scrollWidth,
-                };
-            });
-            expect(geometry.left, `${width}px: ${geometry.label} left edge`).toBeGreaterThanOrEqual(0);
-            expect(geometry.right, `${width}px: ${geometry.label} right edge`).toBeLessThanOrEqual(geometry.viewport);
-            expect(geometry.width, geometry.label).toBeGreaterThanOrEqual(16);
-            expect(geometry.height, geometry.label).toBeGreaterThanOrEqual(16);
-            expect(geometry.reachable, `${width}px: ${geometry.label} is covered or clipped`).toBe(true);
-            // A native text input can scroll its value. Button/label text must fit.
-            if (await control.evaluate((element) => element.tagName === "BUTTON")) {
-                expect(geometry.scrollWidth, `${width}px: ${geometry.label} text is clipped`).toBeLessThanOrEqual(geometry.clientWidth);
-            }
+    await page.setViewportSize({ width, height: page.viewportSize().height });
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    const controls = page.locator("button, input:not([type=hidden]), select, a");
+    for (const control of await controls.all()) {
+        if (!(await control.isVisible())) continue;
+        await control.scrollIntoViewIfNeeded();
+        const geometry = await control.evaluate((element) => {
+            const rect = element.getBoundingClientRect();
+            const center = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            return {
+                label: element.labels?.[0]?.textContent.trim() || element.getAttribute("aria-label") || element.textContent.trim(),
+                left: rect.left, right: rect.right, width: rect.width, height: rect.height,
+                viewport: window.innerWidth, reachable: center === element || element.contains(center),
+                clientWidth: element.clientWidth, scrollWidth: element.scrollWidth,
+            };
+        });
+        expect(geometry.left, `${width}px: ${geometry.label} left edge`).toBeGreaterThanOrEqual(0);
+        expect(geometry.right, `${width}px: ${geometry.label} right edge`).toBeLessThanOrEqual(geometry.viewport);
+        expect(geometry.width, geometry.label).toBeGreaterThanOrEqual(16);
+        expect(geometry.height, geometry.label).toBeGreaterThanOrEqual(16);
+        expect(geometry.reachable, `${width}px: ${geometry.label} is covered or clipped`).toBe(true);
+        // A native text input can scroll its value. Button/label text must fit.
+        if (await control.evaluate((element) => element.tagName === "BUTTON")) {
+            expect(geometry.scrollWidth, `${width}px: ${geometry.label} text is clipped`).toBeLessThanOrEqual(geometry.clientWidth);
         }
     }
+}
+
+test("visible controls fit without clipping at 1440px", { tag: "@geometry-desktop" }, async ({ page }) => {
+    await checkGeometry(page, 1440);
 });
+
+for (const width of [375, 320]) {
+    test(`visible controls fit without clipping at ${width}px`, { tag: "@geometry-narrow" }, async ({ page }) => {
+        await checkGeometry(page, width);
+    });
+}
 
 async function expectKeyboardFocus(locator) {
     await expect(locator).toBeFocused();

@@ -82,11 +82,11 @@ test("settings guide has local-only loading, accessible controls and a narrow la
     expect(external).toEqual([]);
 });
 
-test("generic/unknown profiles and disabled JavaScript cannot silently apply a preset", async ({ page, browser }) => {
+test("generic/unknown profiles and disabled JavaScript cannot silently apply a preset", async ({ page, testBrowser }) => {
     await page.goto("/radio-settings");
     await expect(page.getByText("No radio is selected.", { exact: false })).toBeVisible();
     expect((await page.goto("/radio-settings?profile_id=uv-5r")).status()).toBe(404);
-    const context = await browser.newContext({ javaScriptEnabled: false, baseURL: new URL(page.url()).origin });
+    const context = await testBrowser.newContext({ javaScriptEnabled: false, baseURL: new URL(page.url()).origin });
     try {
         const noJs = await context.newPage();
         await noJs.goto(guide);
@@ -100,10 +100,10 @@ test("generic/unknown profiles and disabled JavaScript cannot silently apply a p
     }
 });
 
-test("missing settings controller keeps guidance visible and editing disabled", async ({ page, browser }) => {
+test("missing settings controller keeps guidance visible and editing disabled", async ({ page, testBrowser }) => {
     // Isolate the intentional resource failure; don't relax the shared fixture's
     // error checks for normal application pages.
-    const context = await browser.newContext({ baseURL: new URL(page.url()).origin });
+    const context = await testBrowser.newContext({ baseURL: new URL(page.url()).origin });
     try {
         const missing = await context.newPage();
         const errors = [];

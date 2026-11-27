@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./browser.fixture.mjs";
 
 test("production pages keep API docs disabled and load no external documentation assets", async ({ page, context, request, baseURL }) => {
     const externalRequests = [];
