@@ -673,6 +673,109 @@ pending. The Windows WebKit keyboard assertions and native-link reproduction
 are preserved. This run provides no new Safari/iPhone, Windows CHIRP or
 provenance evidence.
 
+## WebKit focus and connection follow-up (2026-11-27)
+
+[CI #23](https://github.com/TimothyThurston/radio-loadout/actions/runs/46040468943)
+on Ubuntu 26.04 passed 52/55 WebKit cases. Both keyboard journeys failed at the
+ISS repeater checkbox and one builder initialization failed.
+[CI #24](https://github.com/TimothyThurston/radio-loadout/actions/runs/46041649869)
+ran the pinned Ubuntu 24.04 image (OS 24.04.5), before the fixes below. Chromium and
+Firefox each passed 55/55. WebKit 27.2, revision 2370, passed 51/55 including all
+three geometry cases. Both keyboard journeys failed the visible-focus assertion
+with the ISS repeater checkbox active. The settings and satellite desktop cases
+failed during builder initialization. The traces contain HTTP 503 for
+`radio-settings.js`, `satellite-presets.js` and `builder.js` in the settings case,
+and `satellite-presets.js` and `builder.js` in the satellite case. Uvicorn logged
+five concurrency-limit warnings. These CI runs did not measure server connection
+and task counts. Their failures remain part of the verification record.
+[CI #24 WebKit artifact](https://github.com/TimothyThurston/radio-loadout/actions/runs/46041649869/artifacts/15220032557)
+
+### Native checkbox focus
+
+A focused Windows WebKit 27.2 probe used Tab to reach the real
+`Include ISS RPT RX` checkbox on the builder and measured the CSS before and
+after the change. The standard whole-page keyboard journeys still use their
+original sequence. The probe stops at the checkbox, so it can inspect this
+control despite the Windows build's earlier link-tabbing limitation.
+
+| Measured property | Before CSS change | With checkbox outline |
+| --- | --- | --- |
+| `document.activeElement` is the expected checkbox | true | true |
+| Matches `:focus-visible` | true | true |
+| Outline style | `none` | `solid` |
+| Outline width | `3px` | `3px` |
+| Outline color | `rgb(238, 252, 247)` | `rgb(82, 230, 165)` |
+| Outline offset | `0px` | `4px` |
+| Box shadow | `none` | `none` |
+
+The shared input rule applies `outline: none`. The builder's satellite
+checkbox sits outside the settings-guide and form-field outline rules. The
+general `input:focus` rule declares a shadow, but WebKit computed `none` for
+this native checkbox. The new `input[type="checkbox"]:focus-visible` rule
+provides a 3px solid outline in the existing accent color with a 4px offset.
+The focused label screenshot visibly shows the mint ring around the checked
+native control. The local screenshots are in `test-results/webkit-checkbox-before/`
+and `test-results/webkit-checkbox-visual/`.
+
+If either original focus assertion fails, the test attaches individual
+focus/CSS values and a viewport PNG before rethrowing the original error.
+The capture reads the current keyboard state without moving focus or scrolling.
+The existing test and assertion timeouts, order and activation checks are intact.
+
+### WebKit connection measurements
+
+An ignored, test-only probe at
+`generated/browser-bounded-followup/probe_webkit_processes.mjs` used the existing
+read-only Uvicorn observer on Windows. It ran one normal builder load per context
+with the desktop WebKit project options. Each scenario started a separate
+loopback server using the production factory, concurrency limit of 16 and
+five-second keep-alive. The observer captured connection/task counts at
+navigation, response completion and closure, and at any concurrency warning.
+It recorded whitelisted paths and response codes, with no bodies, headers,
+credentials or operator data. There were no delays between loads.
+
+| Scenario | Loads | Peak connections / tasks | Checkpoint after context close | Checkpoint after process close | Rejections / warnings |
+| --- | ---: | --- | --- | --- | --- |
+| Fresh server and single context | 1 | 6 / 6 | 5 connections, 0 tasks | 0 / 0 | 0 / 0 |
+| Repeat contexts with browser retained | 6 | 6 / 7 | 5 connections, 0 tasks after each close | 0 / 0 after closing the retained browser | 0 / 0 |
+| Close browser process between loads | 6 | 6 / 7 | 5 connections, 0 tasks after each close | 0 / 0 before every next launch | 0 / 0 |
+
+Every document and required asset returned 200 and every load produced one
+channel card. With WebKit retained, each subsequent load started with five open
+connections. The count stayed flat across this Windows sequence. These
+measurements establish socket retention and release on process closure. They
+do not establish accumulation to the limit or explain the Linux CI rejections.
+
+WebKit now uses the same disposable-process fixture as Firefox to release the
+measured idle connections at teardown. Both engines close their test context
+and browser in `finally` blocks. The runner's Playwright instance still applies
+project options and the artifact hooks. Chromium continues using its built-in
+browser and context. The production server settings are unchanged.
+
+### Local Windows verification
+
+Two full WebKit desktop/narrow runs each finished with **53 passed, 2 failed**
+in **2.8 minutes** using two workers and zero retries. The two failures were the
+existing first-link Tab check in both viewports. They stopped before reaching the
+checkbox. All three geometry cases passed in both runs. Neither run had an
+initialization failure or a Uvicorn concurrency-limit warning. Both focus
+attachments were present in each of the four failure traces, with the expected
+link's active-element and focus-visible fields both false.
+
+Local reports are under `playwright-report/webkit-focus-lifecycle-1/` and
+`playwright-report/webkit-focus-lifecycle-2/`. Chromium passed **55/55** in
+**1.9 minutes** and Firefox passed **55/55** in **3.2 minutes**, each including
+both original keyboard journeys and all geometry checks. Their reports are in
+`playwright-report/chromium-focus-regression/` and
+`playwright-report/firefox-focus-regression/`. Ruff, pytest (968 passed and
+three existing skips), 140 JavaScript tests, JavaScript syntax and packaging
+smoke passed. The isolated checkbox probe passed
+with the measured outline and visible ring above. The complete keyboard journeys
+and connection behavior with these changes still need verification on the pinned
+Ubuntu 24.04 runner. PR #1 remains at its previously tested commit and both CI
+failures remain historical results. Real Safari/iPhone, Windows CHIRP and
+provenance verification remain separate and pending.
+
 Implementation references: Playwright's official
 [browser installation and scope](https://playwright.dev/docs/browsers),
 [multi-browser projects](https://playwright.dev/docs/test-projects),

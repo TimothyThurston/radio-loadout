@@ -67,14 +67,49 @@ for (const width of [375, 320]) {
 }
 
 async function expectKeyboardFocus(locator) {
-    await expect(locator).toBeFocused();
-    await expect.poll(() => locator.evaluate((element) => {
-        const style = getComputedStyle(element);
-        return element.matches(":focus-visible") && (
-            (style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0)
-            || style.boxShadow !== "none"
-        );
-    })).toBe(true);
+    try {
+        await expect(locator).toBeFocused();
+        await expect.poll(() => locator.evaluate((element) => {
+            const style = getComputedStyle(element);
+            return element.matches(":focus-visible") && (
+                (style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0)
+                || style.boxShadow !== "none"
+            );
+        })).toBe(true);
+    } catch (error) {
+        // Capture the current keyboard state without moving focus or scrolling.
+        const info = test.info();
+        const diagnostics = await Promise.allSettled([
+            (async () => {
+                const styles = await locator.evaluate((element) => {
+                    const style = getComputedStyle(element);
+                    return {
+                        activeElement: element.ownerDocument.activeElement === element,
+                        focusVisible: element.matches(":focus-visible"),
+                        outlineStyle: style.outlineStyle,
+                        outlineWidth: style.outlineWidth,
+                        outlineColor: style.outlineColor,
+                        outlineOffset: style.outlineOffset,
+                        boxShadow: style.boxShadow,
+                    };
+                }, undefined, { timeout: 2000 });
+                await info.attach("keyboard-focus", {
+                    body: JSON.stringify({ locator: locator.toString(), ...styles }, null, 2),
+                    contentType: "application/json",
+                });
+            })(),
+            (async () => {
+                const screenshot = await locator.page().screenshot({ timeout: 2000 });
+                await info.attach("keyboard-focus-screenshot", { body: screenshot, contentType: "image/png" });
+            })(),
+        ]);
+        for (const [index, result] of diagnostics.entries()) {
+            if (result.status === "rejected") {
+                console.warn(`Could not attach keyboard focus ${index === 0 ? "styles" : "screenshot"}: ${result.reason}`);
+            }
+        }
+        throw error;
+    }
 }
 
 test("keyboard tab order, visible focus, named controls and live feedback work", async ({ page }) => {

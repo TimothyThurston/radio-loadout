@@ -4,32 +4,32 @@ export { expect } from "@playwright/test";
 
 export const test = base.extend({
     testBrowser: async ({ browser, browserName, playwright, launchOptions, headless, channel }, use) => {
-        if (browserName !== "firefox") {
+        if (browserName === "chromium") {
             await use(browser);
             return;
         }
 
-        // Context closure on its own leaves Firefox's idle sockets open between tests.
-        const firefox = await playwright.firefox.launch({ ...launchOptions, headless, channel });
+        // Firefox and WebKit retain idle sockets after context closure.
+        const disposable = await playwright[browserName].launch({ ...launchOptions, headless, channel });
         try {
-            await use(firefox);
+            await use(disposable);
         } finally {
-            await firefox.close();
+            await disposable.close();
         }
     },
     context: async ({ browserName, context, testBrowser }, use) => {
-        if (browserName !== "firefox") {
+        if (browserName === "chromium") {
             await use(context);
             return;
         }
 
         // Use the runner's playwright instance so project context options and
         // the trace/screenshot hooks also apply to this context.
-        const firefoxContext = await testBrowser.newContext();
+        const isolatedContext = await testBrowser.newContext();
         try {
-            await use(firefoxContext);
+            await use(isolatedContext);
         } finally {
-            await firefoxContext.close();
+            await isolatedContext.close();
         }
     },
 });
