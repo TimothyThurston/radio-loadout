@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { readFileSync } from "node:fs";
 import { test, expect, configureTwoChannels, downloadedText, snapshot, savedDraft } from "./builder.fixture.mjs";
-import { openSettingsPlan } from "./settings-disclosure.mjs";
+import { observePointerActivation, openSettingsPlan } from "./settings-disclosure.mjs";
 
 const profileId = "baofeng-bf-f8hp-pro-v053-us";
 const target = (page) => page.getByRole("combobox", { name: "Review target", exact: true });
@@ -118,30 +118,71 @@ test("channel-only autosave and v1 guidance keep the unsaved-plan reminder visib
     await expect(current(page, "VOX")).toHaveValue("true");
 });
 
-test("clearing a settings plan preserves work on cancel and needs confirmation to discard it", async ({ page }) => {
+async function clickClearWithConfirmation(page, button, response, attempts) {
+    const choice = response === "dismiss" ? "Dismiss first" : "Accept second";
+    await test.step(`${choice} Clear settings plan confirmation`, async () => {
+        const attempt = { expectedResponse: response, dialogOrder: [] };
+        attempts.push(attempt);
+        const observation = await observePointerActivation(button);
+        const expectedMessage = "Clear all values in this settings plan?";
+        try {
+            attempt.dialogOrder.push("waiting for dialog");
+            const confirmation = page.waitForEvent("dialog").then(async (dialog) => {
+                const type = dialog.type();
+                const message = dialog.message();
+                attempt.dialogOrder.push({ event: "dialog opened", type, message });
+                const action = type === "confirm" && message.includes(expectedMessage) ? response : "dismiss";
+                attempt.dialogOrder.push(`${action} started`);
+                await dialog[action]();
+                attempt.dialogOrder.push(`${action} completed`);
+                return dialog;
+            });
+            attempt.dialogOrder.push("click started");
+            const [dialog] = await Promise.all([
+                confirmation,
+                button.click().then(() => attempt.dialogOrder.push("click completed")),
+            ]);
+            expect(dialog.type()).toBe("confirm");
+            expect(dialog.message()).toContain(expectedMessage);
+        } finally {
+            attempt.pointer = await observation.evaluate((observer) => {
+                observer.stop();
+                return observer.read();
+            });
+            await observation.dispose();
+        }
+    });
+}
+
+test("clearing a settings plan preserves work on cancel and needs confirmation to discard it", async ({ page }, testInfo) => {
     const channels = await configureTwoChannels(page); await plan(page);
     const draft = await savedDraft(page);
     await page.getByRole("button", { name: "Preview selected suggestions", exact: true }).click();
     const diff = await page.locator("#settings-diff").textContent();
     const clear = page.getByRole("button", { name: "Clear settings plan", exact: true });
-    const dismissed = page.waitForEvent("dialog");
-    page.once("dialog", (dialog) => dialog.dismiss());
-    await clear.click();
-    expect((await dismissed).message()).toContain("Clear all values in this settings plan?");
-    await expect(current(page, "Squelch")).toHaveValue("3");
-    await expect(current(page, "VOX")).toHaveValue("true");
-    await expect(page.locator("#settings-preview")).toBeVisible();
-    await expect(page.locator("#apply-settings")).toBeEnabled();
-    expect(await page.locator("#settings-diff").textContent()).toBe(diff);
-    expect(await snapshot(page)).toEqual(channels); expect(await savedDraft(page)).toBe(draft);
-    page.once("dialog", (dialog) => dialog.accept());
-    await clear.click();
-    await expect(current(page, "Squelch")).toHaveValue("");
-    await expect(current(page, "VOX")).toHaveValue("");
-    await expect(current(page, "Backlight timeout")).toHaveValue("");
-    await expect(page.locator("#settings-preview")).toBeHidden();
-    await expect(page.locator("#apply-settings")).toBeDisabled();
-    await expect(page.locator("#settings-status")).toContainText("No factory reset or radio change");
-    await expect(target(page)).toHaveValue(profileId);
-    expect(await snapshot(page)).toEqual(channels); expect(await savedDraft(page)).toBe(draft);
+    const attempts = [];
+    try {
+        await clickClearWithConfirmation(page, clear, "dismiss", attempts);
+        await expect(current(page, "Squelch")).toHaveValue("3");
+        await expect(current(page, "VOX")).toHaveValue("true");
+        await expect(page.locator("#settings-preview")).toBeVisible();
+        await expect(page.locator("#apply-settings")).toBeEnabled();
+        expect(await page.locator("#settings-diff").textContent()).toBe(diff);
+        expect(await snapshot(page)).toEqual(channels); expect(await savedDraft(page)).toBe(draft);
+        await clickClearWithConfirmation(page, clear, "accept", attempts);
+        await expect(current(page, "Squelch")).toHaveValue("");
+        await expect(current(page, "VOX")).toHaveValue("");
+        await expect(current(page, "Backlight timeout")).toHaveValue("");
+        await expect(page.locator("#settings-preview")).toBeHidden();
+        await expect(page.locator("#apply-settings")).toBeDisabled();
+        await expect(page.locator("#settings-status")).toContainText("No factory reset or radio change");
+        await expect(target(page)).toHaveValue(profileId);
+        expect(await snapshot(page)).toEqual(channels); expect(await savedDraft(page)).toBe(draft);
+    } catch (error) {
+        await testInfo.attach("clear-settings-confirmations", {
+            body: JSON.stringify(attempts, null, 2),
+            contentType: "application/json",
+        });
+        throw error;
+    }
 });

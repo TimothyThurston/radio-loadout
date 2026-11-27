@@ -1,17 +1,18 @@
 import { expect, test } from "./builder.fixture.mjs";
 
-export async function observeSettingsDisclosure(summary) {
-    return summary.evaluateHandle((element) => {
-        const details = element.parentElement;
+export async function observePointerActivation(locator, { disclosure = false } = {}) {
+    return locator.evaluateHandle((element, disclosure) => {
+        const details = disclosure ? element.parentElement : null;
         const events = [];
-        const types = ["pointerdown", "mousedown", "pointerup", "mouseup", "click", "toggle"];
+        const types = ["pointerdown", "mousedown", "pointerup", "mouseup", "click"];
+        if (details) types.push("toggle");
         const identify = (node) => node instanceof Element
             ? node.localName + (node.id ? `#${node.id}` : "")
             : null;
         const state = () => {
             const { x, y, width, height } = element.getBoundingClientRect();
             return {
-                open: details.open,
+                ...(details ? { open: details.open } : {}),
                 bounds: { x, y, width, height },
                 viewport: { width: innerWidth, height: innerHeight },
                 scrollY,
@@ -50,7 +51,11 @@ export async function observeSettingsDisclosure(summary) {
                 for (const type of types) document.removeEventListener(type, record, true);
             },
         };
-    });
+    }, disclosure);
+}
+
+export function observeSettingsDisclosure(summary) {
+    return observePointerActivation(summary, { disclosure: true });
 }
 
 export async function openSettingsPlan(page) {
