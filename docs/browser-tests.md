@@ -783,3 +783,90 @@ Implementation references: Playwright's official
 [CI setup](https://playwright.dev/docs/ci-intro),
 [accessibility testing guidance](https://playwright.dev/docs/accessibility-testing),
 and the official [artifact upload action](https://github.com/actions/upload-artifact).
+
+## Settings disclosure follow-up for CI #25 (2026-11-27)
+
+CI #25 ran commit `6767d0b5b21740888e7ba468875a2377497d5ccf` on Ubuntu
+24.04.5 with Playwright 1.64.1 and WebKit 27.2 (revision 2370). Chromium and
+Firefox passed 55/55 each. WebKit passed 52/55, including both unchanged
+keyboard journeys. Its desktop legacy-restore, embedded-settings and selective
+satellite-addition tests each timed out at the same Squelch selection.
+[CI #25](https://github.com/TimothyThurston/radio-loadout/actions/runs/46050088731)
+
+All three failure traces show the enabled settings fieldset and
+`select#current-squelch` in the DOM before and after the click.
+`details#builder-settings-details` has no `open` attribute at either point.
+Each click encountered an unstable-element check, then recorded a summary
+rectangle of x=147, y=948.59, 1146 × 51 in the 1440 × 1000 viewport and a
+click at (720, 974.09). Playwright reported the click complete. Those traces
+record its intended point and DOM snapshots, so delivery of the native events
+and the hit-test result at dispatch remain unknown. The three traces show HTTP
+200 for the builder and all seven startup assets, and the job log contains no
+Uvicorn concurrency warnings.
+[CI #25 WebKit traces and screenshots](https://github.com/TimothyThurston/radio-loadout/actions/runs/46050088731/artifacts/15224501455)
+
+The shared test helper keeps the original pointer click and asserts
+`details.open === true` before selecting Squelch. On failure, the
+`settings-disclosure` JSON attachment records the summary bounds and scroll
+position before and after the click. It also records the event target, viewport
+point, hit-test result, default-prevention status and open state where applicable.
+The Playwright trace retains the attempted point if the browser delivers no
+pointer event to the document.
+[Playwright locator click](https://playwright.dev/docs/api/class-locator#locator-click)
+
+The three affected desktop cases passed 3/3 on Windows 11 build 26300 with
+the pinned Windows WebKit. Four separate pointer and keyboard probes used the
+same two synthetic channels, pilot profile and 1440 × 1000 viewport.
+
+| Activation | Summary top at activation | Observed events and result |
+| --- | ---: | --- |
+| Original locator click | 906.41 px | Pointer down/up and click at (720, 932) hit the summary. Native toggle opened the panel. |
+| Scroll toward center, then locator click | 906.41 px | The bottom of the document limited scrolling. The click hit the same point and the panel opened. |
+| Scroll to the bottom edge of the viewport, then locator click | 946.41 px | Pointer down/up and click at (720, 972) hit the summary. Native toggle opened the panel. |
+| Enter on the summary | 1171.41 px | A trusted keyboard click and native toggle opened the panel. This was a separate diagnostic. |
+
+The four probes loaded the builder and startup assets with HTTP 200. Their
+scripts, event records and run logs are retained locally under
+`generated/settings-disclosure/`. A separate probe clicked an already-open
+summary and verified that the assertion failure retained its JSON attachment.
+The Ubuntu click dispatch remains unverified. The follow-up adds assertion
+and diagnostics coverage while preserving the original pointer action and
+application behavior.
+
+On the pinned Ubuntu 24.04 runner, the first reproduction uses the three
+affected cases with the existing desktop project.
+
+```sh
+npx playwright test --project=webkit-desktop \
+  --grep 'legacy restore explicitly|embedded settings stay accessible|selective additions preserve'
+```
+
+The local comparison probe can run with the same Ubuntu browser installation
+and project options when its two files under `generated/settings-disclosure/`
+are available beside the checkout.
+
+```sh
+npx playwright test --config=generated/settings-disclosure/playwright.config.mjs \
+  --project=webkit-desktop --grep 'pointer|keyboard diagnostic' --trace=on
+```
+
+The local desktop and narrow suites ran with two workers and zero retries.
+
+| Engine on Windows | Desktop | Narrow | Total |
+| --- | ---: | ---: | ---: |
+| Chromium | 27/27 | 28/28 | 55/55 (1.9 min) |
+| Firefox | 27/27 | 28/28 | 55/55 (3.4 min) |
+| WebKit | 26/27 | 27/28 | 53/55 (2.7 min) |
+
+The WebKit failures were the documented failure to focus the first native
+link with Tab in both viewports. All three settings cases and all geometry
+checks passed. The matrix logs contain no Uvicorn concurrency warnings, and
+the retained WebKit traces and probe traces contain no startup 503s. The
+satellite error-handling test still exercises its deliberate intercepted 503.
+Ruff, pytest (968 passed, 3 skipped), all 140 JavaScript unit tests,
+JavaScript syntax checks and `git diff --check` passed.
+
+Ubuntu 24.04 was unavailable for this uncommitted follow-up. The instrumented
+reproduction and complete WebKit verification still require the pinned Ubuntu
+environment. The repeat run is pending a clean full WebKit run on the same
+revision.

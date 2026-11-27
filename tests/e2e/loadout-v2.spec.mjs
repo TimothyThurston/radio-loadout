@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { readFileSync } from "node:fs";
 import { test, expect, configureTwoChannels, downloadedText, snapshot, savedDraft } from "./builder.fixture.mjs";
+import { openSettingsPlan } from "./settings-disclosure.mjs";
 
 const profileId = "baofeng-bf-f8hp-pro-v053-us";
 const target = (page) => page.getByRole("combobox", { name: "Review target", exact: true });
@@ -8,7 +9,7 @@ const current = (page, name) => page.getByRole("combobox", { name: `Your plan: $
 const legacyFile = new URL("../fixtures/backups/complete-v1.json", import.meta.url);
 async function plan(page) {
     await target(page).selectOption(profileId);
-    await page.locator("#builder-settings-details summary").click();
+    await openSettingsPlan(page);
     await current(page, "Squelch").selectOption("3");
     await current(page, "VOX").selectOption("true");
     await current(page, "Backlight timeout").selectOption('"always_on"');
