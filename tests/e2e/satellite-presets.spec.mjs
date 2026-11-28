@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, downloadedText, configureTwoChannels, snapshot, savedDraft } from "./builder.fixture.mjs";
+import { openSettingsPlan } from "./settings-disclosure.mjs";
 
 const preview = (page) => page.getByRole("button", { name: "Preview ISS receive-only pack", exact: true });
 const add = (page) => page.getByRole("button", { name: "Add reviewed receive-only channels", exact: true });
@@ -39,7 +40,7 @@ test("satellite preview requires confirmation and produces RX-only CSV and v2 ro
 test("selective additions preserve existing channels, selected profile and settings", async ({ page }) => {
     const original = await configureTwoChannels(page);
     await page.getByRole("combobox", { name: "Review target", exact: true }).selectOption("baofeng-bf-f8hp-pro-v053-us");
-    await page.locator("#builder-settings-details summary").click();
+    await openSettingsPlan(page);
     await page.getByRole("combobox", { name: "Your plan: Squelch", exact: true }).selectOption("3");
     await page.getByRole("checkbox", { name: /^Include ISS CREW RX/ }).uncheck();
     await reviewAndAdd(page);

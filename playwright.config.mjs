@@ -34,9 +34,13 @@ export default defineConfig({
         video: "off",
     },
     projects: [
-        { name: "chromium-desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 1000 } } },
-        // A narrow Chromium viewport, not a claim about real phones or mobile Safari.
-        { name: "chromium-narrow", use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 } } },
+        { name: "chromium-desktop", grepInvert: /@geometry-narrow/, use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 1000 } } },
+        // Desktop-engine viewports; these do not verify real phones or Safari.
+        { name: "chromium-narrow", grepInvert: /@geometry-desktop/, use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 } } },
+        { name: "firefox-desktop", grepInvert: /@geometry-narrow/, use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 1000 } } },
+        { name: "firefox-narrow", grepInvert: /@geometry-desktop/, use: { ...devices["Desktop Firefox"], viewport: { width: 375, height: 812 } } },
+        { name: "webkit-desktop", grepInvert: /@geometry-narrow/, use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 1000 } } },
+        { name: "webkit-narrow", grepInvert: /@geometry-desktop/, use: { ...devices["Desktop Safari"], viewport: { width: 375, height: 812 } } },
     ],
     webServer: {
         command: `"${python}" -m radio_loadout.web.serve`,
